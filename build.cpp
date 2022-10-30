@@ -69,7 +69,7 @@ public:
 
     return true;
   }
-  [[nodiscard]] virtual std::vector<std::string> objects() const override {
+  [[nodiscard]] std::vector<std::string> objects() const override {
     std::vector<std::string> res{};
     std::ranges::copy(parts(), std::back_inserter(res));
     res.push_back(name());
@@ -79,6 +79,10 @@ public:
 
 class exe : public unit {
   std::vector<std::unique_ptr<unit>> m_units;
+
+  [[nodiscard]] static auto to_object(const std::string &str) {
+    return std::format(" {}.o", str);
+  }
 
 public:
   using unit::unit;
@@ -92,14 +96,15 @@ public:
     if (!std::ranges::all_of(m_units, &unit::build))
       return false;
 
-    // auto objs = objects() | std::views::join;
+    std::string cmd = std::format("clang++ -o {}.exe", name());
+    std::ranges::copy(objects() | std::views::transform(&exe::to_object) |
+                          std::views::join,
+                      std::back_inserter(cmd));
 
-    // const auto cmd = std::format("clang++ -o {}.exe ", name()) + objs;
-    // std::cerr << cmd << std::endl;
-    // return std::system(cmd.c_str()) == 0;
-    return true;
+    std::cerr << cmd << std::endl;
+    return std::system(cmd.c_str()) == 0;
   }
-  [[nodiscard]] virtual std::vector<std::string> objects() const override {
+  [[nodiscard]] std::vector<std::string> objects() const override {
     auto all =
         m_units | std::views::transform(&unit::objects) | std::views::join;
     std::vector<std::string> res{};
