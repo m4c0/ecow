@@ -2,7 +2,6 @@
 #include <iostream>
 #include <ranges>
 #include <string>
-#include <string_view>
 #include <vector>
 
 [[nodiscard]] inline bool run_clang(const std::string &args) {
@@ -25,8 +24,8 @@ public:
     constexpr const auto obj_fmt = "-c {0:}.cpp -o {0:}.o";
     return run_clang(std::format(obj_fmt, name()));
   }
-  [[nodiscard]] virtual std::vector<std::string_view> objects() const {
-    std::vector<std::string_view> res{};
+  [[nodiscard]] virtual std::vector<std::string> objects() const {
+    std::vector<std::string> res{};
     res.push_back(name());
     return res;
   }
@@ -41,7 +40,7 @@ class mod : public unit {
   std::vector<std::string> m_impls;
   std::vector<std::string> m_parts;
 
-  [[nodiscard]] bool compile(const std::string &who) {
+  [[nodiscard]] static bool compile(const std::string &who) {
     return run_clang(std::format(pcm_fmt, who)) &&
            run_clang(std::format(obj_fmt, who));
   }
@@ -60,12 +59,7 @@ public:
   void add_part(std::string part) { m_parts.push_back(part); }
 
   [[nodiscard]] bool build() override {
-    for (const auto &p : parts()) {
-      if (!compile(p))
-        return false;
-    }
-
-    if (!compile(name()))
+    if (!std::ranges::all_of(objects(), &mod::compile))
       return false;
 
     for (const auto &i : m_impls) {
@@ -75,11 +69,9 @@ public:
 
     return true;
   }
-  [[nodiscard]] virtual std::vector<std::string_view> objects() const override {
-    std::vector<std::string_view> res{};
-    for (const auto &p : parts()) {
-      res.push_back(p);
-    }
+  [[nodiscard]] virtual std::vector<std::string> objects() const override {
+    std::vector<std::string> res{};
+    std::ranges::copy(parts(), std::back_inserter(res));
     res.push_back(name());
     return res;
   }
@@ -97,10 +89,8 @@ public:
   }
 
   [[nodiscard]] bool build() override {
-    for (const auto &u : m_units) {
-      if (!u->build())
-        return false;
-    }
+    if (!std::ranges::all_of(m_units, &unit::build))
+      return false;
 
     // auto objs = objects() | std::views::join;
 
@@ -109,12 +99,11 @@ public:
     // return std::system(cmd.c_str()) == 0;
     return true;
   }
-  [[nodiscard]] virtual std::vector<std::string_view> objects() const override {
-    std::vector<std::string_view> res{};
-    for (const auto &u :
-         m_units | std::views::transform(&unit::objects) | std::views::join) {
-      res.push_back(u);
-    }
+  [[nodiscard]] virtual std::vector<std::string> objects() const override {
+    auto all =
+        m_units | std::views::transform(&unit::objects) | std::views::join;
+    std::vector<std::string> res{};
+    std::ranges::copy(all, std::back_inserter(res));
     return res;
   }
 };
