@@ -1,5 +1,4 @@
 module;
 #include <iostream>
-
-module M;
+module m;
 void hello() { std::cout << "hello "; }
