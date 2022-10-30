@@ -1,4 +1,7 @@
 module;
 #include <iostream>
 module m;
-void hello() { std::cout << "hello "; }
+void hello() {
+  // this is not working
+  /*std::cout << "hello ";*/
+}

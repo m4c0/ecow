@@ -44,6 +44,10 @@ class mod : public unit {
     return run_clang(std::format(pcm_fmt, who)) &&
            run_clang(std::format(obj_fmt, who));
   }
+  [[nodiscard]] bool compile_impl(const std::string &who) {
+    return run_clang(std::format(impl_fmt, name(), who));
+  }
+
   [[nodiscard]] auto part_name(const std::string &who) const {
     return std::format("{}-{}", name(), who);
   }
@@ -59,19 +63,19 @@ public:
   void add_part(std::string part) { m_parts.push_back(part); }
 
   [[nodiscard]] bool build() override {
-    if (!std::ranges::all_of(objects(), &mod::compile))
+    if (!std::ranges::all_of(parts(), &mod::compile))
       return false;
 
-    for (const auto &i : m_impls) {
-      // fails to import std, for reasons
-      // if (!run_clang(std::format(impl_fmt, m_name, i))) return false;
-    }
+    if (!std::ranges::all_of(m_impls,
+                             [this](auto w) { return compile_impl(w); }))
+      return false;
 
-    return true;
+    return compile(name());
   }
   [[nodiscard]] std::vector<std::string> objects() const override {
     std::vector<std::string> res{};
     std::ranges::copy(parts(), std::back_inserter(res));
+    std::ranges::copy(m_impls, std::back_inserter(res));
     res.push_back(name());
     return res;
   }
