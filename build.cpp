@@ -81,23 +81,52 @@ public:
   }
 };
 
-class exe : public unit {
-  std::vector<std::unique_ptr<unit>> m_units;
+class sys : public unit {
+public:
+  using unit::unit;
 
-  [[nodiscard]] static auto to_object(const std::string &str) {
-    return std::format(" {}.o", str);
+  [[nodiscard]] bool build() override {
+    return std::system(name().c_str()) == 0;
   }
+  [[nodiscard]] std::vector<std::string> objects() const override {
+    return std::vector<std::string>();
+  }
+};
+
+class seq : public unit {
+  std::vector<std::unique_ptr<unit>> m_units;
 
 public:
   using unit::unit;
+
   template <typename Tp = unit> Tp *add_unit(const std::string &name) {
     Tp *res = new Tp{name};
     m_units.push_back(std::unique_ptr<unit>(res));
     return res;
   }
 
+  [[nodiscard]] virtual bool build() override {
+    return std::ranges::all_of(m_units, &unit::build);
+  }
+  [[nodiscard]] virtual std::vector<std::string> objects() const override {
+    auto all =
+        m_units | std::views::transform(&unit::objects) | std::views::join;
+    std::vector<std::string> res{};
+    std::ranges::copy(all, std::back_inserter(res));
+    return res;
+  }
+};
+
+class exe : public seq {
+  [[nodiscard]] static auto to_object(const std::string &str) {
+    return std::format(" {}.o", str);
+  }
+
+public:
+  using seq::seq;
+
   [[nodiscard]] bool build() override {
-    if (!std::ranges::all_of(m_units, &unit::build))
+    if (!seq::build())
       return false;
 
     std::string cmd = std::format("clang++ -o {}.exe", name());
@@ -108,23 +137,20 @@ public:
     std::cerr << cmd << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
-  [[nodiscard]] std::vector<std::string> objects() const override {
-    auto all =
-        m_units | std::views::transform(&unit::objects) | std::views::join;
-    std::vector<std::string> res{};
-    std::ranges::copy(all, std::back_inserter(res));
-    return res;
-  }
 };
 
 int main() {
-  exe a{"a"};
+  seq all{"all"};
 
-  auto *m = a.add_unit<mod>("m");
+  auto *a = all.add_unit<exe>("a");
+
+  auto *m = a->add_unit<mod>("m");
   m->add_part("interface_part");
   m->add_part("impl_part");
   m->add_impl("impl");
 
-  a.add_unit<>("user");
-  return a.build() ? 0 : 1;
+  a->add_unit<>("user");
+
+  all.add_unit<sys>("a");
+  return all.build() ? 0 : 1;
 }
