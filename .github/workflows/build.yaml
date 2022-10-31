@@ -1,0 +1,32 @@
+name: proof-of-concept
+on: 
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  posix:
+    runs-on:
+      - macos-latest
+      - ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build the builder
+        run: clang++ -std=c++20 build-poc.cpp -o build
+      - name: Run the builder
+        run: ./build
+      - name: Run the proof-of-concept
+        run: ./a.exe
+  windows:
+    runs-on:
+      - windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build the builder
+        run: clang++ -std=c++20 build-poc.cpp -o build.exe
+      - name: Run the builder
+        run: .\build.exe
+      - name: Run the proof-of-concept
+        run: .\a.exe
