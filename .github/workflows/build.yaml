@@ -5,31 +5,45 @@ on:
   pull_request:
 
 jobs:
-  posix:
-    strategy:
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-latest
-    runs-on: ${{ matrix.os }}
+  linus:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Upgrade LLVM
+        run: 'sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"'
       - name: Print clang version
         run: clang++ -v  
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Build the builder
         run: clang++ -std=c++20 build-poc.cpp -o build
       - name: Run the builder
         run: ./build
       - name: Run the proof-of-concept
         run: ./a.exe
-  windows:
-    runs-on: windows-latest
+  steve:
+    runs-on: macos-latest
     steps:
+      - name: Upgrade LLVM
+        run: brew install llvm
+      - name: Print clang version
+        run: /usr/local/opt/llvm/bin/clang++ -v  
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Build the builder
+        run: /usr/local/opt/llvm/bin/clang++ -std=c++20 build-poc.cpp -o build
+      - name: Run the builder
+        run: ./build
+      - name: Run the proof-of-concept
+        run: ./a.exe
+  bill:
+    runs-on: windows-latest
+    steps:
+      - name: Upgrade LLVM
+        run: choco upgrade llvm -y
       - name: Print clang version
         run: clang++ -v  
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Build the builder
         run: clang++ -std=c++20 build-poc.cpp -o build.exe
       - name: Run the builder
