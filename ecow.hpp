@@ -4,16 +4,18 @@
 #include <string>
 #include <vector>
 
-[[nodiscard]] inline bool run_clang(const std::string &args) {
-  constexpr const auto clang_fmt =
-      "clang++ -std=c++20 -fprebuilt-module-path=. {}";
-  const auto cmd = std::format(clang_fmt, args);
-  std::cerr << cmd << std::endl;
-  return std::system(cmd.c_str()) == 0;
-}
-
+namespace ecow {
 class unit {
   std::string m_name;
+
+protected:
+  [[nodiscard]] static inline bool run_clang(const std::string &args) {
+    constexpr const auto clang_fmt =
+        "clang++ -std=c++20 -fprebuilt-module-path=. {}";
+    const auto cmd = std::format(clang_fmt, args);
+    std::cerr << cmd << std::endl;
+    return std::system(cmd.c_str()) == 0;
+  }
 
 public:
   explicit unit(std::string name) : m_name{name} {}
@@ -63,14 +65,9 @@ public:
   void add_part(std::string part) { m_parts.push_back(part); }
 
   [[nodiscard]] bool build() override {
-    if (!std::ranges::all_of(parts(), &mod::compile))
-      return false;
-
-    if (!std::ranges::all_of(m_impls,
-                             [this](auto w) { return compile_impl(w); }))
-      return false;
-
-    return compile(name());
+    return std::ranges::all_of(parts(), &mod::compile) && compile(name()) &&
+           std::ranges::all_of(m_impls,
+                               [this](auto w) { return compile_impl(w); });
   }
   [[nodiscard]] std::vector<std::string> objects() const override {
     std::vector<std::string> res{};
@@ -138,19 +135,4 @@ public:
     return std::system(cmd.c_str()) == 0;
   }
 };
-
-int main() {
-  seq all{"all"};
-
-  auto *a = all.add_unit<exe>("a");
-
-  auto *m = a->add_unit<mod>("m");
-  m->add_part("interface_part");
-  m->add_part("impl_part");
-  m->add_impl("impl");
-
-  a->add_unit<>("user");
-
-  all.add_unit<sys>("a");
-  return all.build() ? 0 : 1;
-}
+} // namespace ecow
