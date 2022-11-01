@@ -7,6 +7,8 @@ on:
 jobs:
   linus:
     runs-on: ubuntu-latest
+    env:
+      CXX: clang++-15
     steps:
       - name: Upgrade LLVM
         run: 'sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"'
@@ -23,7 +25,7 @@ jobs:
   steve:
     runs-on: macos-latest
     env:
-      CXX: /usr/local/opt/llvm/bin/clang++ -isysroot $(xcrun --show-sdk-path)
+      CXX: /usr/local/opt/llvm/bin/clang++ -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
     steps:
       - name: Upgrade LLVM
         run: brew install llvm
@@ -32,7 +34,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Compile the builder
-        run: $CXX -std=c++20 build-poc.cpp -o build-poc.o
+        run: $CXX -std=c++20 build-poc.cpp -c -o build-poc.o
       - name: Link the builder
         run: clang++ -o build-poc build-poc.o
       - name: Run the builder
