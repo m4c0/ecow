@@ -27,6 +27,8 @@ protected:
     return "/usr/local/opt/llvm/bin/clang++ -isysroot "
            "/Applications/Xcode.app/Contents/Developer/Platforms/"
            "MacOSX.platform/Developer/SDKs/MacOSX.sdk";
+#elif _WIN32
+    return "clang++ -fno-ms-compatibility";
 #else
     return "clang++";
 #endif
