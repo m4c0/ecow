@@ -10,9 +10,21 @@ class unit {
 protected:
   using strvec = std::vector<std::string>;
 
+  [[nodiscard]] static inline std::string cxx() {
+    if (const char *exe = std::getenv("CXX")) {
+      return exe;
+    }
+    return "clang++";
+  }
+  [[nodiscard]] static inline std::string ld() {
+    if (const char *exe = std::getenv("LD")) {
+      return exe;
+    }
+    return "clang++";
+  }
+
   [[nodiscard]] static inline bool run_clang(const std::string &args) {
-    using namespace std::string_literals;
-    const auto cmd = "clang++ -std=c++20 -fprebuilt-module-path=. "s + args;
+    const auto cmd = cxx() + " -std=c++20 -fprebuilt-module-path=. " + args;
     std::cerr << cmd << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
@@ -121,13 +133,12 @@ public:
   using seq::seq;
 
   [[nodiscard]] bool build() override {
-    using namespace std::string_literals;
-
     if (!seq::build())
       return false;
 
-    std::string cmd = "clang++ -o "s + name() + ".exe";
+    std::string cmd = ld() + " -o " + name() + ".exe";
     for (const auto &o : objects()) {
+      using namespace std::string_literals;
       cmd.append(" "s + o + ".o");
     }
 
