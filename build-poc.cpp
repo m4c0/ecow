@@ -13,6 +13,7 @@ int main() {
   m->add_impl("impl");
 
   a->add_unit<>("user");
+  a->add_unit<>("dummy"); // Just tests "mm" extension
 
 #if _WIN32
   all.add_unit<sys>("a.exe");

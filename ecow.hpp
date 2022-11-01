@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -25,8 +26,19 @@ protected:
     return "clang++";
   }
 
+  [[nodiscard]] static inline std::string ext_of(const std::string &who) {
+    if (std::filesystem::exists(who + ".cpp")) {
+      return ".cpp";
+    }
+    if (std::filesystem::exists(who + ".mm")) {
+      return ".mm";
+    }
+    return "";
+  }
+
   [[nodiscard]] static inline bool run_clang(const std::string &args) {
-    const auto cmd = cxx() + " -std=c++20 -fprebuilt-module-path=. " + args;
+    const auto cmd =
+        cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=. " + args;
     std::cerr << cmd << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
@@ -38,7 +50,14 @@ public:
 
   [[nodiscard]] virtual bool build() {
     using namespace std::string_literals;
-    return run_clang("-c "s + m_name + ".cpp -o " + m_name + ".o");
+    const auto ext = ext_of(m_name);
+    if (ext != "") {
+      return run_clang(" -c " + m_name + ext + " -o " + m_name + ".o");
+    } else {
+      std::cerr << "Unit not found with '.cpp' or '.mm' extension: " << m_name
+                << std::endl;
+      return false;
+    }
   }
   [[nodiscard]] virtual strvec objects() const {
     strvec res{};
