@@ -17,7 +17,13 @@ protected:
     if (const char *exe = std::getenv("CXX")) {
       return exe;
     }
+#ifdef __APPLE__
+    return "/usr/local/opt/llvm/bin/clang++ -isysroot "
+           "/Applications/Xcode.app/Contents/Developer/Platforms/"
+           "MacOSX.platform/Developer/SDKs/MacOSX.sdk";
+#else
     return "clang++";
+#endif
   }
   [[nodiscard]] static inline std::string ld() {
     if (const char *exe = std::getenv("LD")) {
