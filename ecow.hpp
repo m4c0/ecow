@@ -1,6 +1,5 @@
-#include <format>
 #include <iostream>
-#include <ranges>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -9,10 +8,11 @@ class unit {
   std::string m_name;
 
 protected:
+  using strvec = std::vector<std::string>;
+
   [[nodiscard]] static inline bool run_clang(const std::string &args) {
-    constexpr const auto clang_fmt =
-        "clang++ -std=c++20 -fprebuilt-module-path=. {}";
-    const auto cmd = std::format(clang_fmt, args);
+    using namespace std::string_literals;
+    const auto cmd = "clang++ -std=c++20 -fprebuilt-module-path=. "s + args;
     std::cerr << cmd << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
@@ -23,40 +23,37 @@ public:
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
 
   [[nodiscard]] virtual bool build() {
-    constexpr const auto obj_fmt = "-c {0:}.cpp -o {0:}.o";
-    return run_clang(std::format(obj_fmt, name()));
+    using namespace std::string_literals;
+    return run_clang("-c "s + m_name + ".cpp -o " + m_name + ".o");
   }
-  [[nodiscard]] virtual std::vector<std::string> objects() const {
-    std::vector<std::string> res{};
+  [[nodiscard]] virtual strvec objects() const {
+    strvec res{};
     res.push_back(name());
     return res;
   }
 };
 
 class mod : public unit {
-  static constexpr const auto pcm_fmt = "--precompile {0:}.cppm -o {0:}.pcm";
-  static constexpr const auto obj_fmt = "-c {0:}.pcm -o {0:}.o";
-  static constexpr const auto impl_fmt =
-      "-fmodule-file={0}.pcm -c {1:}.cpp -o {1:}.o";
 
-  std::vector<std::string> m_impls;
-  std::vector<std::string> m_parts;
+  strvec m_impls;
+  strvec m_parts;
 
   [[nodiscard]] static bool compile(const std::string &who) {
-    return run_clang(std::format(pcm_fmt, who)) &&
-           run_clang(std::format(obj_fmt, who));
+    using namespace std::string_literals;
+    return run_clang("--precompile "s + who + ".cppm -o " + who + ".pcm") &&
+           run_clang("-c "s + who + ".pcm -o " + who + ".o");
   }
   [[nodiscard]] bool compile_impl(const std::string &who) {
-    return run_clang(std::format(impl_fmt, name(), who));
-  }
-
-  [[nodiscard]] auto part_name(const std::string &who) const {
-    return std::format("{}-{}", name(), who);
+    using namespace std::string_literals;
+    return run_clang("-fmodule-file="s + name() + ".pcm -c " + who +
+                     ".cpp -o " + who + ".o");
   }
 
   [[nodiscard]] auto parts() const {
-    return m_parts |
-           std::views::transform([this](auto p) { return part_name(p); });
+    strvec res;
+    std::transform(m_parts.begin(), m_parts.end(), std::back_inserter(res),
+                   [this](auto p) { return name() + "-" + p; });
+    return res;
   }
 
 public:
@@ -65,14 +62,19 @@ public:
   void add_part(std::string part) { m_parts.push_back(part); }
 
   [[nodiscard]] bool build() override {
-    return std::ranges::all_of(parts(), &mod::compile) && compile(name()) &&
-           std::ranges::all_of(m_impls,
-                               [this](auto w) { return compile_impl(w); });
+    const auto p = parts();
+    return std::all_of(p.begin(), p.end(),
+                       [this](auto w) { return compile(w); }) &&
+           compile(name()) &&
+           std::all_of(m_impls.begin(), m_impls.end(),
+                       [this](auto w) { return compile_impl(w); });
   }
-  [[nodiscard]] std::vector<std::string> objects() const override {
-    std::vector<std::string> res{};
-    std::ranges::copy(parts(), std::back_inserter(res));
-    std::ranges::copy(m_impls, std::back_inserter(res));
+  [[nodiscard]] strvec objects() const override {
+    const auto pts = parts();
+
+    strvec res{};
+    std::copy(pts.begin(), pts.end(), std::back_inserter(res));
+    std::copy(m_impls.begin(), m_impls.end(), std::back_inserter(res));
     res.push_back(name());
     return res;
   }
@@ -85,9 +87,7 @@ public:
   [[nodiscard]] bool build() override {
     return std::system(name().c_str()) == 0;
   }
-  [[nodiscard]] std::vector<std::string> objects() const override {
-    return std::vector<std::string>();
-  }
+  [[nodiscard]] strvec objects() const override { return strvec(); }
 };
 
 class seq : public unit {
@@ -103,33 +103,33 @@ public:
   }
 
   [[nodiscard]] virtual bool build() override {
-    return std::ranges::all_of(m_units, &unit::build);
+    return std::all_of(m_units.begin(), m_units.end(),
+                       [](const auto &u) { return u->build(); });
   }
-  [[nodiscard]] virtual std::vector<std::string> objects() const override {
-    auto all =
-        m_units | std::views::transform(&unit::objects) | std::views::join;
-    std::vector<std::string> res{};
-    std::ranges::copy(all, std::back_inserter(res));
+  [[nodiscard]] virtual strvec objects() const override {
+    strvec res{};
+    for (const auto &u : m_units) {
+      const auto objs = u->objects();
+      std::copy(objs.begin(), objs.end(), std::back_inserter(res));
+    }
     return res;
   }
 };
 
 class exe : public seq {
-  [[nodiscard]] static auto to_object(const std::string &str) {
-    return std::format(" {}.o", str);
-  }
-
 public:
   using seq::seq;
 
   [[nodiscard]] bool build() override {
+    using namespace std::string_literals;
+
     if (!seq::build())
       return false;
 
-    std::string cmd = std::format("clang++ -o {}.exe", name());
-    std::ranges::copy(objects() | std::views::transform(&exe::to_object) |
-                          std::views::join,
-                      std::back_inserter(cmd));
+    std::string cmd = "clang++ -o "s + name() + ".exe";
+    for (const auto &o : objects()) {
+      cmd.append(" "s + o + ".o");
+    }
 
     std::cerr << cmd << std::endl;
     return std::system(cmd.c_str()) == 0;
