@@ -124,16 +124,17 @@ public:
 };
 
 class seq : public unit {
-  std::vector<std::unique_ptr<unit>> m_units;
+  std::vector<std::shared_ptr<unit>> m_units;
 
 public:
   using unit::unit;
 
-  template <typename Tp = unit> Tp *add_unit(const std::string &name) {
-    Tp *res = new Tp{name};
-    m_units.push_back(std::unique_ptr<unit>(res));
+  template <typename Tp = unit> auto add_unit(const std::string &name) {
+    auto res = std::make_shared<Tp>(name);
+    m_units.push_back(res);
     return res;
   }
+  void add_ref(std::shared_ptr<unit> ref) { m_units.push_back(ref); }
 
   [[nodiscard]] virtual bool build() override {
     return std::all_of(m_units.begin(), m_units.end(),

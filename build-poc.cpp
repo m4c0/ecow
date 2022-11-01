@@ -5,9 +5,9 @@ using namespace ecow;
 int main() {
   seq all{"all"};
 
-  auto *a = all.add_unit<exe>("a");
+  auto a = all.add_unit<exe>("a");
 
-  auto *m = a->add_unit<mod>("m");
+  auto m = a->add_unit<mod>("m");
   m->add_part("interface_part");
   m->add_part("impl_part");
   m->add_impl("impl");
