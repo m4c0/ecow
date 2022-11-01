@@ -14,6 +14,10 @@ int main() {
 
   a->add_unit<>("user");
 
-  all.add_unit<sys>("a");
+#if _WIN32
+  all.add_unit<sys>("a.exe");
+#else
+  all.add_unit<sys>("./a.exe");
+#endif
   return all.build() ? 0 : 1;
 }
