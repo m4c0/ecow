@@ -22,5 +22,8 @@ int main() {
 #else
   all.add_unit<sys>("./a.exe");
 #endif
+
+  all.add_ref(a); // Tests if we can build incrementally
+
   return all.build() ? 0 : 1;
 }

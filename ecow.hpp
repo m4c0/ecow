@@ -13,6 +13,12 @@ class unit {
 protected:
   using strvec = std::vector<std::string>;
 
+  [[nodiscard]] static inline auto last_write_time(auto path) {
+    if (std::filesystem::exists(path))
+      return std::filesystem::last_write_time(path);
+    return std::filesystem::file_time_type{};
+  }
+
   [[nodiscard]] static inline std::string cxx() {
     if (const char *exe = std::getenv("CXX")) {
       return exe;
@@ -42,10 +48,18 @@ protected:
     return "";
   }
 
-  [[nodiscard]] static inline bool run_clang(const std::string &args) {
-    const auto cmd =
-        cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=. " + args;
-    std::cerr << cmd << std::endl;
+  [[nodiscard]] static inline bool run_clang(const std::string &args,
+                                             const std::string &from,
+                                             const std::string &to) {
+    const auto ftime = last_write_time(from);
+    const auto ttime = last_write_time(to);
+    if (ttime > ftime)
+      return true;
+
+    std::cerr << "compiling " << to << std::endl;
+    const auto cmd = cxx() +
+                     " -fobjc-arc -std=c++20 -fprebuilt-module-path=. " + args +
+                     " " + from + " -o " + to;
     return std::system(cmd.c_str()) == 0;
   }
 
@@ -55,10 +69,9 @@ public:
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
 
   [[nodiscard]] virtual bool build() {
-    using namespace std::string_literals;
     const auto ext = ext_of(m_name);
     if (ext != "") {
-      return run_clang(" -c " + m_name + ext + " -o " + m_name + ".o");
+      return run_clang("-c", m_name + ext, m_name + ".o");
     } else {
       std::cerr << "Unit not found with '.cpp' or '.mm' extension: " << m_name
                 << std::endl;
@@ -77,15 +90,14 @@ class mod : public unit {
   strvec m_impls;
   strvec m_parts;
 
-  [[nodiscard]] static bool compile(const std::string &who) {
-    using namespace std::string_literals;
-    return run_clang("--precompile "s + who + ".cppm -o " + who + ".pcm") &&
-           run_clang("-c "s + who + ".pcm -o " + who + ".o");
+  [[nodiscard]] static bool compile_part(const std::string &who) {
+    return run_clang("--precompile", who + ".cppm", who + ".pcm") &&
+           run_clang("-c", who + ".pcm", who + ".o");
   }
   [[nodiscard]] bool compile_impl(const std::string &who) {
     using namespace std::string_literals;
-    return run_clang("-fmodule-file="s + name() + ".pcm -c " + who +
-                     ".cpp -o " + who + ".o");
+    return run_clang("-fmodule-file="s + name() + ".pcm -c", who + ".cpp",
+                     who + ".o");
   }
 
   [[nodiscard]] auto parts() const {
@@ -103,8 +115,8 @@ public:
   [[nodiscard]] bool build() override {
     const auto p = parts();
     return std::all_of(p.begin(), p.end(),
-                       [this](auto w) { return compile(w); }) &&
-           compile(name()) &&
+                       [this](auto w) { return compile_part(w); }) &&
+           compile_part(name()) &&
            std::all_of(m_impls.begin(), m_impls.end(),
                        [this](auto w) { return compile_impl(w); });
   }
@@ -164,13 +176,25 @@ public:
     if (!seq::build())
       return false;
 
-    std::string cmd = ld() + " -o " + name() + ".exe";
+    const auto exe = name() + ".exe";
+    const auto exe_time = last_write_time(exe);
+
+    bool any_is_newer = false;
+    std::string cmd = ld() + " -o " + exe;
     for (const auto &o : objects()) {
+      const auto obj = o + ".o";
+      const auto otime = last_write_time(obj);
+      if (otime > exe_time)
+        any_is_newer = true;
+
       using namespace std::string_literals;
-      cmd.append(" "s + o + ".o");
+      cmd.append(" "s + obj);
     }
 
-    std::cerr << cmd << std::endl;
+    if (!any_is_newer)
+      return true;
+
+    std::cerr << "linking " << exe << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
 };
