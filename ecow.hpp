@@ -87,62 +87,6 @@ public:
   }
 };
 
-class mod : public unit {
-
-  strvec m_impls;
-  strvec m_parts;
-
-  [[nodiscard]] static bool compile_part(const std::string &who) {
-    return run_clang("--precompile", who + ".cppm", who + ".pcm") &&
-           run_clang("-c", who + ".pcm", who + ".o");
-  }
-  [[nodiscard]] bool compile_impl(const std::string &who) {
-    using namespace std::string_literals;
-    return run_clang("-fmodule-file="s + name() + ".pcm -c", who + ".cpp",
-                     who + ".o");
-  }
-
-  [[nodiscard]] auto parts() const {
-    strvec res;
-    std::transform(m_parts.begin(), m_parts.end(), std::back_inserter(res),
-                   [this](auto p) { return name() + "-" + p; });
-    return res;
-  }
-
-public:
-  using unit::unit;
-  void add_impl(std::string impl) { m_impls.push_back(impl); }
-  void add_part(std::string part) { m_parts.push_back(part); }
-
-  [[nodiscard]] bool build() override {
-    const auto p = parts();
-    return std::all_of(p.begin(), p.end(),
-                       [this](auto w) { return compile_part(w); }) &&
-           compile_part(name()) &&
-           std::all_of(m_impls.begin(), m_impls.end(),
-                       [this](auto w) { return compile_impl(w); });
-  }
-  [[nodiscard]] strvec objects() const override {
-    const auto pts = parts();
-
-    strvec res{};
-    std::copy(pts.begin(), pts.end(), std::back_inserter(res));
-    std::copy(m_impls.begin(), m_impls.end(), std::back_inserter(res));
-    res.push_back(name());
-    return res;
-  }
-};
-
-class sys : public unit {
-public:
-  using unit::unit;
-
-  [[nodiscard]] bool build() override {
-    return std::system(name().c_str()) == 0;
-  }
-  [[nodiscard]] strvec objects() const override { return strvec(); }
-};
-
 class seq : public unit {
   std::vector<std::shared_ptr<unit>> m_units;
 
@@ -168,6 +112,66 @@ public:
     }
     return res;
   }
+};
+
+class mod : public seq {
+
+  strvec m_impls;
+  strvec m_parts;
+
+  [[nodiscard]] static bool compile_part(const std::string &who) {
+    return run_clang("--precompile", who + ".cppm", who + ".pcm") &&
+           run_clang("-c", who + ".pcm", who + ".o");
+  }
+  [[nodiscard]] bool compile_impl(const std::string &who) {
+    using namespace std::string_literals;
+    return run_clang("-fmodule-file="s + name() + ".pcm -c", who + ".cpp",
+                     who + ".o");
+  }
+
+  [[nodiscard]] auto parts() const {
+    strvec res;
+    std::transform(m_parts.begin(), m_parts.end(), std::back_inserter(res),
+                   [this](auto p) { return name() + "-" + p; });
+    return res;
+  }
+
+public:
+  using seq::add_unit;
+  using seq::seq;
+  void add_impl(std::string impl) { m_impls.push_back(impl); }
+  void add_part(std::string part) { m_parts.push_back(part); }
+
+  [[nodiscard]] bool build() override {
+    const auto p = parts();
+    return std::all_of(p.begin(), p.end(),
+                       [this](auto w) { return compile_part(w); }) &&
+           compile_part(name()) &&
+           std::all_of(m_impls.begin(), m_impls.end(),
+                       [this](auto w) { return compile_impl(w); }) &&
+           seq::build();
+  }
+  [[nodiscard]] strvec objects() const override {
+    const auto pts = parts();
+    const auto super = seq::objects();
+
+    strvec res{};
+    std::copy(pts.begin(), pts.end(), std::back_inserter(res));
+    std::copy(m_impls.begin(), m_impls.end(), std::back_inserter(res));
+    res.push_back(name());
+    std::copy(super.begin(), super.end(), std::back_inserter(res));
+    return res;
+  }
+};
+
+class sys : public unit {
+public:
+  using unit::unit;
+
+  [[nodiscard]] bool build() override {
+    return std::system(name().c_str()) == 0;
+  }
+  [[nodiscard]] strvec objects() const override { return strvec(); }
 };
 
 class exe : public seq {
