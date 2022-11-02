@@ -27,5 +27,5 @@ int main(int argc, char **argv) {
   myapp->add_ref(m);
   myapp->add_unit<>("user");
 
-  return all.main(argc, argv);
+  return run_main(all, argc, argv);
 }

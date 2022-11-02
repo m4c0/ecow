@@ -2,8 +2,11 @@
 
 #include <filesystem>
 #include <iostream>
+#include <span>
 
 namespace ecow::impl {
+using args_t = std::span<char *>;
+
 [[nodiscard]] static inline auto last_write_time(auto path) {
   if (std::filesystem::exists(path))
     return std::filesystem::last_write_time(path);
