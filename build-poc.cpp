@@ -2,7 +2,7 @@
 
 using namespace ecow;
 
-int main() {
+int main(int argc, char **argv) {
   seq all{"all"};
 
   auto a = all.add_unit<exe>("a");
@@ -25,5 +25,5 @@ int main() {
 
   all.add_ref(a); // Tests if we can build incrementally
 
-  return all.build() ? 0 : 1;
+  return all.main(argc, argv);
 }

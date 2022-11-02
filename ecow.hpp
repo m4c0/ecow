@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <span>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -11,6 +12,7 @@ class unit {
   std::string m_name;
 
 protected:
+  using args_t = std::span<char *>;
   using strvec = std::vector<std::string>;
 
   [[nodiscard]] static inline auto last_write_time(auto path) {
@@ -65,12 +67,19 @@ protected:
     return std::system(cmd.c_str()) == 0;
   }
 
+  static inline void remove(std::string name) {
+    if (std::filesystem::exists(name)) {
+      std::cerr << "removing " << name << std::endl;
+      std::filesystem::remove(name);
+    }
+  }
+
 public:
   explicit unit(std::string name) : m_name{name} {}
 
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
 
-  [[nodiscard]] virtual bool build() {
+  [[nodiscard]] virtual bool build(args_t args) {
     const auto ext = ext_of(m_name);
     if (ext != "") {
       return run_clang("-c", m_name + ext, m_name + ".o");
@@ -80,10 +89,31 @@ public:
       return false;
     }
   }
+  virtual void clean(args_t args) { remove(m_name + ".o"); }
+
   [[nodiscard]] virtual strvec objects() const {
     strvec res{};
     res.push_back(name());
     return res;
+  }
+
+  [[nodiscard]] virtual int main(int argc, char **argv) {
+    auto args = args_t{argv, static_cast<size_t>(argc)};
+    switch (args.size()) {
+    case 0:
+      std::terminate();
+    case 1:
+      return build(args) ? 0 : 1;
+    case 2:
+      using namespace std::string_view_literals;
+      if (args[1] == "clean"sv) {
+        clean(args);
+        return 0;
+      }
+    default:
+      std::cerr << "I don't know how to do that" << std::endl;
+      return 1;
+    }
   }
 };
 
@@ -100,10 +130,15 @@ public:
   }
   void add_ref(std::shared_ptr<unit> ref) { m_units.push_back(ref); }
 
-  [[nodiscard]] virtual bool build() override {
+  [[nodiscard]] virtual bool build(args_t args) override {
     return std::all_of(m_units.begin(), m_units.end(),
-                       [](const auto &u) { return u->build(); });
+                       [args](const auto &u) { return u->build(args); });
   }
+  virtual void clean(args_t args) override {
+    std::for_each(m_units.begin(), m_units.end(),
+                  [args](const auto &u) { return u->clean(args); });
+  }
+
   [[nodiscard]] virtual strvec objects() const override {
     strvec res{};
     for (const auto &u : m_units) {
@@ -115,7 +150,6 @@ public:
 };
 
 class mod : public seq {
-
   strvec m_impls;
   strvec m_parts;
 
@@ -129,34 +163,40 @@ class mod : public seq {
                      who + ".o");
   }
 
-  [[nodiscard]] auto parts() const {
-    strvec res;
-    std::transform(m_parts.begin(), m_parts.end(), std::back_inserter(res),
-                   [this](auto p) { return name() + "-" + p; });
-    return res;
+  static void remove_part(const std::string &who) {
+    remove(who + ".pcm");
+    remove(who + ".o");
   }
+  static void remove_impl(const std::string &who) { remove(who + ".o"); }
 
 public:
   using seq::add_unit;
   using seq::seq;
   void add_impl(std::string impl) { m_impls.push_back(impl); }
-  void add_part(std::string part) { m_parts.push_back(part); }
+  void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 
-  [[nodiscard]] bool build() override {
-    const auto p = parts();
-    return std::all_of(p.begin(), p.end(),
+  [[nodiscard]] bool build(args_t args) override {
+    return std::all_of(m_parts.begin(), m_parts.end(),
                        [this](auto w) { return compile_part(w); }) &&
            compile_part(name()) &&
            std::all_of(m_impls.begin(), m_impls.end(),
                        [this](auto w) { return compile_impl(w); }) &&
-           seq::build();
+           seq::build(args);
   }
+  virtual void clean(args_t args) override {
+    std::for_each(m_parts.begin(), m_parts.end(),
+                  [args](const auto &u) { return remove_part(u); });
+    remove_part(name());
+    std::for_each(m_impls.begin(), m_impls.end(),
+                  [args](const auto &u) { return remove_impl(u); });
+    seq::clean(args);
+  }
+
   [[nodiscard]] strvec objects() const override {
-    const auto pts = parts();
     const auto super = seq::objects();
 
     strvec res{};
-    std::copy(pts.begin(), pts.end(), std::back_inserter(res));
+    std::copy(m_parts.begin(), m_parts.end(), std::back_inserter(res));
     std::copy(m_impls.begin(), m_impls.end(), std::back_inserter(res));
     res.push_back(name());
     std::copy(super.begin(), super.end(), std::back_inserter(res));
@@ -168,9 +208,11 @@ class sys : public unit {
 public:
   using unit::unit;
 
-  [[nodiscard]] bool build() override {
+  [[nodiscard]] bool build(args_t args) override {
     return std::system(name().c_str()) == 0;
   }
+  void clean(args_t args) override {}
+
   [[nodiscard]] strvec objects() const override { return strvec(); }
 };
 
@@ -178,8 +220,8 @@ class exe : public seq {
 public:
   using seq::seq;
 
-  [[nodiscard]] bool build() override {
-    if (!seq::build())
+  [[nodiscard]] bool build(args_t args) override {
+    if (!seq::build(args))
       return false;
 
     const auto exe = name() + ".exe";
@@ -202,6 +244,10 @@ public:
 
     std::cerr << "linking " << exe << std::endl;
     return std::system(cmd.c_str()) == 0;
+  }
+  void clean(args_t args) override {
+    seq::clean(args);
+    remove(name() + ".exe");
   }
 };
 } // namespace ecow
