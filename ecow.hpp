@@ -224,11 +224,10 @@ public:
     if (!seq::build(args))
       return false;
 
-    const auto exe = name() + ".exe";
-    const auto exe_time = last_write_time(exe);
+    const auto exe_time = last_write_time(name());
 
     bool any_is_newer = false;
-    std::string cmd = ld() + " -o " + exe;
+    std::string cmd = ld() + " -o " + name();
     for (const auto &o : objects()) {
       const auto obj = o + ".o";
       const auto otime = last_write_time(obj);
@@ -242,12 +241,32 @@ public:
     if (!any_is_newer)
       return true;
 
-    std::cerr << "linking " << exe << std::endl;
+    std::cerr << "linking " << name() << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
   void clean(args_t args) override {
     seq::clean(args);
     remove(name() + ".exe");
   }
+};
+
+class app : public exe {
+  [[nodiscard]] static inline auto exe_name(const std::string &name) {
+#ifdef __APPLE__
+    auto path = name + ".app/Contents/MacOS";
+    std::filesystem::create_directories(path);
+    return path + "/" + name;
+#elif _WIN32
+    return name + ".exe";
+#else
+    return name;
+#endif
+  }
+
+public:
+  explicit app(const std::string &name) : exe{exe_name(name)} {}
+
+  [[nodiscard]] bool build(args_t args) override { return exe::build(args); }
+  void clean(args_t args) override { exe::clean(args); }
 };
 } // namespace ecow
