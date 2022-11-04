@@ -19,7 +19,7 @@ class app : public exe {
 public:
   explicit app(const std::string &name) : exe{exe_name(name)} {}
 
-  [[nodiscard]] bool build(args_t args) override { return exe::build(args); }
-  void clean(args_t args) override { exe::clean(args); }
+  [[nodiscard]] bool build() override { return exe::build(); }
+  void clean() override { exe::clean(); }
 };
 } // namespace ecow

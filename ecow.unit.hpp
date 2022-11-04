@@ -10,7 +10,6 @@ class unit {
   std::string m_name;
 
 protected:
-  using args_t = impl::args_t;
   using strvec = std::vector<std::string>;
 
 public:
@@ -18,7 +17,7 @@ public:
 
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
 
-  [[nodiscard]] virtual bool build(args_t args) {
+  [[nodiscard]] virtual bool build() {
     const auto ext = impl::ext_of(m_name);
     if (ext != "") {
       return impl::run_clang("-c", m_name + ext, m_name + ".o");
@@ -28,7 +27,7 @@ public:
       return false;
     }
   }
-  virtual void clean(args_t args) { impl::remove(m_name + ".o"); }
+  virtual void clean() { impl::remove(m_name + ".o"); }
 
   [[nodiscard]] virtual strvec objects() const {
     strvec res{};

@@ -7,10 +7,10 @@ class sys : public unit {
 public:
   using unit::unit;
 
-  [[nodiscard]] bool build(args_t args) override {
+  [[nodiscard]] bool build() override {
     return std::system(name().c_str()) == 0;
   }
-  void clean(args_t args) override {}
+  void clean() override {}
 
   [[nodiscard]] strvec objects() const override { return strvec(); }
 };

@@ -7,16 +7,16 @@
 
 namespace ecow {
 [[nodiscard]] static inline int run_main(unit &u, int argc, char **argv) {
-  auto args = impl::args_t{argv, static_cast<size_t>(argc)};
+  auto args = std::span{argv, static_cast<size_t>(argc)};
   switch (args.size()) {
   case 0:
     std::terminate();
   case 1:
-    return u.build(args) ? 0 : 1;
+    return u.build() ? 0 : 1;
   case 2:
     using namespace std::string_view_literals;
     if (args[1] == "clean"sv) {
-      u.clean(args);
+      u.clean();
       return 0;
     }
   default:

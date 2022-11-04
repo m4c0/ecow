@@ -7,8 +7,8 @@ class exe : public seq {
 public:
   using seq::seq;
 
-  [[nodiscard]] bool build(args_t args) override {
-    if (!seq::build(args))
+  [[nodiscard]] bool build() override {
+    if (!seq::build())
       return false;
 
     const auto exe_time = impl::last_write_time(name());
@@ -31,8 +31,8 @@ public:
     std::cerr << "linking " << name() << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
-  void clean(args_t args) override {
-    seq::clean(args);
+  void clean() override {
+    seq::clean();
     impl::remove(name() + ".exe");
   }
 };

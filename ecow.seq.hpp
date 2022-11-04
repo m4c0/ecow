@@ -19,13 +19,13 @@ public:
   }
   void add_ref(std::shared_ptr<unit> ref) { m_units.push_back(ref); }
 
-  [[nodiscard]] virtual bool build(args_t args) override {
+  [[nodiscard]] virtual bool build() override {
     return std::all_of(m_units.begin(), m_units.end(),
-                       [args](const auto &u) { return u->build(args); });
+                       [](const auto &u) { return u->build(); });
   }
-  virtual void clean(args_t args) override {
+  virtual void clean() override {
     std::for_each(m_units.begin(), m_units.end(),
-                  [args](const auto &u) { return u->clean(args); });
+                  [](const auto &u) { return u->clean(); });
   }
 
   [[nodiscard]] virtual strvec objects() const override {

@@ -29,21 +29,21 @@ public:
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 
-  [[nodiscard]] bool build(args_t args) override {
+  [[nodiscard]] bool build() override {
     return std::all_of(m_parts.begin(), m_parts.end(),
                        [this](auto w) { return compile_part(w); }) &&
            compile_part(name()) &&
            std::all_of(m_impls.begin(), m_impls.end(),
                        [this](auto w) { return compile_impl(w); }) &&
-           seq::build(args);
+           seq::build();
   }
-  virtual void clean(args_t args) override {
+  virtual void clean() override {
     std::for_each(m_parts.begin(), m_parts.end(),
-                  [args](const auto &u) { return remove_part(u); });
+                  [](const auto &u) { return remove_part(u); });
     remove_part(name());
     std::for_each(m_impls.begin(), m_impls.end(),
-                  [args](const auto &u) { return remove_impl(u); });
-    seq::clean(args);
+                  [](const auto &u) { return remove_impl(u); });
+    seq::clean();
   }
 
   [[nodiscard]] strvec objects() const override {
