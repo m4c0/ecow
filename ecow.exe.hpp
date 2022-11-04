@@ -4,6 +4,9 @@
 
 namespace ecow {
 class exe : public seq {
+protected:
+  [[nodiscard]] virtual std::string exe_name() const { return name(); }
+
 public:
   using seq::seq;
 
@@ -11,10 +14,10 @@ public:
     if (!seq::build())
       return false;
 
-    const auto exe_time = impl::last_write_time(name());
+    const auto exe_time = impl::last_write_time(exe_name());
 
     bool any_is_newer = false;
-    std::string cmd = impl::ld() + " -o " + name();
+    std::string cmd = impl::ld() + " -o " + exe_name();
     for (const auto &o : objects()) {
       const auto obj = o + ".o";
       const auto otime = impl::last_write_time(obj);
@@ -33,7 +36,7 @@ public:
   }
   void clean() override {
     seq::clean();
-    impl::remove(name() + ".exe");
+    impl::remove(exe_name() + ".exe");
   }
 };
 } // namespace ecow
