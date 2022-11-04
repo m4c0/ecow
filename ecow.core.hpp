@@ -5,6 +5,19 @@
 #include <span>
 
 namespace ecow::impl {
+class target {
+public:
+  virtual ~target() {}
+  virtual std::string cxx() = 0;
+};
+static std::unique_ptr<target> &current_target() {
+  static std::unique_ptr<target> i{};
+  return i;
+}
+template <typename T, typename... Args>
+static void make_target(Args &&...args) {
+  current_target().reset(new T{std::forward<Args>(args)...});
+}
 
 [[nodiscard]] static inline auto last_write_time(auto path) {
   if (std::filesystem::exists(path))
@@ -16,14 +29,9 @@ namespace ecow::impl {
   if (const char *exe = std::getenv("CXX")) {
     return exe;
   }
-#ifdef __APPLE__
-  return "/usr/local/opt/llvm/bin/clang++ -isysroot "
-         "/Applications/Xcode.app/Contents/Developer/Platforms/"
-         "MacOSX.platform/Developer/SDKs/MacOSX.sdk";
-#elif _WIN32
-  return "clang++ -fno-ms-compatibility";
+#if _WIN32
 #else
-  return "clang++";
+  return current_target()->cxx();
 #endif
 }
 [[nodiscard]] static inline std::string ld() {
