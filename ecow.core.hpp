@@ -1,22 +1,19 @@
 #pragma once
 
+#ifdef __APPLE__
+#include "ecow.apple.hpp"
+#elif _WIN32
+#include "ecow.win32.hpp"
+#endif
+
 #include <filesystem>
 #include <iostream>
 #include <span>
 
 namespace ecow::impl {
-class target {
-public:
-  virtual ~target() {}
-  virtual std::string cxx() = 0;
-};
-static std::unique_ptr<target> &current_target() {
-  static std::unique_ptr<target> i{};
+static target &current_target() {
+  static target i{};
   return i;
-}
-template <typename T, typename... Args>
-static void make_target(Args &&...args) {
-  current_target().reset(new T{std::forward<Args>(args)...});
 }
 
 [[nodiscard]] static inline auto last_write_time(auto path) {
@@ -29,16 +26,13 @@ static void make_target(Args &&...args) {
   if (const char *exe = std::getenv("CXX")) {
     return exe;
   }
-#if _WIN32
-#else
-  return current_target()->cxx();
-#endif
+  return current_target().cxx();
 }
 [[nodiscard]] static inline std::string ld() {
   if (const char *exe = std::getenv("LD")) {
     return exe;
   }
-  return "clang++";
+  return current_target().ld();
 }
 
 [[nodiscard]] static inline std::string ext_of(const std::string &who) {

@@ -1,7 +1,7 @@
 #pragma once
-#include "ecow.core.hpp"
 
 #include <cstdlib>
+#include <string>
 
 namespace ecow::impl {
 [[nodiscard]] static inline std::string popen(const std::string &cmd) {
@@ -13,24 +13,22 @@ namespace ecow::impl {
   return res;
 }
 
-class native_target : public target {
-  std::string m_sdk_path;
+class target {
   std::string m_extra_cflags{};
 
 public:
-  native_target() : native_target("macosx") {}
-  native_target(const char *sdk) {
+  target() : target("macosx") {}
+  target(const char *sdk) {
     using namespace std::string_literals;
-    m_sdk_path = impl::popen("xcrun --show-sdk-path --sdk "s + sdk);
+    m_extra_cflags =
+        "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk "s + sdk);
     if (sdk == "iphoneos"s) {
-      m_extra_cflags = " -target arm64-apple-ios13.0";
+      m_extra_cflags += " -target arm64-apple-ios13.0";
     }
   }
-  std::string cxx() override {
-    using namespace std::string_literals;
-    return "/usr/local/opt/llvm/bin/clang++ -isysroot " + m_sdk_path +
-           m_extra_cflags;
+  [[nodiscard]] std::string cxx() const {
+    return "/usr/local/opt/llvm/bin/clang++ " + m_extra_cflags;
   }
+  [[nodiscard]] std::string ld() const { return "clang++ " + m_extra_cflags; }
 };
-
 } // namespace ecow::impl

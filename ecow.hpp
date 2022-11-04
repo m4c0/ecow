@@ -5,12 +5,6 @@
 #include "ecow.mod.hpp"
 #include "ecow.sys.hpp"
 
-#ifdef __APPLE__
-#include "ecow.apple.hpp"
-#elif _WIN32
-#include "ecow.win32.hpp"
-#endif
-
 namespace ecow {
 [[nodiscard]] static inline int run_main(unit &u, int argc, char **argv) {
   auto args = std::span{argv, static_cast<size_t>(argc)};
@@ -18,7 +12,6 @@ namespace ecow {
   case 0:
     std::terminate();
   case 1:
-    impl::make_target<impl::native_target>();
     break;
   case 2:
     using namespace std::string_view_literals;
@@ -28,7 +21,7 @@ namespace ecow {
     }
     // TODO: if arg is android
 #ifdef __APPLE__
-    impl::make_target<impl::native_target>(argv[1]);
+    impl::current_target() = {argv[1]};
 #endif
     break;
   default:

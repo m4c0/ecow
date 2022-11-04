@@ -1,8 +1,11 @@
 #pragma once
-#include "ecow.core.hpp"
+#include <string>
 
 namespace ecow::impl {
-class native_target : public target {
-  std::string cxx() override { return "clang++ -fno-ms-compatibility"; }
+class target {
+  [[nodiscard]] std::string cxx() const {
+    return "clang++ -fno-ms-compatibility";
+  }
+  [[nodiscard]] std::string ld() const { return "clang++"; }
 };
 } // namespace ecow::impl
