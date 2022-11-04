@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <filesystem>
 #include <string>
 
 namespace ecow::impl {
@@ -15,6 +16,7 @@ namespace ecow::impl {
 
 class target {
   std::string m_extra_cflags{};
+  std::string m_extra_path{"Contents/MacOS"};
 
 public:
   target() : target("macosx") {}
@@ -24,11 +26,19 @@ public:
         "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk "s + sdk);
     if (sdk == "iphoneos"s) {
       m_extra_cflags += " -target arm64-apple-ios13.0";
+      m_extra_path = "";
     }
   }
+
   [[nodiscard]] std::string cxx() const {
     return "/usr/local/opt/llvm/bin/clang++ " + m_extra_cflags;
   }
   [[nodiscard]] std::string ld() const { return "clang++ " + m_extra_cflags; }
+
+  [[nodiscard]] std::string app_exe_name(const std::string &name) const {
+    auto path = name + ".app/" + m_extra_path;
+    std::filesystem::create_directories(path);
+    return path + "/" + name;
+  }
 };
 } // namespace ecow::impl

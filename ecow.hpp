@@ -22,8 +22,8 @@ namespace ecow {
     // TODO: if arg is android
 #ifdef __APPLE__
     impl::current_target() = {argv[1]};
-#endif
     break;
+#endif
   default:
     std::cerr << "I don't know how to do that" << std::endl;
     return 1;

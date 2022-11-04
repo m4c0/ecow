@@ -7,5 +7,9 @@ class target {
     return "clang++ -fno-ms-compatibility";
   }
   [[nodiscard]] std::string ld() const { return "clang++"; }
+
+  [[nodiscard]] std::string app_exe_name(const std::string &name) const {
+    return name + ".exe";
+  }
 };
 } // namespace ecow::impl
