@@ -54,8 +54,9 @@ static target &current_target() {
     return true;
 
   std::cerr << "compiling " << to << std::endl;
-  const auto cmd = cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=. " +
-                   args + " " + from + " -o " + to;
+  const auto cmd = cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=" +
+                   impl::current_target().build_folder() + " " + args + " " +
+                   from + " -o " + to;
   return std::system(cmd.c_str()) == 0;
 }
 

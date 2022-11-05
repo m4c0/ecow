@@ -11,5 +11,7 @@ class target {
   [[nodiscard]] std::string app_exe_name(const std::string &name) const {
     return name + ".exe";
   }
+
+  [[nodiscard]] std::string build_folder() const { return "out/"; }
 };
 } // namespace ecow::impl

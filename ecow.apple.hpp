@@ -17,17 +17,20 @@ namespace ecow::impl {
 class target {
   std::string m_extra_cflags{};
   std::string m_extra_path{"Contents/MacOS"};
+  std::string m_build_folder{};
 
 public:
   target() : target("macosx") {}
   target(const char *sdk) {
     using namespace std::string_literals;
+    m_build_folder = "out/"s + sdk + "/";
     m_extra_cflags =
         "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk "s + sdk);
     if (sdk == "iphoneos"s) {
       m_extra_cflags += " -target arm64-apple-ios13.0";
       m_extra_path = "";
     }
+    std::filesystem::create_directories(m_build_folder);
   }
 
   [[nodiscard]] std::string cxx() const {
@@ -40,5 +43,7 @@ public:
     std::filesystem::create_directories(path);
     return path + "/" + name;
   }
+
+  [[nodiscard]] std::string build_folder() const { return m_build_folder; }
 };
 } // namespace ecow::impl

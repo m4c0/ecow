@@ -19,7 +19,7 @@ public:
     bool any_is_newer = false;
     std::string cmd = impl::ld() + " -o " + exe_name();
     for (const auto &o : objects()) {
-      const auto obj = o + ".o";
+      const auto obj = obj_name(o);
       const auto otime = impl::last_write_time(obj);
       if (otime > exe_time)
         any_is_newer = true;

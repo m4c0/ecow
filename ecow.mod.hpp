@@ -8,20 +8,22 @@ class mod : public seq {
   strvec m_parts;
 
   [[nodiscard]] static bool compile_part(const std::string &who) {
-    return impl::run_clang("--precompile", who + ".cppm", who + ".pcm") &&
-           impl::run_clang("-c", who + ".pcm", who + ".o");
+    return impl::run_clang("--precompile", who + ".cppm", pcm_name(who)) &&
+           impl::run_clang("-c", pcm_name(who), obj_name(who));
   }
   [[nodiscard]] bool compile_impl(const std::string &who) {
     using namespace std::string_literals;
-    return impl::run_clang("-fmodule-file="s + name() + ".pcm -c", who + ".cpp",
-                           who + ".o");
+    return impl::run_clang("-fmodule-file="s + pcm_name(name()) + " -c",
+                           who + ".cpp", obj_name(who));
   }
 
   static void remove_part(const std::string &who) {
-    impl::remove(who + ".pcm");
-    impl::remove(who + ".o");
+    impl::remove(pcm_name(who));
+    impl::remove(obj_name(who));
   }
-  static void remove_impl(const std::string &who) { impl::remove(who + ".o"); }
+  static void remove_impl(const std::string &who) {
+    impl::remove(obj_name(who));
+  }
 
 public:
   using seq::add_unit;
