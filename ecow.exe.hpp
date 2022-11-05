@@ -4,11 +4,19 @@
 
 namespace ecow {
 class exe : public seq {
+  [[nodiscard]] auto final_exe_name() const {
+    return impl::current_target().build_folder() + exe_name();
+  }
+
 protected:
   [[nodiscard]] virtual std::string exe_name() const { return name(); }
 
 public:
   using seq::seq;
+
+  [[nodiscard]] std::filesystem::path exe_path() const {
+    return {final_exe_name()};
+  }
 
   [[nodiscard]] virtual bool build(const std::string &flags = "") override {
     using namespace std::string_literals;
@@ -16,13 +24,11 @@ public:
     if (!seq::build(flags))
       return false;
 
-    const auto exe_time = impl::last_write_time(exe_name());
+    const auto exe_nm = final_exe_name();
+    const auto exe_time = impl::last_write_time(exe_nm);
 
     bool any_is_newer = false;
-    std::string cmd = impl::ld() + " -o " + exe_name();
-    for (const auto &f : frameworks()) {
-      cmd.append(" -framework "s + f);
-    }
+    std::string cmd = impl::ld() + " -o " + exe_nm;
     for (const auto &o : objects()) {
       const auto obj = obj_name(o);
       const auto otime = impl::last_write_time(obj);
@@ -35,12 +41,16 @@ public:
     if (!any_is_newer)
       return true;
 
-    std::cerr << "linking " << exe_name() << std::endl;
+    for (const auto &f : frameworks()) {
+      cmd.append(" -framework "s + f);
+    }
+
+    std::cerr << "linking " << exe_nm << std::endl;
     return std::system(cmd.c_str()) == 0;
   }
   void clean() override {
     seq::clean();
-    impl::remove(exe_name() + ".exe");
+    impl::remove(final_exe_name() + ".exe");
   }
 };
 } // namespace ecow

@@ -5,7 +5,8 @@
 namespace ecow {
 class sys : public unit {
 public:
-  using unit::unit;
+  explicit sys(const std::string &path) : unit{path} {}
+  explicit sys(std::filesystem::path path) : unit{path.make_preferred()} {}
 
   [[nodiscard]] bool build(const std::string &flags = "") override {
     return std::system(name().c_str()) == 0;

@@ -40,7 +40,7 @@ public:
 
   [[nodiscard]] std::string app_exe_name(const std::string &name) const {
     auto path = name + ".app/" + m_extra_path;
-    std::filesystem::create_directories(path);
+    std::filesystem::create_directories(m_build_folder + path);
     return path + "/" + name;
   }
 

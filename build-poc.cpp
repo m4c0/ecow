@@ -17,11 +17,7 @@ int main(int argc, char **argv) {
   a->add_unit<>("dummy.mm"); // Just tests "mm" extension
 #endif
 
-#if _WIN32
-  all.add_unit<sys>("a.exe");
-#else
-  all.add_unit<sys>("./a.exe");
-#endif
+  all.add_unit<sys>(a->exe_path());
 
   auto myapp = all.add_unit<app>("my_app");
   myapp->add_ref(m);
