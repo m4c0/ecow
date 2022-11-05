@@ -28,6 +28,15 @@ public:
                   [](const auto &u) { return u->clean(); });
   }
 
+  [[nodiscard]] virtual strset frameworks() const override {
+    strset res{unit::frameworks()};
+    for (const auto &u : m_units) {
+      const auto fws = u->frameworks();
+      std::copy(fws.begin(), fws.end(), std::inserter(res, res.end()));
+    }
+    return res;
+  }
+
   [[nodiscard]] virtual strvec objects() const override {
     strvec res{};
     for (const auto &u : m_units) {
