@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   a->add_unit<>("dummy.mm"); // Just tests "mm" extension
 #endif
 
-  all.add_unit<sys>(a->exe_path());
+  all.add_unit<sys>(a->exe_path().make_preferred().string());
 
   auto myapp = all.add_unit<app>("my_app");
   myapp->add_ref(m);
