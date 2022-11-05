@@ -10,8 +10,8 @@ protected:
 public:
   using seq::seq;
 
-  [[nodiscard]] bool build() override {
-    if (!seq::build())
+  [[nodiscard]] virtual bool build(const std::string &flags = "") override {
+    if (!seq::build(flags))
       return false;
 
     const auto exe_time = impl::last_write_time(exe_name());

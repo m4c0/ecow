@@ -19,9 +19,9 @@ public:
   }
   void add_ref(std::shared_ptr<unit> ref) { m_units.push_back(ref); }
 
-  [[nodiscard]] virtual bool build() override {
+  [[nodiscard]] virtual bool build(const std::string &flags = "") override {
     return std::all_of(m_units.begin(), m_units.end(),
-                       [](const auto &u) { return u->build(); });
+                       [flags](const auto &u) { return u->build(flags); });
   }
   virtual void clean() override {
     std::for_each(m_units.begin(), m_units.end(),

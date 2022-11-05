@@ -24,15 +24,10 @@ public:
 
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
 
-  [[nodiscard]] virtual bool build() {
-    const auto ext = impl::ext_of(m_name);
-    if (ext != "") {
-      return impl::run_clang("-c", m_name + ext, obj_name(m_name));
-    } else {
-      std::cerr << "Unit not found with '.cpp' or '.mm' extension: " << m_name
-                << std::endl;
-      return false;
-    }
+  [[nodiscard]] virtual bool build(const std::string &flags = "") {
+    const auto ext =
+        std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
+    return impl::run_clang(flags + " -c", m_name + ext, obj_name(m_name));
   }
   virtual void clean() { impl::remove(obj_name(m_name)); }
 

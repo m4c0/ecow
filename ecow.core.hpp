@@ -35,16 +35,6 @@ static target &current_target() {
   return current_target().ld();
 }
 
-[[nodiscard]] static inline std::string ext_of(const std::string &who) {
-  if (std::filesystem::exists(who + ".cpp")) {
-    return ".cpp";
-  }
-  if (std::filesystem::exists(who + ".mm")) {
-    return ".mm";
-  }
-  return "";
-}
-
 [[nodiscard]] static inline bool run_clang(const std::string &args,
                                            const std::string &from,
                                            const std::string &to) {

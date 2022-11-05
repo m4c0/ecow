@@ -7,7 +7,7 @@ class sys : public unit {
 public:
   using unit::unit;
 
-  [[nodiscard]] bool build() override {
+  [[nodiscard]] bool build(const std::string &flags = "") override {
     return std::system(name().c_str()) == 0;
   }
   void clean() override {}

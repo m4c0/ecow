@@ -11,8 +11,5 @@ protected:
 
 public:
   explicit app(const std::string &name) : exe{name} {}
-
-  [[nodiscard]] bool build() override { return exe::build(); }
-  void clean() override { exe::clean(); }
 };
 } // namespace ecow

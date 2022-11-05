@@ -31,15 +31,15 @@ public:
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 
-  [[nodiscard]] bool build() override {
+  [[nodiscard]] bool build(const std::string &flags = "") override {
     return std::all_of(m_parts.begin(), m_parts.end(),
                        [this](auto w) { return compile_part(w); }) &&
            compile_part(name()) &&
            std::all_of(m_impls.begin(), m_impls.end(),
                        [this](auto w) { return compile_impl(w); }) &&
-           seq::build();
+           seq::build(flags);
   }
-  virtual void clean() override {
+  void clean() override {
     std::for_each(m_parts.begin(), m_parts.end(),
                   [](const auto &u) { return remove_part(u); });
     remove_part(name());
