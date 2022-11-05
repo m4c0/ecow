@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 
   a->add_unit<>("user");
 #ifdef __APPLE__
-  a->add_unit<>("dummy"); // Just tests "mm" extension
+  a->add_unit<>("dummy.mm"); // Just tests "mm" extension
 #endif
 
 #if _WIN32
