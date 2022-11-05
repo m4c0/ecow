@@ -29,6 +29,7 @@ namespace ecow {
     return 1;
   }
 
+  std::filesystem::create_directories(impl::current_target().build_folder());
   return u.build() ? 0 : 1;
 }
 } // namespace ecow

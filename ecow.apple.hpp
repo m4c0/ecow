@@ -30,7 +30,6 @@ public:
       m_extra_cflags += " -target arm64-apple-ios13.0";
       m_extra_path = "";
     }
-    std::filesystem::create_directories(m_build_folder);
   }
 
   [[nodiscard]] std::string cxx() const {
