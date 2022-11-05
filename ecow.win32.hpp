@@ -3,6 +3,7 @@
 
 namespace ecow::impl {
 class target {
+public:
   [[nodiscard]] std::string cxx() const {
     return "clang++ -fno-ms-compatibility";
   }
