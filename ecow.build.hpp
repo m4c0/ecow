@@ -1,10 +1,17 @@
 #pragma once
 
+#ifdef __APPLE__
+#include "ecow.apple.hpp"
+#elif _WIN32
+#include "ecow.win32.hpp"
+#endif
+
 namespace ecow::impl {
-[[nodiscard]] static inline bool build(unit &u, impl::target t) {
+template <typename T, typename... Args>
+[[nodiscard]] static inline bool build(unit &u, Args &&...args) {
   auto &tgt = impl::current_target();
-  tgt = t;
-  std::filesystem::create_directories(tgt.build_folder());
+  tgt.reset(new T{std::forward<Args>(args)...});
+  std::filesystem::create_directories(tgt->build_folder());
   return u.build();
 }
 } // namespace ecow::impl
@@ -12,19 +19,20 @@ namespace ecow {
 [[nodiscard]] static inline int run_main(unit &u, int argc, char **argv) {
   auto args = std::span{argv, static_cast<size_t>(argc)}.subspan(1);
   if (args.empty()) {
-    return impl::build(u, {}) ? 0 : 1;
+    return impl::build<impl::host_target>(u) ? 0 : 1;
   }
   for (auto arg : args) {
     using namespace std::string_view_literals;
     if (arg == "clean"sv) {
-      u.clean();
+      std::cerr << "Removing 'out'" << std::endl;
+      std::filesystem::remove_all("out");
       continue;
     }
     if (arg == "android"sv) {
       continue;
     }
 #ifdef __APPLE__
-    if (!impl::build(u, {arg}))
+    if (!impl::build<impl::host_target>(u, arg))
       return 1;
 #else
     std::cerr << "I don't know how to do '" << arg << "'" << std::endl;

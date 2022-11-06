@@ -23,10 +23,6 @@ public:
     return std::all_of(m_units.begin(), m_units.end(),
                        [flags](const auto &u) { return u->build(flags); });
   }
-  virtual void clean() override {
-    std::for_each(m_units.begin(), m_units.end(),
-                  [](const auto &u) { return u->clean(); });
-  }
 
   [[nodiscard]] virtual strset frameworks() const override {
     strset res{unit::frameworks()};

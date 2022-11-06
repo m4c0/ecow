@@ -17,14 +17,6 @@ class mod : public seq {
                            who + ".cpp", obj_name(who));
   }
 
-  static void remove_part(const std::string &who) {
-    impl::remove(pcm_name(who));
-    impl::remove(obj_name(who));
-  }
-  static void remove_impl(const std::string &who) {
-    impl::remove(obj_name(who));
-  }
-
 public:
   using seq::add_unit;
   using seq::seq;
@@ -38,14 +30,6 @@ public:
            std::all_of(m_impls.begin(), m_impls.end(),
                        [this](auto w) { return compile_impl(w); }) &&
            seq::build(flags);
-  }
-  void clean() override {
-    std::for_each(m_parts.begin(), m_parts.end(),
-                  [](const auto &u) { return remove_part(u); });
-    remove_part(name());
-    std::for_each(m_impls.begin(), m_impls.end(),
-                  [](const auto &u) { return remove_impl(u); });
-    seq::clean();
   }
 
   [[nodiscard]] strvec objects() const override {

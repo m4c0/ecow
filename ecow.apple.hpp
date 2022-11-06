@@ -14,35 +14,39 @@ namespace ecow::impl {
   return res;
 }
 
-class target {
+class host_target : public target {
   std::string m_extra_cflags{};
   std::string m_extra_path{"Contents/MacOS"};
   std::string m_build_folder{};
 
+protected:
+  [[nodiscard]] std::string build_subfolder() const { return m_build_folder; }
+
 public:
   target() : target("macosx") {}
-  target(const char *sdk) {
+  target(const std::string &sdk) {
     using namespace std::string_literals;
-    m_build_folder = "out/"s + sdk + "/";
+    m_build_folder = sdk + "/";
     m_extra_cflags =
-        "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk "s + sdk);
+        "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
     if (sdk == "iphoneos"s) {
       m_extra_cflags += " -target arm64-apple-ios13.0";
       m_extra_path = "";
     }
   }
 
-  [[nodiscard]] std::string cxx() const {
+  [[nodiscard]] std::string cxx() const override {
     return "/usr/local/opt/llvm/bin/clang++ " + m_extra_cflags;
   }
-  [[nodiscard]] std::string ld() const { return "clang++ " + m_extra_cflags; }
+  [[nodiscard]] std::string ld() const override {
+    return "clang++ " + m_extra_cflags;
+  }
 
-  [[nodiscard]] std::string app_exe_name(const std::string &name) const {
+  [[nodiscard]] std::string
+  app_exe_name(const std::string &name) const override {
     auto path = name + ".app/" + m_extra_path;
     std::filesystem::create_directories(m_build_folder + path);
     return path + "/" + name;
   }
-
-  [[nodiscard]] std::string build_folder() const { return m_build_folder; }
 };
 } // namespace ecow::impl

@@ -5,7 +5,7 @@
 namespace ecow {
 class exe : public seq {
   [[nodiscard]] auto final_exe_name() const {
-    return impl::current_target().build_folder() + exe_name();
+    return impl::current_target()->build_folder() + exe_name();
   }
 
 protected:
@@ -13,10 +13,6 @@ protected:
 
 public:
   using seq::seq;
-
-  [[nodiscard]] std::filesystem::path exe_path() const {
-    return {final_exe_name()};
-  }
 
   [[nodiscard]] virtual bool build(const std::string &flags = "") override {
     using namespace std::string_literals;
@@ -47,10 +43,6 @@ public:
 
     std::cerr << "linking " << exe_nm << std::endl;
     return std::system(cmd.c_str()) == 0;
-  }
-  void clean() override {
-    seq::clean();
-    impl::remove(final_exe_name() + ".exe");
   }
 };
 } // namespace ecow

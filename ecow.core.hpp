@@ -1,18 +1,29 @@
 #pragma once
-
-#ifdef __APPLE__
-#include "ecow.apple.hpp"
-#elif _WIN32
-#include "ecow.win32.hpp"
-#endif
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <span>
 
 namespace ecow::impl {
-static target &current_target() {
-  static target i{};
+class target {
+protected:
+  [[nodiscard]] virtual std::string build_subfolder() const = 0;
+
+public:
+  virtual ~target() = default;
+
+  [[nodiscard]] virtual std::string cxx() const = 0;
+  [[nodiscard]] virtual std::string ld() const = 0;
+  [[nodiscard]] virtual std::string
+  app_exe_name(const std::string &name) const = 0;
+  [[nodiscard]] std::string build_folder() const {
+    return "out/" + build_subfolder() + "/";
+  }
+};
+static auto &current_target() {
+  static std::unique_ptr<target> i{};
   return i;
 }
 
@@ -26,13 +37,13 @@ static target &current_target() {
   if (const char *exe = std::getenv("CXX")) {
     return exe;
   }
-  return current_target().cxx();
+  return current_target()->cxx();
 }
 [[nodiscard]] static inline std::string ld() {
   if (const char *exe = std::getenv("LD")) {
     return exe;
   }
-  return current_target().ld();
+  return current_target()->ld();
 }
 
 [[nodiscard]] static inline bool run_clang(const std::string &args,
@@ -45,15 +56,8 @@ static target &current_target() {
 
   std::cerr << "compiling " << to << std::endl;
   const auto cmd = cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=" +
-                   impl::current_target().build_folder() + " " + args + " " +
+                   impl::current_target()->build_folder() + " " + args + " " +
                    from + " -o " + to;
   return std::system(cmd.c_str()) == 0;
-}
-
-static inline void remove(std::string name) {
-  if (std::filesystem::exists(name)) {
-    std::cerr << "removing " << name << std::endl;
-    std::filesystem::remove(name);
-  }
 }
 } // namespace ecow::impl

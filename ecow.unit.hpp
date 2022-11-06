@@ -16,10 +16,10 @@ protected:
   using strset = std::unordered_set<std::string>;
 
   [[nodiscard]] static auto pcm_name(const std::string &who) {
-    return impl::current_target().build_folder() + who + ".pcm";
+    return impl::current_target()->build_folder() + who + ".pcm";
   }
   [[nodiscard]] static auto obj_name(const std::string &who) {
-    return impl::current_target().build_folder() + who + ".o";
+    return impl::current_target()->build_folder() + who + ".o";
   }
 
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
@@ -32,7 +32,6 @@ public:
         std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
     return impl::run_clang(flags + " -c", m_name + ext, obj_name(m_name));
   }
-  virtual void clean() { impl::remove(obj_name(m_name)); }
 
   void add_framework(const std::string &name) {
 #ifdef __APPLE__
