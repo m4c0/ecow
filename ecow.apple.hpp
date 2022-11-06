@@ -20,11 +20,13 @@ class host_target : public target {
   std::string m_build_folder{};
 
 protected:
-  [[nodiscard]] std::string build_subfolder() const { return m_build_folder; }
+  [[nodiscard]] std::string build_subfolder() const override {
+    return m_build_folder;
+  }
 
 public:
-  target() : target("macosx") {}
-  target(const std::string &sdk) {
+  host_target() : host_target("macosx") {}
+  host_target(const std::string &sdk) {
     using namespace std::string_literals;
     m_build_folder = sdk + "/";
     m_extra_cflags =
