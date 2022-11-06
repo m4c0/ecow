@@ -1,14 +1,54 @@
 #pragma once
+
+#include "ecow.target.hpp"
+
+#include <filesystem>
 #include <string>
 
 namespace ecow::impl {
 class android_target : public target {
-  static constexpr const auto llvm =
-      "F:/Apps/Android/ndk-bundle/toolchains/llvm/prebuilt/windows-x86_64/";
-
+  std::string m_clang;
   std::string m_ld;
-  std::string m_extra_cflags;
   std::string m_target;
+
+  [[nodiscard]] static inline auto sdk_path() {
+    const auto env = std::getenv("ANDROID_SDK_ROOT");
+    if (!env)
+      throw std::runtime_error("ANDROID_SDK_ROOT undefined");
+
+    return std::filesystem::path{env};
+  }
+  [[nodiscard]] static inline auto find_latest_ndk() {
+    const auto sdk = sdk_path();
+
+    const auto ndk_bundle = sdk / "ndk-bundle";
+    if (std::filesystem::is_directory(ndk_bundle)) {
+      return ndk_bundle;
+    }
+
+    const auto ndk_root = sdk / "ndk";
+    if (!std::filesystem::is_directory(ndk_root) ||
+        std::filesystem::is_empty(ndk_root)) {
+      throw std::runtime_error("No NDK installed");
+    }
+    const auto ndk_iter = std::filesystem::directory_iterator{ndk_root};
+    std::filesystem::directory_entry max{};
+    for (auto x : ndk_iter) {
+      if (x > max)
+        max = x;
+    }
+    return max.path();
+  }
+
+  [[nodiscard]] static inline auto find_llvm() {
+    const auto ndk = find_latest_ndk();
+    const auto prebuilt = ndk / "toolchains" / "llvm" / "prebuilt";
+    if (!std::filesystem::is_directory(prebuilt) ||
+        std::filesystem::is_empty(prebuilt)) {
+      throw std::runtime_error("LLVM not found in NDK");
+    }
+    return (*std::filesystem::directory_iterator{prebuilt}).path();
+  }
 
 protected:
   [[nodiscard]] std::string build_subfolder() const override {
@@ -17,20 +57,28 @@ protected:
 
 public:
   explicit android_target(const std::string &tgt) : m_target{tgt} {
-    m_ld = std::string{llvm} + "bin/clang++";
-    m_extra_cflags =
-        " -fPIC -DANDROID -fdata-sections -ffunction-sections "
+    const auto llvm = find_llvm().string();
+
+    const auto flags =
+        "-fPIC -DANDROID -fdata-sections -ffunction-sections "
         "-funwind-tables "
         "-fstack-protector-strong -no-canonical-prefixes --target=" +
-        tgt + " --sysroot " + llvm + "sysroot";
+        tgt + " --sysroot " + llvm + "/sysroot";
+
+#ifdef __APPLE__
+    const auto clang = "/usr/local/opt/llvm/bin/clang++ ";
+#elif WIN32
+    const auto clang = "clang++ ";
+#else
+    const auto clang = "clang++-15 ";
+#endif
+
+    m_clang = clang + flags;
+    m_ld = llvm + "/bin/clang++ " + flags + " -shared -static-libstdc++";
   }
 
-  [[nodiscard]] std::string cxx() const override {
-    return "clang++ " + m_extra_cflags;
-  }
-  [[nodiscard]] std::string ld() const override {
-    return m_ld + " " + m_extra_cflags + " -shared -static-libstdc++";
-  }
+  [[nodiscard]] std::string cxx() const override { return m_clang; }
+  [[nodiscard]] std::string ld() const override { return m_ld; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
