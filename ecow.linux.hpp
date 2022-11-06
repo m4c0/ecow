@@ -1,4 +1,7 @@
 #pragma once
+
+#include "ecow.target.hpp"
+
 #include <string>
 
 namespace ecow::impl {

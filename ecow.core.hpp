@@ -1,27 +1,14 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
 
+#include "ecow.target.hpp"
+
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <span>
 
 namespace ecow::impl {
-class target {
-protected:
-  [[nodiscard]] virtual std::string build_subfolder() const = 0;
-
-public:
-  virtual ~target() = default;
-
-  [[nodiscard]] virtual std::string cxx() const = 0;
-  [[nodiscard]] virtual std::string ld() const = 0;
-  [[nodiscard]] virtual std::string
-  app_exe_name(const std::string &name) const = 0;
-  [[nodiscard]] std::string build_folder() const {
-    return "out/" + build_subfolder() + "/";
-  }
-};
 static auto &current_target() {
   static std::unique_ptr<target> i{};
   return i;

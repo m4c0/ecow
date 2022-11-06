@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ecow.target.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <string>
@@ -28,7 +30,7 @@ public:
   host_target() : host_target("macosx") {}
   host_target(const std::string &sdk) {
     using namespace std::string_literals;
-    m_build_folder = sdk + "/";
+    m_build_folder = sdk;
     m_extra_cflags =
         "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
     if (sdk == "iphoneos"s) {
@@ -47,7 +49,7 @@ public:
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
     auto path = name + ".app/" + m_extra_path;
-    std::filesystem::create_directories(m_build_folder + path);
+    std::filesystem::create_directories(build_folder() + path);
     return path + "/" + name;
   }
 };
