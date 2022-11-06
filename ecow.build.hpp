@@ -4,6 +4,8 @@
 #include "ecow.apple.hpp"
 #elif _WIN32
 #include "ecow.win32.hpp"
+#else
+#include "ecow.linux.hpp"
 #endif
 #include "ecow.droid.hpp"
 
