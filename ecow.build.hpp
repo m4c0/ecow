@@ -5,6 +5,7 @@
 #elif _WIN32
 #include "ecow.win32.hpp"
 #endif
+#include "ecow.droid.hpp"
 
 namespace ecow::impl {
 template <typename T, typename... Args>
@@ -29,6 +30,15 @@ namespace ecow {
       continue;
     }
     if (arg == "android"sv) {
+      if (!impl::build<impl::android_target>(u, "aarch64-none-linux-android26"))
+        return 1;
+      if (!impl::build<impl::android_target>(u,
+                                             "armv7-none-linux-androideabi26"))
+        return 1;
+      if (!impl::build<impl::android_target>(u, "i686-none-linux-android26"))
+        return 1;
+      if (!impl::build<impl::android_target>(u, "x86_64-none-linux-android26"))
+        return 1;
       continue;
     }
 #ifdef __APPLE__
