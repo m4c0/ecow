@@ -8,6 +8,9 @@
 #include "ecow.linux.hpp"
 #endif
 #include "ecow.droid.hpp"
+#include "ecow.unit.hpp"
+
+#include <iostream>
 
 namespace ecow::impl {
 template <typename T, typename... Args>
@@ -17,12 +20,10 @@ template <typename T, typename... Args>
   std::filesystem::create_directories(tgt->build_folder());
   return u.build();
 }
-} // namespace ecow::impl
-namespace ecow {
-[[nodiscard]] static inline int run_main(unit &u, int argc, char **argv) {
+[[nodiscard]] static inline bool run_main(unit &u, int argc, char **argv) {
   auto args = std::span{argv, static_cast<size_t>(argc)}.subspan(1);
   if (args.empty()) {
-    return impl::build<impl::host_target>(u) ? 0 : 1;
+    return impl::build<impl::host_target>(u);
   }
   for (auto arg : args) {
     using namespace std::string_view_literals;
@@ -32,25 +33,31 @@ namespace ecow {
       continue;
     }
     if (arg == "android"sv) {
-      if (!impl::build<impl::android_target>(u, "aarch64-none-linux-android26"))
-        return 1;
-      if (!impl::build<impl::android_target>(u,
-                                             "armv7-none-linux-androideabi26"))
-        return 1;
-      if (!impl::build<impl::android_target>(u, "i686-none-linux-android26"))
-        return 1;
-      if (!impl::build<impl::android_target>(u, "x86_64-none-linux-android26"))
-        return 1;
+      if (!build<android_target>(u, "aarch64-none-linux-android26") ||
+          !build<android_target>(u, "armv7-none-linux-androideabi26") ||
+          !build<android_target>(u, "i686-none-linux-android26") ||
+          !build<android_target>(u, "x86_64-none-linux-android26"))
+        return false;
       continue;
     }
 #ifdef __APPLE__
-    if (!impl::build<impl::host_target>(u, arg))
-      return 1;
+    return build<host_target>(u, arg);
 #else
     std::cerr << "I don't know how to do '" << arg << "'" << std::endl;
-    return 1;
+    return false;
 #endif
   }
-  return 0;
+  return true;
+}
+} // namespace ecow::impl
+
+namespace ecow {
+[[nodiscard]] static inline int run_main(unit &u, int argc, char **argv) {
+  try {
+    return impl::run_main(u, argc, argv);
+  } catch (const std::exception &e) {
+    std::cerr << "Unexpected failure: " << e.what() << std::endl;
+    return 1;
+  }
 }
 } // namespace ecow
