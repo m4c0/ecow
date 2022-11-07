@@ -18,7 +18,7 @@ namespace ecow::impl {
 
 class host_target : public target {
   std::string m_extra_cflags{};
-  std::string m_extra_path{"Contents/MacOS"};
+  std::string m_extra_path{"Contents/MacOS/"};
   std::string m_build_folder{};
 
 protected:
@@ -50,7 +50,7 @@ public:
   app_exe_name(const std::string &name) const override {
     auto path = name + ".app/" + m_extra_path;
     std::filesystem::create_directories(build_folder() + path);
-    return path + "/" + name;
+    return path + name;
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {
