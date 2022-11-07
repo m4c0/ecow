@@ -17,7 +17,7 @@ static auto &current_target() {
 [[nodiscard]] static inline auto last_write_time(auto path) {
   if (std::filesystem::exists(path))
     return std::filesystem::last_write_time(path);
-  return std::filesystem::file_time_type{};
+  return std::filesystem::file_time_type::min();
 }
 
 [[nodiscard]] static inline std::string cxx() {

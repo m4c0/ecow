@@ -74,7 +74,8 @@ public:
 #endif
 
     m_clang = clang + flags;
-    m_ld = llvm + "/bin/clang++ " + flags + " -shared -static-libstdc++";
+    m_ld = llvm + "/bin/clang++ " + flags +
+           " -shared -static-libstdc++ --gcc-toolchain=" + llvm;
   }
 
   [[nodiscard]] std::string cxx() const override { return m_clang; }
