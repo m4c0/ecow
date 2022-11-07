@@ -15,17 +15,17 @@
 
 namespace ecow::impl {
 template <typename T, typename... Args>
-[[nodiscard]] static inline bool build(unit &u, Args &&...args) {
+static inline void build(unit &u, Args &&...args) {
   auto &tgt = impl::current_target();
   tgt.reset(new T{std::forward<Args>(args)...});
   std::filesystem::create_directories(tgt->build_folder());
   u.build();
-  return true;
 }
-[[nodiscard]] static inline bool run_main(unit &u, int argc, char **argv) {
+static inline void run_main(unit &u, int argc, char **argv) {
   auto args = std::span{argv, static_cast<size_t>(argc)}.subspan(1);
   if (args.empty()) {
-    return build<host_target>(u);
+    build<host_target>(u);
+    return;
   }
   for (auto arg : args) {
     using namespace std::string_view_literals;
@@ -35,37 +35,29 @@ template <typename T, typename... Args>
       continue;
     }
     if (arg == "android"sv) {
-      if (!build<android_target>(u, "aarch64-none-linux-android26") ||
-          !build<android_target>(u, "armv7-none-linux-androideabi26") ||
-          !build<android_target>(u, "i686-none-linux-android26") ||
-          !build<android_target>(u, "x86_64-none-linux-android26"))
-        return false;
+      build<android_target>(u, "aarch64-none-linux-android26");
+      build<android_target>(u, "armv7-none-linux-androideabi26");
+      build<android_target>(u, "i686-none-linux-android26");
+      build<android_target>(u, "x86_64-none-linux-android26");
       continue;
     }
     if (arg == "wasm"sv) {
-      if (!build<wasm_target>(u))
-        return false;
+      build<wasm_target>(u);
       continue;
     }
 #ifdef __APPLE__
-    if (!build<host_target>(u, arg))
-      return false;
+    build<host_target>(u, arg);
 #else
-    std::cerr << "I don't know how to do '" << arg << "'" << std::endl;
-    return false;
+    throw std::runtime_error("I don't know how to do '"s + arg + "'");
 #endif
   }
-  return true;
 }
 } // namespace ecow::impl
 
 namespace ecow {
 [[nodiscard]] static inline int run_main(unit &u, int argc, char **argv) {
   try {
-    if (!impl::run_main(u, argc, argv))
-      return 1;
-
-    std::cerr << "done" << std::endl;
+    impl::run_main(u, argc, argv);
     return 0;
   } catch (const impl::clang_failed &e) {
     std::cerr << "`clang` failed to run. Command:" << std::endl
