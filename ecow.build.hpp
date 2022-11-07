@@ -41,7 +41,8 @@ template <typename T, typename... Args>
       continue;
     }
 #ifdef __APPLE__
-    return build<host_target>(u, arg);
+    if (!build<host_target>(u, arg))
+      continue;
 #else
     std::cerr << "I don't know how to do '" << arg << "'" << std::endl;
     return false;

@@ -13,9 +13,10 @@ int main(int argc, char **argv) {
   m->add_impl("impl");
 
   a->add_unit<>("user");
-#ifdef __APPLE__
-  a->add_unit<>("dummy.mm"); // Just tests "mm" extension
-#endif
+
+  // tests objc and otherplatform-specifics
+  auto dummy = a->add_unit<objc>("dummy.mm");
+  dummy->add_framework("Foundation");
 
   // TODO: define a way to build/run "host" tools (such as asset builders)
   // all.add_unit<sys>(a->exe_path().make_preferred().string());

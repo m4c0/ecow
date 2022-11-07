@@ -9,9 +9,9 @@
 namespace ecow {
 class unit {
   std::string m_name;
-  std::unordered_set<std::string> m_frameworks{};
 
 protected:
+  using feats = impl::target::features;
   using strvec = std::vector<std::string>;
   using strset = std::unordered_set<std::string>;
 
@@ -23,6 +23,9 @@ protected:
   }
 
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
+  [[nodiscard]] bool target_supports(feats f) const noexcept {
+    return impl::current_target()->supports(f);
+  }
 
 public:
   explicit unit(std::string name) : m_name{name} {}
@@ -33,13 +36,7 @@ public:
     return impl::run_clang(flags + " -c", m_name + ext, obj_name(m_name));
   }
 
-  void add_framework(const std::string &name) {
-#ifdef __APPLE__
-    m_frameworks.insert(name);
-#endif
-  }
-
-  [[nodiscard]] virtual strset frameworks() const { return m_frameworks; }
+  [[nodiscard]] virtual strset frameworks() const { return {}; }
 
   [[nodiscard]] virtual strvec objects() const {
     strvec res{};

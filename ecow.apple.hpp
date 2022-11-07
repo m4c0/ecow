@@ -52,5 +52,14 @@ public:
     std::filesystem::create_directories(build_folder() + path);
     return path + "/" + name;
   }
+
+  [[nodiscard]] virtual bool supports(features f) const override {
+    switch (f) {
+    case objective_c:
+      return true;
+    default:
+      return false;
+    }
+  }
 };
 } // namespace ecow::impl
