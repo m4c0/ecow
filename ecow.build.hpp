@@ -9,6 +9,7 @@
 #endif
 #include "ecow.droid.hpp"
 #include "ecow.unit.hpp"
+#include "ecow.wasm.hpp"
 
 #include <iostream>
 
@@ -37,6 +38,11 @@ template <typename T, typename... Args>
           !build<android_target>(u, "armv7-none-linux-androideabi26") ||
           !build<android_target>(u, "i686-none-linux-android26") ||
           !build<android_target>(u, "x86_64-none-linux-android26"))
+        return false;
+      continue;
+    }
+    if (arg == "wasm"sv) {
+      if (!build<wasm_target>(u))
         return false;
       continue;
     }

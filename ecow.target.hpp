@@ -7,6 +7,16 @@ class target {
 protected:
   [[nodiscard]] virtual std::string build_subfolder() const = 0;
 
+  [[nodiscard]] static inline std::string default_clang() {
+#ifdef __APPLE__
+    return "/usr/local/opt/llvm/bin/clang++ ";
+#elif WIN32
+    return "clang++ ";
+#else
+    return "clang++-15 ";
+#endif
+  }
+
 public:
   enum features {
     android_ndk,

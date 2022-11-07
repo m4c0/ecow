@@ -65,15 +65,7 @@ public:
         "-fstack-protector-strong -no-canonical-prefixes --target=" +
         tgt + " --sysroot " + llvm + "/sysroot";
 
-#ifdef __APPLE__
-    const auto clang = "/usr/local/opt/llvm/bin/clang++ ";
-#elif WIN32
-    const auto clang = "clang++ ";
-#else
-    const auto clang = "clang++-15 ";
-#endif
-
-    m_clang = clang + flags;
+    m_clang = default_clang() + flags;
     m_ld = llvm + "/bin/clang++ " + flags + " -shared -static-libstdc++";
   }
 

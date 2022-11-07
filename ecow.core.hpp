@@ -43,8 +43,8 @@ static auto &current_target() {
 
   std::cerr << "compiling " << to << std::endl;
   const auto cmd = cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=" +
-                   impl::current_target()->build_folder() + " " + args + " " +
-                   from + " -o " + to;
+                   current_target()->build_folder() + " " + args + " " + from +
+                   " -o " + to;
   return std::system(cmd.c_str()) == 0;
 }
 } // namespace ecow::impl
