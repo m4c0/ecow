@@ -23,7 +23,7 @@ template <typename T, typename... Args>
 [[nodiscard]] static inline bool run_main(unit &u, int argc, char **argv) {
   auto args = std::span{argv, static_cast<size_t>(argc)}.subspan(1);
   if (args.empty()) {
-    return impl::build<impl::host_target>(u);
+    return build<host_target>(u);
   }
   for (auto arg : args) {
     using namespace std::string_view_literals;
@@ -42,7 +42,7 @@ template <typename T, typename... Args>
     }
 #ifdef __APPLE__
     if (!build<host_target>(u, arg))
-      continue;
+      return false;
 #else
     std::cerr << "I don't know how to do '" << arg << "'" << std::endl;
     return false;
@@ -55,7 +55,11 @@ template <typename T, typename... Args>
 namespace ecow {
 [[nodiscard]] static inline int run_main(unit &u, int argc, char **argv) {
   try {
-    return impl::run_main(u, argc, argv);
+    if (!impl::run_main(u, argc, argv))
+      return 1;
+
+    std::cerr << "done" << std::endl;
+    return 0;
   } catch (const std::exception &e) {
     std::cerr << "Unexpected failure: " << e.what() << std::endl;
     return 1;
