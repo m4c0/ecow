@@ -14,10 +14,10 @@ protected:
 public:
   using seq::seq;
 
-  virtual void build(const std::string &flags = "") override {
+  virtual void build() override {
     using namespace std::string_literals;
 
-    seq::build(flags);
+    seq::build();
 
     const auto exe_nm = final_exe_name();
     const auto exe_time = impl::last_write_time(exe_nm);

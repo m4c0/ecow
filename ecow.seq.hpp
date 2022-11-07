@@ -19,9 +19,8 @@ public:
   }
   void add_ref(std::shared_ptr<unit> ref) { m_units.push_back(ref); }
 
-  virtual void build(const std::string &flags = "") override {
-    std::for_each(m_units.begin(), m_units.end(),
-                  [flags](const auto &u) { u->build(flags); });
+  virtual void build() override {
+    std::for_each(m_units.begin(), m_units.end(), std::mem_fn(&unit::build));
   }
 
   [[nodiscard]] virtual strset link_flags() const override {

@@ -24,13 +24,13 @@ public:
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 
-  void build(const std::string &flags = "") override {
+  void build() override {
     std::for_each(m_parts.begin(), m_parts.end(),
                   [this](auto w) { return compile_part(w); });
     compile_part(name());
     std::for_each(m_impls.begin(), m_impls.end(),
                   [this](auto w) { return compile_impl(w); });
-    seq::build(flags);
+    seq::build();
   }
 
   [[nodiscard]] strvec objects() const override {

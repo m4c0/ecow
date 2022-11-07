@@ -11,9 +11,9 @@ public:
     add_link_flag("-framework " + name);
   }
 
-  void build(const std::string &flags = "") override {
+  void build() override {
     if (target_supports(impl::target::objective_c))
-      unit::build(flags);
+      unit::build();
   }
 
   [[nodiscard]] virtual strvec objects() const override {

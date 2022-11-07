@@ -12,7 +12,7 @@ public:
   explicit sys(std::filesystem::path path)
       : unit{path.make_preferred().string()} {}
 
-  void build(const std::string &flags = "") override {
+  void build() override {
     if (std::system(name().c_str()) != 0)
       throw command_failed(name());
   }
