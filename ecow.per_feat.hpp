@@ -15,12 +15,11 @@ public:
     return (*m_map.try_emplace(f, name()).first).second;
   }
 
-  [[nodiscard]] bool build(const std::string &flags = "") override {
+  void build(const std::string &flags = "") override {
     for (auto &[f, u] : m_map) {
-      if (target_supports(f) && !u.build(flags))
-        return false;
+      if (target_supports(f))
+        u.build(flags);
     }
-    return true;
   }
   [[nodiscard]] strset link_flags() const override {
     strset res{};

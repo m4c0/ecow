@@ -19,7 +19,8 @@ template <typename T, typename... Args>
   auto &tgt = impl::current_target();
   tgt.reset(new T{std::forward<Args>(args)...});
   std::filesystem::create_directories(tgt->build_folder());
-  return u.build();
+  u.build();
+  return true;
 }
 [[nodiscard]] static inline bool run_main(unit &u, int argc, char **argv) {
   auto args = std::span{argv, static_cast<size_t>(argc)}.subspan(1);

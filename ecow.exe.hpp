@@ -14,11 +14,10 @@ protected:
 public:
   using seq::seq;
 
-  [[nodiscard]] virtual bool build(const std::string &flags = "") override {
+  virtual void build(const std::string &flags = "") override {
     using namespace std::string_literals;
 
-    if (!seq::build(flags))
-      return false;
+    seq::build(flags);
 
     const auto exe_nm = final_exe_name();
     const auto exe_time = impl::last_write_time(exe_nm);
@@ -35,7 +34,7 @@ public:
     }
 
     if (!any_is_newer)
-      return true;
+      return;
 
     for (const auto &f : link_flags()) {
       cmd.append(" ");
@@ -43,7 +42,8 @@ public:
     }
 
     std::cerr << "linking " << exe_nm << std::endl;
-    return std::system(cmd.c_str()) == 0;
+    if (std::system(cmd.c_str()) != 0)
+      throw impl::clang_failed{cmd};
   }
 };
 } // namespace ecow
