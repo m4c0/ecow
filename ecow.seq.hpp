@@ -24,10 +24,10 @@ public:
                        [flags](const auto &u) { return u->build(flags); });
   }
 
-  [[nodiscard]] virtual strset frameworks() const override {
-    strset res{unit::frameworks()};
+  [[nodiscard]] virtual strset link_flags() const override {
+    strset res{unit::link_flags()};
     for (const auto &u : m_units) {
-      const auto fws = u->frameworks();
+      const auto fws = u->link_flags();
       std::copy(fws.begin(), fws.end(), std::inserter(res, res.end()));
     }
     return res;

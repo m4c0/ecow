@@ -4,12 +4,12 @@
 
 namespace ecow {
 class objc : public unit {
-  std::unordered_set<std::string> m_frameworks{};
-
 public:
   using unit::unit;
 
-  void add_framework(const std::string &name) { m_frameworks.insert(name); }
+  void add_framework(const std::string &name) {
+    add_link_flag("-framework " + name);
+  }
 
   [[nodiscard]] virtual bool build(const std::string &flags = "") override {
     return !target_supports(impl::target::objective_c) || unit::build(flags);
@@ -20,8 +20,9 @@ public:
                                                       : strvec{};
   }
 
-  [[nodiscard]] virtual strset frameworks() const override {
-    return target_supports(impl::target::objective_c) ? m_frameworks : strset{};
+  [[nodiscard]] virtual strset link_flags() const override {
+    return target_supports(impl::target::objective_c) ? unit::link_flags()
+                                                      : strset{};
   }
 };
 } // namespace ecow

@@ -37,8 +37,9 @@ public:
     if (!any_is_newer)
       return true;
 
-    for (const auto &f : frameworks()) {
-      cmd.append(" -framework "s + f);
+    for (const auto &f : link_flags()) {
+      cmd.append(" ");
+      cmd.append(f);
     }
 
     std::cerr << "linking " << exe_nm << std::endl;

@@ -22,13 +22,13 @@ public:
     }
     return true;
   }
-  [[nodiscard]] strset frameworks() const override {
+  [[nodiscard]] strset link_flags() const override {
     strset res{};
     for (auto &[f, u] : m_map) {
       if (!target_supports(f))
         continue;
 
-      auto fw = u.frameworks();
+      auto fw = u.link_flags();
       std::copy(fw.begin(), fw.end(), std::inserter(res, res.end()));
     }
     return res;

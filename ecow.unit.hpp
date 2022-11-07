@@ -9,6 +9,7 @@
 namespace ecow {
 class unit {
   std::string m_name;
+  std::unordered_set<std::string> m_link_flags{};
 
 protected:
   using strvec = std::vector<std::string>;
@@ -26,10 +27,16 @@ protected:
     return impl::current_target()->supports(f);
   }
 
+  void add_link_flag(const std::string &name) { m_link_flags.insert(name); }
+
 public:
   using feats = impl::target::features;
 
   explicit unit(std::string name) : m_name{name} {}
+
+  void add_system_library(const std::string &name) {
+    add_link_flag("-l" + name);
+  }
 
   [[nodiscard]] virtual bool build(const std::string &flags = "") {
     const auto ext =
@@ -37,7 +44,7 @@ public:
     return impl::run_clang(flags + " -c", m_name + ext, obj_name(m_name));
   }
 
-  [[nodiscard]] virtual strset frameworks() const { return {}; }
+  [[nodiscard]] virtual strset link_flags() const { return m_link_flags; }
 
   [[nodiscard]] virtual strvec objects() const {
     strvec res{};
