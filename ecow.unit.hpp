@@ -11,7 +11,6 @@ class unit {
   std::string m_name;
 
 protected:
-  using feats = impl::target::features;
   using strvec = std::vector<std::string>;
   using strset = std::unordered_set<std::string>;
 
@@ -23,11 +22,13 @@ protected:
   }
 
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
-  [[nodiscard]] bool target_supports(feats f) const noexcept {
+  [[nodiscard]] bool target_supports(impl::target::features f) const noexcept {
     return impl::current_target()->supports(f);
   }
 
 public:
+  using feats = impl::target::features;
+
   explicit unit(std::string name) : m_name{name} {}
 
   [[nodiscard]] virtual bool build(const std::string &flags = "") {

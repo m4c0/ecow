@@ -20,6 +20,7 @@ class host_target : public target {
   std::string m_extra_cflags{};
   std::string m_extra_path{"Contents/MacOS/"};
   std::string m_build_folder{};
+  features m_main_api{cocoa};
 
 protected:
   [[nodiscard]] std::string build_subfolder() const override {
@@ -36,6 +37,7 @@ public:
     if (sdk == "iphoneos"s) {
       m_extra_cflags += " -target arm64-apple-ios13.0";
       m_extra_path = "";
+      m_main_api = uikit;
     }
   }
 
@@ -55,6 +57,9 @@ public:
 
   [[nodiscard]] virtual bool supports(features f) const override {
     switch (f) {
+    case cocoa:
+    case uikit:
+      return f == m_main_api;
     case objective_c:
       return true;
     default:

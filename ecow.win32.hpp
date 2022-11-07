@@ -19,5 +19,14 @@ public:
   app_exe_name(const std::string &name) const override {
     return name + ".exe";
   }
+
+  [[nodiscard]] bool supports(features f) const override {
+    switch (f) {
+    case windows_api:
+      return true;
+    default:
+      return false;
+    }
+  }
 };
 } // namespace ecow::impl

@@ -84,5 +84,14 @@ public:
   app_exe_name(const std::string &name) const override {
     return "lib" + name + ".so";
   }
+
+  [[nodiscard]] bool supports(features f) const override {
+    switch (f) {
+    case android_ndk:
+      return true;
+    default:
+      return false;
+    }
+  }
 };
 } // namespace ecow::impl

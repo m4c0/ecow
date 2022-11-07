@@ -8,7 +8,14 @@ protected:
   [[nodiscard]] virtual std::string build_subfolder() const = 0;
 
 public:
-  enum features { objective_c };
+  enum features {
+    android_ndk,
+    cocoa,
+    objective_c,
+    uikit,
+    windows_api,
+    webassembly,
+  };
 
   virtual ~target() = default;
 
