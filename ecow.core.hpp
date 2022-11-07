@@ -37,13 +37,12 @@ static auto &current_target() {
   return current_target()->ld();
 }
 
-[[nodiscard]] static inline bool run_clang(const std::string &args,
-                                           const std::string &from,
-                                           const std::string &to) {
+static inline void run_clang(const std::string &args, const std::string &from,
+                             const std::string &to) {
   const auto ftime = last_write_time(from);
   const auto ttime = last_write_time(to);
   if (ttime > ftime)
-    return true;
+    return;
 
   std::cerr << "compiling " << to << std::endl;
   const auto cmd = cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=" +
@@ -51,7 +50,5 @@ static auto &current_target() {
                    " -o " + to;
   if (std::system(cmd.c_str()))
     throw clang_failed{cmd};
-
-  return true;
 }
 } // namespace ecow::impl

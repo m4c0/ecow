@@ -41,7 +41,8 @@ public:
   [[nodiscard]] virtual bool build(const std::string &flags = "") {
     const auto ext =
         std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
-    return impl::run_clang(flags + " -c", m_name + ext, obj_name(m_name));
+    impl::run_clang(flags + " -c", m_name + ext, obj_name(m_name));
+    return true;
   }
 
   [[nodiscard]] virtual strset link_flags() const { return m_link_flags; }
