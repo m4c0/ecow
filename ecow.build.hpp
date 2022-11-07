@@ -66,6 +66,10 @@ namespace ecow {
 
     std::cerr << "done" << std::endl;
     return 0;
+  } catch (const impl::clang_failed &e) {
+    std::cerr << "`clang` failed to run. Command:" << std::endl
+              << e.what() << std::endl;
+    return 1;
   } catch (const std::exception &e) {
     std::cerr << "Unexpected failure: " << e.what() << std::endl;
     return 1;

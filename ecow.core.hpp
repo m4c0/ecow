@@ -9,6 +9,10 @@
 #include <span>
 
 namespace ecow::impl {
+struct clang_failed : public std::runtime_error {
+  using runtime_error::runtime_error;
+};
+
 static auto &current_target() {
   static std::unique_ptr<target> i{};
   return i;
@@ -45,6 +49,9 @@ static auto &current_target() {
   const auto cmd = cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=" +
                    current_target()->build_folder() + " " + args + " " + from +
                    " -o " + to;
-  return std::system(cmd.c_str()) == 0;
+  if (std::system(cmd.c_str()))
+    throw clang_failed{cmd};
+
+  return true;
 }
 } // namespace ecow::impl
