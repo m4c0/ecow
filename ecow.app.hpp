@@ -29,6 +29,7 @@ public:
 
       o << R"(
     function ecow() {
+      var ecow_buffer;
       const imp = {
         env: {)";
       for (auto &[k, v] : env) {
@@ -52,11 +53,16 @@ public:
           },
         }),
       };
+      function start(obj) {
+        ecow_buffer = obj.instance.exports.memory.buffer;
+        obj.instance.exports._initialize();
+        return obj;
+      }
       return fetch(")" +
                name() + R"(.wasm")
         .then(response => response.arrayBuffer())
         .then(bytes => WebAssembly.instantiate(bytes, imp));
-        .then(obj => {obj.instance.exports._initialize(); return obj;});
+        .then(start);
     }
 )";
     }
