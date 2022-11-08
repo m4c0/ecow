@@ -14,10 +14,12 @@ int main(int argc, char **argv) {
 
   a->add_unit<>("user");
 
+  m->add_feat<js>()->set("test", "() => console.log('hello')");
+
   // tests objc and otherplatform-specifics
   auto pf = a->add_unit<per_feat<seq>>("per_feat");
   auto dummy =
-      pf->for_feature(unit::feats::objective_c).add_unit<objc>("dummy.mm");
+      pf->for_feature(features::objective_c).add_unit<objc>("dummy.mm");
   dummy->add_framework("Foundation");
 
   // TODO: define a way to build/run "host" tools (such as asset builders)

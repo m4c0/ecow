@@ -6,13 +6,20 @@
 
 namespace ecow {
 template <typename UTp> class per_feat : public unit {
-  std::unordered_map<feats, UTp> m_map;
+  std::unordered_map<features, UTp> m_map;
 
 public:
   using unit::unit;
 
-  [[nodiscard]] UTp &for_feature(feats f) {
+  [[nodiscard]] UTp &for_feature(features f) {
     return (*m_map.try_emplace(f, name()).first).second;
+  }
+  void visit(features vf, strmap &out) const override {
+    unit::visit(vf, out);
+    for (auto &[f, u] : m_map) {
+      if (target_supports(f))
+        u.visit(vf, out);
+    }
   }
 
   void build() override {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ecow.feat.hpp"
+
 #include <string>
 
 namespace ecow::impl {
@@ -18,15 +20,6 @@ protected:
   }
 
 public:
-  enum features {
-    android_ndk,
-    cocoa,
-    objective_c,
-    uikit,
-    windows_api,
-    webassembly,
-  };
-
   virtual ~target() = default;
 
   [[nodiscard]] virtual bool supports(features f) const { return false; }

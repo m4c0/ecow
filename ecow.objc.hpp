@@ -12,18 +12,16 @@ public:
   }
 
   void build() override {
-    if (target_supports(impl::target::objective_c))
+    if (target_supports(objective_c))
       unit::build();
   }
 
   [[nodiscard]] virtual strvec objects() const override {
-    return target_supports(impl::target::objective_c) ? unit::objects()
-                                                      : strvec{};
+    return target_supports(objective_c) ? unit::objects() : strvec{};
   }
 
   [[nodiscard]] virtual strset link_flags() const override {
-    return target_supports(impl::target::objective_c) ? unit::link_flags()
-                                                      : strset{};
+    return target_supports(objective_c) ? unit::link_flags() : strset{};
   }
 };
 } // namespace ecow

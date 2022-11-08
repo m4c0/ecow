@@ -19,6 +19,12 @@ public:
   }
   void add_ref(std::shared_ptr<unit> ref) { m_units.push_back(ref); }
 
+  virtual void visit(features f, strmap &out) const override {
+    unit::visit(f, out);
+    std::for_each(m_units.begin(), m_units.end(),
+                  [f, &out](auto &u) { u->visit(f, out); });
+  }
+
   virtual void build() override {
     std::for_each(m_units.begin(), m_units.end(), std::mem_fn(&unit::build));
   }
