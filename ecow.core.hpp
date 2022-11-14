@@ -44,10 +44,14 @@ static inline void run_clang(const std::string &args, const std::string &from,
   if (ttime > ftime)
     return;
 
+  const auto bfld = current_target()->build_folder();
+
   std::cerr << "compiling " << to << std::endl;
-  const auto cmd = cxx() + " -fobjc-arc -std=c++20 -fprebuilt-module-path=" +
-                   current_target()->build_folder() + " " + args + " " + from +
-                   " -o " + to;
+  const auto cmd = cxx() +
+                   " -fmodules -fobjc-arc -std=c++20"
+                   " -fmodules-cache-path=" +
+                   bfld + " -fprebuilt-module-path=" + bfld + " " + args + " " +
+                   from + " -o " + to;
   if (std::system(cmd.c_str()))
     throw clang_failed{cmd};
 }
