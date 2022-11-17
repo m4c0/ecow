@@ -3,38 +3,10 @@
   <body>
     <script type="text/javascript" src="out/wasm/a.js"></script>
     <script type="text/javascript">
-      var mem_buf;
-
-      function fd_fdstat_get(fd, stat) { return 0; }
-      function fd_write(fd, iovs, iovs_len, nwritten) {
-        const view = new DataView(mem_buf);
-        const decoder = new TextDecoder()
-        var written = 0;
-        var text = ''
-
-        for (var i = 0; i < iovs_len; i++) {
-          const ptr = iovs + i * 8;
-          const buf = view.getUint32(ptr, true);
-          const buf_len = view.getUint32(ptr + 4, true);
-          text += decoder.decode(new Uint8Array(mem_buf, buf, buf_len));
-          written += buf_len;
-        }
-
-        view.setUint32(nwritten, written, true);
-        console.log(text);
-        return 0;
-      }
-
       (function() {
-        ecow({
-          base_dir: "out/wasm",
-          extra_syscalls: {
-            fd_fdstat_get,
-            fd_write,
-          }
-        }).then(obj => {
-          mem_buf = obj.exports.memory.buffer;
+        ecow({ base_dir: "out/wasm" }).then(obj => {
           obj.start();
+          obj.exports.main();
         });
       })();
     </script>
