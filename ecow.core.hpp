@@ -37,21 +37,26 @@ static auto &current_target() {
   return current_target()->ld();
 }
 
-static inline void run_clang(const std::string &args, const std::string &from,
+static inline void run_clang(std::string args, const std::string &from,
                              const std::string &to) {
   const auto ftime = last_write_time(from);
   const auto ttime = last_write_time(to);
   if (ttime > ftime)
     return;
 
+  const auto fext = std::filesystem::path{from}.extension();
+  if (fext == ".mm") {
+    args = args + " -fobjc-arc";
+  } else {
+    args = args + " -std=c++20";
+  }
+
   const auto bfld = current_target()->build_folder();
 
   std::cerr << "compiling " << to << std::endl;
-  const auto cmd = cxx() +
-                   " -fmodules -fobjc-arc -std=c++20"
-                   " -fmodules-cache-path=" +
-                   bfld + " -fprebuilt-module-path=" + bfld + " " + args + " " +
-                   from + " -o " + to;
+  const auto cmd = cxx() + " -fmodules -fmodules-cache-path=" + bfld +
+                   " -fprebuilt-module-path=" + bfld + " " + args + " " + from +
+                   " -o " + to;
   if (std::system(cmd.c_str()))
     throw clang_failed{cmd};
 }

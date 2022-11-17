@@ -39,6 +39,9 @@ public:
       m_extra_path = "";
       m_main_api = uikit;
     }
+    if (sdk == "macosx") {
+      m_extra_cflags += " -mmacosx-version-min=11.6";
+    }
   }
 
   [[nodiscard]] std::string cxx() const override {

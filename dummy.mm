@@ -1,1 +1,8 @@
-// Nothing really, just let's check if the compiler compiles
+#import <Foundation/Foundation.h>
+
+#include <string>
+
+std::string stringFromNS(NSString * str) {
+  const char * cstr = [str UTF8String];
+  return { cstr };
+}
