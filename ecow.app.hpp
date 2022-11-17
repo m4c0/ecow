@@ -16,14 +16,19 @@ public:
   explicit app(const std::string &name) : exe{name} {}
 
   void build() override {
-    exe::build();
-
     if (target_supports(webassembly)) {
+
       const auto fdir =
           std::filesystem::path{impl::current_target()->build_folder()};
       const auto fname = (fdir / exe_name()).replace_extension("js");
-      std::cerr << "javascripting " << fname.string() << std::endl;
+      const auto ename = (fdir / exe_name()).replace_extension("exports");
+
+      add_link_flag("-Wl,--allow-undefined-file=" + ename.string());
+
+      std::cerr << "javascripting " << fname.string() << " and "
+                << ename.string() << std::endl;
       std::ofstream o{fname};
+      std::ofstream exp{ename};
 
       strmap env;
       visit(webassembly, env);
@@ -35,6 +40,7 @@ public:
         env: {)";
       for (auto &[k, v] : env) {
         o << "\n          " << k << ": " << v << ",";
+        exp << k << "\n";
       }
       o << R"(
         },
@@ -71,6 +77,8 @@ public:
     }
 )";
     }
+
+    exe::build();
   };
 };
 } // namespace ecow
