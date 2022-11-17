@@ -2,6 +2,7 @@
 
 #include "ecow.feat.hpp"
 
+#include <filesystem>
 #include <string>
 
 namespace ecow::impl {
@@ -30,6 +31,10 @@ public:
   app_exe_name(const std::string &name) const = 0;
   [[nodiscard]] std::string build_folder() const {
     return "out/" + build_subfolder() + "/";
+  }
+  [[nodiscard]] virtual std::filesystem::path
+  resource_path(const std::string &name) const {
+    return build_folder();
   }
 };
 } // namespace ecow::impl

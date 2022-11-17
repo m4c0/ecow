@@ -18,7 +18,8 @@ namespace ecow::impl {
 
 class host_target : public target {
   std::string m_extra_cflags{};
-  std::string m_extra_path{"Contents/MacOS/"};
+  std::string m_exe_path{"Contents/MacOS/"};
+  std::string m_res_path{"Contents/Resources/"};
   std::string m_build_folder{};
   features m_main_api{cocoa};
 
@@ -36,7 +37,8 @@ public:
         "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
     if (sdk == "iphoneos"s) {
       m_extra_cflags += " -target arm64-apple-ios13.0";
-      m_extra_path = "";
+      m_exe_path = "";
+      m_res_path = "";
       m_main_api = uikit;
     }
     if (sdk == "macosx") {
@@ -53,9 +55,16 @@ public:
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
-    auto path = name + ".app/" + m_extra_path;
+    auto path = name + ".app/" + m_exe_path;
     std::filesystem::create_directories(build_folder() + path);
     return path + name;
+  }
+  [[nodiscard]] std::filesystem::path
+  resource_path(const std::string &name) const override {
+    const auto res =
+        std::filesystem::path{build_folder()} / (name + ".app") / m_res_path;
+    std::filesystem::create_directories(res);
+    return res;
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {

@@ -60,4 +60,15 @@ static inline void run_clang(std::string args, const std::string &from,
   if (std::system(cmd.c_str()))
     throw clang_failed{cmd};
 }
+static inline void run_copy(const std::filesystem::path &from,
+                            const std::filesystem::path &to) {
+  const auto ftime = impl::last_write_time(from);
+  const auto ttime = impl::last_write_time(to);
+  if (ttime > ftime)
+    return;
+
+  std::cout << "copying " << to.string() << "\n";
+  std::filesystem::copy(from, to,
+                        std::filesystem::copy_options::update_existing);
+}
 } // namespace ecow::impl
