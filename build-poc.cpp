@@ -6,6 +6,7 @@ int main(int argc, char **argv) {
   seq all{"all"};
 
   auto a = all.add_unit<app>("a");
+  a->add_resource("build-poc.cpp");
 
   auto m = a->add_unit<mod>("m");
   m->add_part("interface_part");
@@ -20,7 +21,7 @@ int main(int argc, char **argv) {
   auto pf = a->add_unit<per_feat<seq>>("per_feat");
   auto dummy =
       pf->for_feature(features::objective_c).add_unit<objc>("dummy.mm");
-  dummy->add_framework("Foundation");
+  dummy->add_framework("Foundation"); // Not really needed with clang
 
   // TODO: define a way to build/run "host" tools (such as asset builders)
   // all.add_unit<sys>(a->exe_path().make_preferred().string());

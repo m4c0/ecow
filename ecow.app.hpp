@@ -7,42 +7,34 @@
 
 namespace ecow {
 class app : public exe {
-protected:
-  [[nodiscard]] std::string exe_name() const override {
-    return impl::current_target()->app_exe_name(name());
-  }
+  std::vector<std::string> m_resources;
 
-public:
-  explicit app(const std::string &name) : exe{name} {}
+  void build_wasm() {
+    const auto fdir =
+        std::filesystem::path{impl::current_target()->build_folder()};
+    const auto fname = (fdir / exe_name()).replace_extension("js");
+    const auto ename = (fdir / exe_name()).replace_extension("exports");
 
-  void build() override {
-    if (target_supports(webassembly)) {
+    add_link_flag("-Wl,--allow-undefined-file=" + ename.string());
 
-      const auto fdir =
-          std::filesystem::path{impl::current_target()->build_folder()};
-      const auto fname = (fdir / exe_name()).replace_extension("js");
-      const auto ename = (fdir / exe_name()).replace_extension("exports");
+    std::cerr << "javascripting " << fname.string() << " and " << ename.string()
+              << std::endl;
+    std::ofstream o{fname};
+    std::ofstream exp{ename};
 
-      add_link_flag("-Wl,--allow-undefined-file=" + ename.string());
+    strmap env;
+    visit(webassembly, env);
 
-      std::cerr << "javascripting " << fname.string() << " and "
-                << ename.string() << std::endl;
-      std::ofstream o{fname};
-      std::ofstream exp{ename};
-
-      strmap env;
-      visit(webassembly, env);
-
-      o << R"(
+    o << R"(
     function ecow(options) {
       var ecow_buffer;
       const imp = {
         env: {)";
-      for (auto &[k, v] : env) {
-        o << "\n          " << k << ": " << v << ",";
-        exp << k << "\n";
-      }
-      o << R"(
+    for (auto &[k, v] : env) {
+      o << "\n          " << k << ": " << v << ",";
+      exp << k << "\n";
+    }
+    o << R"(
         },
         wasi_snapshot_preview1: new Proxy({
             clock_time_get : (id, precision, out) => {
@@ -67,7 +59,7 @@ public:
         return obj;
       }
       return fetch(options.base_dir + "/)" +
-               name() + R"(.wasm")
+             name() + R"(.wasm")
         .then(response => response.arrayBuffer())
         .then(bytes => WebAssembly.instantiate(bytes, imp))
         .then(obj => ({
@@ -76,7 +68,21 @@ public:
         }));
     }
 )";
-    }
+  }
+
+protected:
+  [[nodiscard]] std::string exe_name() const override {
+    return impl::current_target()->app_exe_name(name());
+  }
+
+public:
+  explicit app(const std::string &name) : exe{name} {}
+
+  void add_resource(const std::string &name) { m_resources.push_back(name); }
+
+  void build() override {
+    if (target_supports(webassembly))
+      build_wasm();
 
     exe::build();
   };
