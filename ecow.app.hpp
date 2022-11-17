@@ -19,16 +19,17 @@ public:
     exe::build();
 
     if (target_supports(webassembly)) {
-      const auto fname =
-          std::filesystem::path{exe_name()}.replace_extension("js");
+      const auto fdir =
+          std::filesystem::path{impl::current_target()->build_folder()};
+      const auto fname = (fdir / exe_name()).replace_extension("js");
       std::cerr << "javascripting " << fname.string() << std::endl;
-      std::ofstream o{impl::current_target()->build_folder() / fname};
+      std::ofstream o{fname};
 
       strmap env;
       visit(webassembly, env);
 
       o << R"(
-    function ecow() {
+    function ecow(options) {
       var ecow_buffer;
       const imp = {
         env: {)";
@@ -43,7 +44,8 @@ public:
             var arr = new BigUint64Array(obj.instance.exports.memory.buffer, out, 3);
             arr[0] = BigInt(Date.now() * 1000000);
           }, 
-          proc_exit : () => { throw "oops" }
+          proc_exit : () => { throw "oops" },
+          ...options.extra_syscalls,
         }, {
           get(obj, prop) {
             return prop in obj ? obj[prop] : (... args) => {
@@ -55,14 +57,17 @@ public:
       };
       function start(obj) {
         ecow_buffer = obj.instance.exports.memory.buffer;
-        obj.instance.exports._initialize();
+        obj.instance.exports._start();
         return obj;
       }
-      return fetch(")" +
+      return fetch(options.base_dir + "/)" +
                name() + R"(.wasm")
         .then(response => response.arrayBuffer())
-        .then(bytes => WebAssembly.instantiate(bytes, imp));
-        .then(start);
+        .then(bytes => WebAssembly.instantiate(bytes, imp))
+        .then(obj => ({
+          exports: obj.instance.exports,
+          start: () => start(obj),
+        }));
     }
 )";
     }
