@@ -54,7 +54,7 @@ static inline void run_clang(std::string args, const std::string &from,
   const auto bfld = current_target()->build_folder();
 
   std::cerr << "compiling " << to << std::endl;
-  const auto cmd = cxx() + " -fmodules -fmodules-cache-path=" + bfld +
+  const auto cmd = cxx() + " -O3 -fmodules -fmodules-cache-path=" + bfld +
                    " -fprebuilt-module-path=" + bfld + " " + args + " " + from +
                    " -o " + to;
   if (std::system(cmd.c_str()))
