@@ -30,6 +30,7 @@ class app : public exe {
 
     o << R"(function ecow(options) {
   var ecow_buffer;
+  var ecow_globals = {};
 
   function dump(fn, iovs, iovs_len, nwritten) {
     const view = new DataView(ecow_buffer);
