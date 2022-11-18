@@ -17,6 +17,8 @@ class app : public exe {
 
     add_link_flag("-Wl,--allow-undefined-file=" + ename.string());
     add_link_flag("-mexec-model=reactor");
+    add_link_flag("-flto");
+    add_link_flag("-Wl,--lto-O3");
 
     std::cerr << "javascripting " << fname.string() << " and " << ename.string()
               << std::endl;
