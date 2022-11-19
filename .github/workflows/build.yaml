@@ -13,7 +13,7 @@ jobs:
   #     - run: sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
   #     - run: clang++-15 -v
   #     - uses: actions/checkout@v3
-  #     - run: clang++-15 -std=c++20 build-poc.cpp -o build.exe
+  #     - run: clang++-15 -std=c++20 build.cpp -o build.exe
   #     - run: ./build.exe android
   steve:
     runs-on: macos-latest
@@ -21,7 +21,7 @@ jobs:
       - run: brew install llvm
       - run: /usr/local/opt/llvm/bin/clang++ -v  
       - uses: actions/checkout@v3
-      - run: clang++ -std=c++20 build-poc.cpp -o build.exe
+      - run: clang++ -std=c++20 build.cpp -o build.exe
       - run: ./build.exe macosx iphoneos
   bill:
     runs-on: windows-latest
@@ -29,5 +29,5 @@ jobs:
       - run: choco upgrade llvm -y
       - run: clang++ -v  
       - uses: actions/checkout@v3
-      - run: clang++ -std=c++20 build-poc.cpp -o build.exe
+      - run: clang++ -std=c++20 build.cpp -o build.exe
       - run: .\build.exe
