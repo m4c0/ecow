@@ -54,6 +54,10 @@ class app : public exe {
   const imp = {
     env: {)";
     for (auto &[k, v] : env) {
+      if (v == "") {
+        add_link_flag("-Wl,--export=" + k);
+        continue;
+      }
       o << "\n          " << k << ": " << v << ",";
       exp << k << "\n";
     }
