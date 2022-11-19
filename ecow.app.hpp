@@ -110,9 +110,6 @@ protected:
 public:
   explicit app(const std::string &name) : exe{name} {}
 
-  void add_export(const std::string &name) {
-    add_link_flag("-Wl,--export=" + name);
-  }
   void add_resource(const std::string &name) { m_resources.push_back(name); }
 
   void build() override {
