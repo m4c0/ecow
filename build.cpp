@@ -21,8 +21,7 @@ int main(int argc, char **argv) {
 
   // tests objc and otherplatform-specifics
   auto pf = a->add_unit<per_feat<seq>>("per_feat");
-  auto dummy =
-      pf->for_feature(features::objective_c).add_unit<objc>("dummy.mm");
+  auto dummy = pf->for_feature(features::objective_c).add_unit<objc>("dummy");
   dummy->add_framework("Foundation"); // Not really needed with clang
 
   // TODO: define a way to build/run "host" tools (such as asset builders)

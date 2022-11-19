@@ -5,7 +5,7 @@
 namespace ecow {
 class objc : public unit {
 public:
-  using unit::unit;
+  explicit objc(const std::string &name) : unit{name + ".mm"} {}
 
   void add_framework(const std::string &name) {
     add_link_flag("-framework " + name);
