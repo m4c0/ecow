@@ -3,6 +3,7 @@
 #include "ecow.unit.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 
 namespace ecow {

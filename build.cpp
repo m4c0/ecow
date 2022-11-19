@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
   seq all{"all"};
 
   auto a = all.add_unit<app>("a");
-  a->add_resource("build-poc.cpp");
+  a->add_resource("build.cpp");
   a->add_export("main");
 
   auto m = a->add_unit<mod>("m");

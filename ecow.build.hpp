@@ -48,6 +48,11 @@ static inline void run_main(unit &u, int argc, char **argv) {
 #ifdef __APPLE__
     build<host_target>(u, arg);
 #else
+    using namespace std::string_literals;
+    if (arg == "windows"sv) {
+      build<host_target>(u);
+      continue;
+    }
     throw std::runtime_error("I don't know how to do '"s + arg + "'");
 #endif
   }
