@@ -1,5 +1,4 @@
-*.app
 *.json
-*.o
-*.pcm
-*.exe
+build
+build-poc
+out
