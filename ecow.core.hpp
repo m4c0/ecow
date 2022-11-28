@@ -60,6 +60,12 @@ static inline void run_clang(std::string args, const std::string &from,
   if (std::system(cmd.c_str()))
     throw clang_failed{cmd};
 }
+static inline void run_clang_with_deps(std::string args,
+                                       const std::string &from,
+                                       const std::string &to) {
+  run_clang(args + " -MMD -MF " + to + ".deps", from, to);
+}
+
 static inline void run_copy(const std::filesystem::path &from,
                             const std::filesystem::path &to) {
   const auto ftime = impl::last_write_time(from);

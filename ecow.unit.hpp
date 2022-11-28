@@ -52,7 +52,7 @@ public:
   virtual void build() {
     const auto ext =
         std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
-    impl::run_clang("-c", m_name + ext, obj_name(m_name));
+    impl::run_clang_with_deps("-c", m_name + ext, obj_name(m_name));
   }
 
   [[nodiscard]] virtual strset link_flags() const { return m_link_flags; }
