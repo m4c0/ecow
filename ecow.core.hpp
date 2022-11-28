@@ -4,6 +4,7 @@
 #include "ecow.target.hpp"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <span>
@@ -37,13 +38,8 @@ static auto &current_target() {
   return current_target()->ld();
 }
 
-static inline void run_clang(std::string args, const std::string &from,
-                             const std::string &to) {
-  const auto ftime = last_write_time(from);
-  const auto ttime = last_write_time(to);
-  if (ttime > ftime)
-    return;
-
+static inline void run_clang_force(std::string args, const std::string &from,
+                                   const std::string &to) {
   const auto fext = std::filesystem::path{from}.extension();
   if (fext == ".mm") {
     args = args + " -fobjc-arc";
@@ -60,10 +56,44 @@ static inline void run_clang(std::string args, const std::string &from,
   if (std::system(cmd.c_str()))
     throw clang_failed{cmd};
 }
+static inline void run_clang(std::string args, const std::string &from,
+                             const std::string &to) {
+  const auto ftime = last_write_time(from);
+  const auto ttime = last_write_time(to);
+  if (ttime > ftime)
+    return;
+
+  run_clang_force(args, from, to);
+}
 static inline void run_clang_with_deps(std::string args,
                                        const std::string &from,
                                        const std::string &to) {
-  run_clang(args + " -MMD -MF " + to + ".deps", from, to);
+  const auto depfn = to + ".deps";
+  std::ifstream deps{depfn};
+  if (deps) {
+    const auto ftime = last_write_time(from);
+    const auto ttime = last_write_time(to);
+    bool must_recompile = ttime < ftime;
+
+    std::string line;
+    while (!must_recompile && std::getline(deps, line)) {
+      if (!line.starts_with("  "))
+        continue;
+
+      line = line.substr(2);
+      if (line.ends_with(" \\"))
+        line.resize(line.size() - 2);
+
+      const auto deptime = last_write_time(line);
+      if (deptime > ttime) {
+        must_recompile = true;
+      }
+    }
+
+    if (!must_recompile)
+      return;
+  }
+  run_clang_force(args + " -MMD -MF " + depfn, from, to);
 }
 
 static inline void run_copy(const std::filesystem::path &from,
