@@ -24,6 +24,34 @@ static auto &current_target() {
     return std::filesystem::last_write_time(path);
   return std::filesystem::file_time_type::min();
 }
+[[nodiscard]] static inline bool must_recompile(const auto &depfn,
+                                                const std::string &from,
+                                                const std::string &to) {
+  std::ifstream deps{depfn};
+  if (!deps)
+    return true;
+
+  const auto ftime = last_write_time(from);
+  const auto ttime = last_write_time(to);
+  if (ftime > ttime)
+    return true;
+
+  std::string line;
+  while (std::getline(deps, line)) {
+    if (!line.starts_with("  "))
+      continue;
+
+    line = line.substr(2);
+    if (line.ends_with(" \\"))
+      line.resize(line.size() - 2);
+
+    const auto deptime = last_write_time(line);
+    if (deptime > ttime)
+      return true;
+  }
+
+  return false;
+}
 
 [[nodiscard]] static inline std::string cxx() {
   if (const char *exe = std::getenv("CXX")) {
@@ -69,31 +97,8 @@ static inline void run_clang_with_deps(std::string args,
                                        const std::string &from,
                                        const std::string &to) {
   const auto depfn = to + ".deps";
-  std::ifstream deps{depfn};
-  if (deps) {
-    const auto ftime = last_write_time(from);
-    const auto ttime = last_write_time(to);
-    bool must_recompile = ttime < ftime;
-
-    std::string line;
-    while (!must_recompile && std::getline(deps, line)) {
-      if (!line.starts_with("  "))
-        continue;
-
-      line = line.substr(2);
-      if (line.ends_with(" \\"))
-        line.resize(line.size() - 2);
-
-      const auto deptime = last_write_time(line);
-      if (deptime > ttime) {
-        must_recompile = true;
-      }
-    }
-
-    if (!must_recompile)
-      return;
-  }
-  run_clang_force(args + " -MMD -MF " + depfn, from, to);
+  if (must_recompile(depfn, from, to))
+    run_clang_force(args + " -MMD -MF " + depfn, from, to);
 }
 
 static inline void run_copy(const std::filesystem::path &from,
