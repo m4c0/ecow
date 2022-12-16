@@ -94,7 +94,8 @@ public:
 
     add_arg("-O3");
     add_arg("-fmodules");
-    add_arg("-fmodules-cache-path=" + current_target()->build_folder());
+    add_arg("-fmodules-cache-path=" +
+            current_target()->module_cache_path().string());
     add_prebuilt_module_path(current_target()->build_folder());
   }
 
