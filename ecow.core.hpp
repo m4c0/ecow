@@ -75,10 +75,10 @@ static auto &current_target() {
 }
 
 class clang {
-  std::set<std::string> m_args;
+  std::set<std::string> m_args{};
   std::string m_from;
   std::string m_to;
-  bool m_with_deps;
+  bool m_with_deps{false};
 
   [[nodiscard]] auto depfile() const { return m_to + ".deps"; }
 
