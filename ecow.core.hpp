@@ -7,7 +7,10 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <span>
+#include <sstream>
+#include <string>
 
 namespace ecow::impl {
 struct clang_failed : public std::runtime_error {
@@ -71,24 +74,66 @@ static auto &current_target() {
   return current_target()->ld();
 }
 
-static inline void run_clang(std::string args, const std::string &from,
-                             const std::string &to) {
-  const auto fext = std::filesystem::path{from}.extension();
-  if (fext == ".mm") {
-    args = args + " -fobjc-arc";
-  } else {
-    args = args + " -std=c++20";
+class clang {
+  std::set<std::string> m_args;
+  std::string m_from;
+  std::string m_to;
+  bool m_with_deps;
+
+  [[nodiscard]] auto depfile() const { return m_to + ".deps"; }
+
+public:
+  clang(const std::string &from, const std::string &to)
+      : m_from{from}, m_to{to} {
+    const auto fext = std::filesystem::path{from}.extension();
+    if (fext == ".mm") {
+      add_arg("-fobjc-arc");
+    } else {
+      add_arg("-std=c++20");
+    }
+
+    add_arg("-O3");
+    add_arg("-fmodules");
+    add_arg("-fmodules-cache-path=" + current_target()->build_folder());
+    add_prebuilt_module_path(current_target()->build_folder());
   }
 
-  const auto bfld = current_target()->build_folder();
+  clang &add_arg(const std::string &a) {
+    m_args.insert(a);
+    return *this;
+  }
+  clang &add_prebuilt_module_path(const std::string &p) {
+    add_arg("-fprebuilt-module-path=" + p);
+    return *this;
+  }
+  clang &with_deps() {
+    add_arg("-MMD");
+    add_arg("-MF " + depfile());
+    m_with_deps = true;
+    return *this;
+  }
 
-  std::cerr << "compiling " << to << std::endl;
-  const auto cmd = cxx() + " -O3 -fmodules -fmodules-cache-path=" + bfld +
-                   " -fprebuilt-module-path=" + bfld + " " + args + " " + from +
-                   " -o " + to;
-  if (std::system(cmd.c_str()))
-    throw clang_failed{cmd};
-}
+  void run() {
+    if (m_with_deps && !impl::must_recompile(depfile(), m_from, m_to))
+      return;
+
+    if (!m_with_deps && !impl::must_recompile(m_from, m_to))
+      return;
+
+    std::cerr << "compiling " << m_to << std::endl;
+
+    std::stringstream cbuf;
+    cbuf << cxx();
+    for (const auto &a : m_args)
+      cbuf << " " << a;
+    cbuf << " " << m_from;
+    cbuf << " -o " << m_to;
+
+    auto cmd = cbuf.str();
+    if (std::system(cmd.c_str()))
+      throw clang_failed{cmd};
+  }
+};
 
 static inline void run_copy(const std::filesystem::path &from,
                             const std::filesystem::path &to) {

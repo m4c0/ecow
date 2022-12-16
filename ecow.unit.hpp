@@ -21,14 +21,11 @@ protected:
 
   static void run_clang_with_deps(std::string args, const std::string &from,
                                   const std::string &to) {
-    const auto depfn = to + ".deps";
-    if (impl::must_recompile(depfn, from, to))
-      impl::run_clang(args + " -MMD -MF " + depfn, from, to);
+    impl::clang{from, to}.add_arg(args).with_deps().run();
   }
   static void run_clang(std::string args, const std::string &from,
                         const std::string &to) {
-    if (impl::must_recompile(from, to))
-      impl::run_clang(args, from, to);
+    impl::clang{from, to}.add_arg(args).run();
   }
 
   [[nodiscard]] static auto pcm_name(const std::string &who) {
