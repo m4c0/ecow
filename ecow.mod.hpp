@@ -8,13 +8,18 @@ class mod : public seq {
   strvec m_parts;
 
   static void compile_part(const std::string &who) {
-    run_clang_with_deps("--precompile", who + ".cppm", pcm_name(who));
-    run_clang("-c", pcm_name(who), obj_name(who));
+    impl::clang{who + ".cppm", pcm_name(who)}
+        .add_arg("--precompile")
+        .with_deps()
+        .run();
+    impl::clang{pcm_name(who), obj_name(who)}.add_arg("-c").run();
   }
   void compile_impl(const std::string &who) {
-    using namespace std::string_literals;
-    run_clang_with_deps("-fmodule-file="s + pcm_name(name()) + " -c",
-                        who + ".cpp", obj_name(who));
+    impl::clang{who + ".cpp", obj_name(who)}
+        .add_arg("-c")
+        .add_arg("-fmodule-file=" + pcm_name(name()))
+        .with_deps()
+        .run();
   }
 
 public:

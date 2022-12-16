@@ -19,15 +19,6 @@ protected:
   using strvec = std::vector<std::string>;
   using strset = std::unordered_set<std::string>;
 
-  static void run_clang_with_deps(std::string args, const std::string &from,
-                                  const std::string &to) {
-    impl::clang{from, to}.add_arg(args).with_deps().run();
-  }
-  static void run_clang(std::string args, const std::string &from,
-                        const std::string &to) {
-    impl::clang{from, to}.add_arg(args).run();
-  }
-
   [[nodiscard]] static auto pcm_name(const std::string &who) {
     return impl::current_target()->build_folder() + who + ".pcm";
   }
@@ -61,7 +52,7 @@ public:
   virtual void build() {
     const auto ext =
         std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
-    run_clang_with_deps("-c", m_name + ext, obj_name(m_name));
+    impl::clang{m_name + ext, obj_name(m_name)}.add_arg("-c").with_deps().run();
   }
 
   [[nodiscard]] virtual strset link_flags() const { return m_link_flags; }
