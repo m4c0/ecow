@@ -14,7 +14,7 @@ public:
   using unit::unit;
 
   template <typename Tp = unit> auto add_unit(const std::string &name) {
-    auto res = std::make_shared<Tp>(name);
+    auto res = create<Tp>(name);
     m_units.push_back(res);
     return res;
   }

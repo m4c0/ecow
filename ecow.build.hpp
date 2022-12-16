@@ -73,4 +73,8 @@ namespace ecow {
     return 1;
   }
 }
+[[nodiscard]] static inline int run_main(std::shared_ptr<unit> u, int argc,
+                                         char **argv) {
+  return run_main(*u, argc, argv);
+}
 } // namespace ecow

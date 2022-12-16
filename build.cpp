@@ -3,9 +3,9 @@
 using namespace ecow;
 
 int main(int argc, char **argv) {
-  seq all{"all"};
+  auto all = unit::create<seq>("all");
 
-  auto a = all.add_unit<app>("a");
+  auto a = all->add_unit<app>("a");
   a->add_resource("build.cpp");
 
   auto m = a->add_unit<mod>("m");
@@ -25,9 +25,9 @@ int main(int argc, char **argv) {
   dummy->add_framework("Foundation"); // Not really needed with clang
 
   // TODO: define a way to build/run "host" tools (such as asset builders)
-  // all.add_unit<sys>(a->exe_path().make_preferred().string());
+  // all->add_unit<sys>(a->exe_path().make_preferred().string());
 
-  auto myapp = all.add_unit<exe>("my_cli");
+  auto myapp = all->add_unit<exe>("my_cli");
   myapp->add_ref(m);
   myapp->add_unit<>("user");
 

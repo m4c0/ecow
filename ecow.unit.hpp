@@ -62,5 +62,10 @@ public:
     res.push_back(name());
     return res;
   }
+
+  template <typename Tp>
+  static std::shared_ptr<Tp> create(const std::string &name) {
+    return std::make_shared<Tp>(name);
+  }
 };
 } // namespace ecow
