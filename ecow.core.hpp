@@ -24,6 +24,12 @@ static auto &current_target() {
     return std::filesystem::last_write_time(path);
   return std::filesystem::file_time_type::min();
 }
+[[nodiscard]] static inline bool must_recompile(const std::string &from,
+                                                const std::string &to) {
+  const auto ftime = impl::last_write_time(from);
+  const auto ttime = impl::last_write_time(to);
+  return ftime > ttime;
+}
 [[nodiscard]] static inline bool must_recompile(const auto &depfn,
                                                 const std::string &from,
                                                 const std::string &to) {
@@ -31,11 +37,10 @@ static auto &current_target() {
   if (!deps)
     return true;
 
-  const auto ftime = last_write_time(from);
-  const auto ttime = last_write_time(to);
-  if (ftime > ttime)
+  if (must_recompile(from, to))
     return true;
 
+  const auto ttime = impl::last_write_time(to);
   std::string line;
   while (std::getline(deps, line)) {
     if (!line.starts_with("  "))
@@ -66,8 +71,8 @@ static auto &current_target() {
   return current_target()->ld();
 }
 
-static inline void run_clang_force(std::string args, const std::string &from,
-                                   const std::string &to) {
+static inline void run_clang(std::string args, const std::string &from,
+                             const std::string &to) {
   const auto fext = std::filesystem::path{from}.extension();
   if (fext == ".mm") {
     args = args + " -fobjc-arc";
@@ -84,28 +89,10 @@ static inline void run_clang_force(std::string args, const std::string &from,
   if (std::system(cmd.c_str()))
     throw clang_failed{cmd};
 }
-static inline void run_clang(std::string args, const std::string &from,
-                             const std::string &to) {
-  const auto ftime = last_write_time(from);
-  const auto ttime = last_write_time(to);
-  if (ttime > ftime)
-    return;
-
-  run_clang_force(args, from, to);
-}
-static inline void run_clang_with_deps(std::string args,
-                                       const std::string &from,
-                                       const std::string &to) {
-  const auto depfn = to + ".deps";
-  if (must_recompile(depfn, from, to))
-    run_clang_force(args + " -MMD -MF " + depfn, from, to);
-}
 
 static inline void run_copy(const std::filesystem::path &from,
                             const std::filesystem::path &to) {
-  const auto ftime = impl::last_write_time(from);
-  const auto ttime = impl::last_write_time(to);
-  if (ttime > ftime)
+  if (!must_recompile(from, to))
     return;
 
   std::cout << "copying " << to.string() << "\n";
