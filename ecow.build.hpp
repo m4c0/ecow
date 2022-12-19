@@ -16,9 +16,8 @@
 namespace ecow::impl {
 template <typename T, typename... Args>
 static inline void build(unit &u, Args &&...args) {
-  auto &tgt = impl::current_target();
-  tgt.reset(new T{std::forward<Args>(args)...});
-  std::filesystem::create_directories(tgt->build_folder());
+  T tgt{std::forward<Args>(args)...};
+  std::filesystem::create_directories(tgt.build_folder());
   u.build();
 }
 static inline void run_main(unit &u, int argc, char **argv) {

@@ -17,11 +17,6 @@ struct clang_failed : public std::runtime_error {
   using runtime_error::runtime_error;
 };
 
-static auto &current_target() {
-  static std::unique_ptr<target> i{};
-  return i;
-}
-
 [[nodiscard]] static inline auto last_write_time(auto path) {
   if (std::filesystem::exists(path))
     return std::filesystem::last_write_time(path);
@@ -96,15 +91,12 @@ public:
     add_arg("-fmodules");
     add_arg("-fmodules-cache-path=" +
             current_target()->module_cache_path().string());
-    add_prebuilt_module_path(current_target()->build_folder());
+    for (const auto &path : current_target()->prebuilt_module_paths())
+      add_arg("-fprebuilt-module-path=" + path);
   }
 
   clang &add_arg(const std::string &a) {
     m_args.insert(a);
-    return *this;
-  }
-  clang &add_prebuilt_module_path(const std::string &p) {
-    add_arg("-fprebuilt-module-path=" + p);
     return *this;
   }
   clang &with_deps() {
