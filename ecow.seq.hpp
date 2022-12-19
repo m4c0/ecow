@@ -39,11 +39,11 @@ public:
     return res;
   }
 
-  [[nodiscard]] virtual strvec objects() const override {
-    strvec res{};
+  [[nodiscard]] virtual pathset objects() const override {
+    pathset res{};
     for (const auto &u : m_units) {
       const auto objs = u->objects();
-      std::copy(objs.begin(), objs.end(), std::back_inserter(res));
+      std::copy(objs.begin(), objs.end(), std::inserter(res, res.end()));
     }
     return res;
   }

@@ -38,14 +38,14 @@ public:
     seq::build();
   }
 
-  [[nodiscard]] strvec objects() const override {
+  [[nodiscard]] pathset objects() const override {
     const auto super = seq::objects();
 
-    strvec res{};
-    std::copy(m_parts.begin(), m_parts.end(), std::back_inserter(res));
-    std::copy(m_impls.begin(), m_impls.end(), std::back_inserter(res));
-    res.push_back(name());
-    std::copy(super.begin(), super.end(), std::back_inserter(res));
+    pathset res{};
+    std::copy(m_parts.begin(), m_parts.end(), std::inserter(res, res.end()));
+    std::copy(m_impls.begin(), m_impls.end(), std::inserter(res, res.end()));
+    res.insert(name());
+    std::copy(super.begin(), super.end(), std::inserter(res, res.end()));
     return res;
   }
 };

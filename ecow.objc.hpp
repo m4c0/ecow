@@ -16,8 +16,8 @@ public:
       unit::build();
   }
 
-  [[nodiscard]] virtual strvec objects() const override {
-    return target_supports(objective_c) ? unit::objects() : strvec{};
+  [[nodiscard]] virtual pathset objects() const override {
+    return target_supports(objective_c) ? unit::objects() : pathset{};
   }
 
   [[nodiscard]] virtual strset link_flags() const override {

@@ -39,14 +39,14 @@ public:
     }
     return res;
   }
-  [[nodiscard]] strvec objects() const override {
-    strvec res{};
+  [[nodiscard]] pathset objects() const override {
+    pathset res{};
     for (auto &[f, u] : m_map) {
       if (!target_supports(f))
         continue;
 
       auto fw = u.objects();
-      std::copy(fw.begin(), fw.end(), std::back_inserter(res));
+      std::copy(fw.begin(), fw.end(), std::inserter(res, res.end()));
     }
     return res;
   }

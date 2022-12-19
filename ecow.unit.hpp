@@ -4,6 +4,7 @@
 #include "ecow.feat.hpp"
 
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -15,6 +16,7 @@ class unit {
   std::vector<std::shared_ptr<feat>> m_features{};
 
 protected:
+  using pathset = std::set<std::filesystem::path>;
   using strmap = std::map<std::string, std::string>;
   using strvec = std::vector<std::string>;
   using strset = std::unordered_set<std::string>;
@@ -57,9 +59,9 @@ public:
 
   [[nodiscard]] virtual strset link_flags() const { return m_link_flags; }
 
-  [[nodiscard]] virtual strvec objects() const {
-    strvec res{};
-    res.push_back(name());
+  [[nodiscard]] virtual pathset objects() const {
+    pathset res{};
+    res.insert(name());
     return res;
   }
 

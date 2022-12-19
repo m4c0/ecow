@@ -17,6 +17,6 @@ public:
       throw command_failed(name());
   }
 
-  [[nodiscard]] strvec objects() const override { return strvec(); }
+  [[nodiscard]] pathset objects() const override { return {}; }
 };
 } // namespace ecow
