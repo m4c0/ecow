@@ -14,6 +14,28 @@ class seq : public unit {
   std::vector<std::shared_ptr<unit>> m_units;
   wsdeps_t m_wsdeps;
 
+  void build_wsdep(const std::string &k, const std::shared_ptr<unit> &u) {
+    using namespace std::filesystem;
+
+    class curpath_raii {
+      path o{current_path()};
+
+    public:
+      curpath_raii(const std::string &n) {
+        auto p = o.parent_path() / n;
+        if (!exists(p))
+          throw std::runtime_error("Project not in workspace: " + n);
+
+        create_directories(p / impl::current_target()->build_folder());
+        current_path(p);
+      }
+      ~curpath_raii() { current_path(o); }
+    };
+
+    curpath_raii c{k};
+    u->build();
+  }
+
 public:
   using unit::unit;
 
@@ -37,6 +59,9 @@ public:
   }
 
   virtual void build() override {
+    std::for_each(m_wsdeps.begin(), m_wsdeps.end(),
+                  [this](const auto &d) { build_wsdep(d.first, d.second); });
+
     class wsdep_target : public impl::deco_target {
       const wsdeps_t &m;
 
