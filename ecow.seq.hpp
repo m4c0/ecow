@@ -36,6 +36,11 @@ class seq : public unit {
     u->build();
   }
 
+protected:
+  virtual void build_self() {
+    std::for_each(m_units.begin(), m_units.end(), std::mem_fn(&unit::build));
+  }
+
 public:
   using unit::unit;
 
@@ -78,7 +83,7 @@ public:
     };
     wsdep_target t{m_wsdeps};
 
-    std::for_each(m_units.begin(), m_units.end(), std::mem_fn(&unit::build));
+    build_self();
   }
 
   [[nodiscard]] virtual strset link_flags() const override {

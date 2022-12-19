@@ -22,21 +22,22 @@ class mod : public seq {
         .run();
   }
 
+protected:
+  void build_self() override {
+    std::for_each(m_parts.begin(), m_parts.end(),
+                  [this](auto w) { return compile_part(w); });
+    compile_part(name());
+    std::for_each(m_impls.begin(), m_impls.end(),
+                  [this](auto w) { return compile_impl(w); });
+    seq::build_self();
+  }
+
 public:
   using seq::add_unit;
   using seq::seq;
 
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
-
-  void build() override {
-    std::for_each(m_parts.begin(), m_parts.end(),
-                  [this](auto w) { return compile_part(w); });
-    compile_part(name());
-    std::for_each(m_impls.begin(), m_impls.end(),
-                  [this](auto w) { return compile_impl(w); });
-    seq::build();
-  }
 
   [[nodiscard]] pathset objects() const override {
     pathset res = seq::objects();
