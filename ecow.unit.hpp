@@ -61,7 +61,7 @@ public:
 
   [[nodiscard]] virtual pathset objects() const {
     pathset res{};
-    res.insert(name());
+    res.insert(obj_name(name()));
     return res;
   }
 

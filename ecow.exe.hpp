@@ -24,13 +24,12 @@ public:
 
     bool any_is_newer = false;
     std::string cmd = impl::ld() + " -o " + exe_nm;
-    for (const auto &o : objects()) {
-      const auto obj = obj_name(o);
+    for (const auto &obj : objects()) {
       const auto otime = impl::last_write_time(obj);
       if (otime > exe_time)
         any_is_newer = true;
 
-      cmd.append(" "s + obj);
+      cmd.append(" "s + obj.string());
     }
 
     if (!any_is_newer)

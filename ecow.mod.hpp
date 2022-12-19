@@ -39,13 +39,12 @@ public:
   }
 
   [[nodiscard]] pathset objects() const override {
-    const auto super = seq::objects();
-
-    pathset res{};
-    std::copy(m_parts.begin(), m_parts.end(), std::inserter(res, res.end()));
-    std::copy(m_impls.begin(), m_impls.end(), std::inserter(res, res.end()));
-    res.insert(name());
-    std::copy(super.begin(), super.end(), std::inserter(res, res.end()));
+    pathset res = seq::objects();
+    res.insert(obj_name(name()));
+    std::for_each(m_parts.begin(), m_parts.end(),
+                  [&](auto w) { res.insert(obj_name(w)); });
+    std::for_each(m_impls.begin(), m_impls.end(),
+                  [&](auto w) { res.insert(obj_name(w)); });
     return res;
   }
 };
