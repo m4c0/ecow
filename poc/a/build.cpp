@@ -1,4 +1,4 @@
-#include "../../ecow.hpp"
+#include "build.hpp"
 
 using namespace ecow;
 
@@ -8,16 +8,10 @@ int main(int argc, char **argv) {
   auto a = all->add_unit<app>("a");
   a->add_resource("build.cpp");
 
-  auto m = a->add_unit<mod>("m");
-  m->add_part("interface_part");
-  m->add_part("impl_part");
-  m->add_impl("impl");
+  auto m = exported();
+  a->add_ref(m);
 
   a->add_unit<>("user");
-
-  auto mjs = m->add_feat<js>();
-  mjs->set("main", "");
-  mjs->set("test", "() => console.log('hello')");
 
   // tests objc and otherplatform-specifics
   auto pf = a->add_unit<per_feat<seq>>("per_feat");
