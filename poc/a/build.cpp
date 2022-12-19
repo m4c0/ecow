@@ -1,4 +1,4 @@
-#include "ecow.hpp"
+#include "../../ecow.hpp"
 
 using namespace ecow;
 
