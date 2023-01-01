@@ -31,6 +31,9 @@ struct clang_failed : public std::runtime_error {
 [[nodiscard]] static inline bool must_recompile(const auto &depfn,
                                                 const std::string &from,
                                                 const std::string &to) {
+  if (!std::filesystem::exists(to))
+    return true;
+
   std::ifstream deps{depfn};
   if (!deps)
     return true;
