@@ -22,15 +22,14 @@ struct clang_failed : public std::runtime_error {
     return std::filesystem::last_write_time(path);
   return std::filesystem::file_time_type::min();
 }
-[[nodiscard]] static inline bool must_recompile(const std::string &from,
-                                                const std::string &to) {
+[[nodiscard]] static inline bool must_recompile(const auto &from,
+                                                const auto &to) {
   const auto ftime = impl::last_write_time(from);
   const auto ttime = impl::last_write_time(to);
   return ftime > ttime;
 }
-[[nodiscard]] static inline bool must_recompile(const auto &depfn,
-                                                const std::string &from,
-                                                const std::string &to) {
+[[nodiscard]] static inline bool
+must_recompile(const auto &depfn, const auto &from, const auto &to) {
   if (!std::filesystem::exists(to))
     return true;
 
