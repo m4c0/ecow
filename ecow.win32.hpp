@@ -20,7 +20,8 @@ public:
     return name + ".exe";
   }
 
-  [[nodiscard]] virtual std::filesystem::path module_cache_path() const {
+  [[nodiscard]] virtual std::filesystem::path
+  module_cache_path() const override {
     std::filesystem::path home{std::getenv("LOCALAPPDATA")};
     return home / "ecow" / "cache" / build_subfolder();
   }

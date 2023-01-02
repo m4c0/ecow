@@ -19,6 +19,14 @@ static inline void build(unit &u, Args &&...args) {
   T tgt{std::forward<Args>(args)...};
   std::filesystem::create_directories(tgt.build_folder());
   u.build();
+
+  std::ofstream cdb{tgt.build_folder() + "compile_commands.json"};
+  cdb << "[\n";
+  for (const auto &obj : u.objects()) {
+    std::ifstream p{obj.string() + ".json"};
+    cdb << p.rdbuf();
+  }
+  cdb << "]\n";
 }
 static inline void run_main(unit &u, int argc, char **argv) {
   auto args = std::span{argv, static_cast<size_t>(argc)}.subspan(1);
