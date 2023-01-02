@@ -1,0 +1,17 @@
+<html>
+  <head><title>ecow Proof-of-Concept</title></head>
+  <body>
+    <script type="text/javascript" src="out/wasm/a.js"></script>
+    <script type="text/javascript">
+      (function() {
+        ecow({ base_dir: "out/wasm" }).then(obj => {
+          obj.start();
+          // the non-reactor version of "main" also calls global dtors.
+          // Therefore, "reactor" allows event-driven architectures, which
+          // is better suited for web
+          obj.exports.main();
+        });
+      })();
+    </script>
+  </body>
+</html>
