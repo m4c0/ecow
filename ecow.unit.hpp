@@ -3,6 +3,7 @@
 #include "ecow.core.hpp"
 #include "ecow.feat.hpp"
 
+#include <algorithm>
 #include <map>
 #include <set>
 #include <string>
