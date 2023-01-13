@@ -11,10 +11,10 @@ class wasm_target : public target {
 
   [[nodiscard]] static inline auto sysroot_path() {
     const auto env = std::getenv("WASI_SYSROOT");
-    if (!env)
-      throw std::runtime_error("WASI_SYSROOT undefined");
+    if (env)
+      return std::filesystem::path{env};
 
-    return std::filesystem::path{env};
+    return std::filesystem::current_path().parent_path() / "wasi-sysroot";
   }
 
 protected:
@@ -25,6 +25,9 @@ public:
     constexpr const auto target = " -target wasm32-wasi ";
 
     auto sysroot = sysroot_path();
+    if (!std::filesystem::exists(sysroot))
+      throw std::runtime_error("Invalid wasi sysroot");
+
     auto clang = default_clang() + target + " --sysroot " + sysroot.string();
 
     m_cxx = clang + " -D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
