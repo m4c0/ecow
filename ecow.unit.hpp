@@ -47,8 +47,8 @@ public:
     return f;
   }
   virtual void visit(features f, strmap &out) const {
-    for_each(m_features.begin(), m_features.end(),
-             [f, &out](auto &mf) { mf->visit(f, out); });
+    std::for_each(m_features.begin(), m_features.end(),
+                  [f, &out](auto &mf) { mf->visit(f, out); });
   }
 
   virtual void build() {
