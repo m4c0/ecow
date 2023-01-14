@@ -33,7 +33,7 @@ protected:
   }
 
   [[nodiscard]] pathset self_objects() const override {
-    pathset res = seq::objects();
+    pathset res = seq::self_objects();
     res.insert(obj_name(name()));
     std::for_each(m_parts.begin(), m_parts.end(),
                   [&](auto w) { res.insert(obj_name(w)); });
