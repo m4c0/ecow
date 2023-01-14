@@ -4,14 +4,17 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ecow-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   oreo:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install llvm
-      - run: /home/linuxbrew/.linuxbrew/bin/clang++ -v  
+      - uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+        with:
+          os: ubuntu-latest
       - uses: actions/checkout@v3
       - run: |
           cd poc
@@ -31,8 +34,9 @@ jobs:
   steve:
     runs-on: macos-latest
     steps:
-      - run: brew install llvm
-      - run: /usr/local/opt/llvm/bin/clang++ -v  
+      - uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+        with:
+          os: macos-latest
       - uses: actions/checkout@v3
       - run: clang++ -std=c++20 build.cpp -o build.exe
         working-directory: poc/a-nostl
@@ -45,8 +49,9 @@ jobs:
   bill:
     runs-on: windows-latest
     steps:
-      - run: choco upgrade llvm -y
-      - run: clang++ -v  
+      - uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+        with:
+          os: windows-latest
       - uses: actions/checkout@v3
       - run: clang++ -std=c++20 build.cpp -o build.exe
         working-directory: poc/a-nostl
