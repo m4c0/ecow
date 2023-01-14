@@ -2,6 +2,7 @@
 
 #include "ecow.core.hpp"
 #include "ecow.feat.hpp"
+#include "ecow.wsdep.hpp"
 
 #include <algorithm>
 #include <map>
@@ -15,6 +16,7 @@ class unit {
   std::string m_name;
   std::unordered_set<std::string> m_link_flags{};
   std::vector<std::shared_ptr<feat>> m_features{};
+  wsdeps::map_t m_wsdeps;
 
 protected:
   using pathset = std::set<std::filesystem::path>;
@@ -36,33 +38,70 @@ protected:
 
   void add_link_flag(const std::string &name) { m_link_flags.insert(name); }
 
+  virtual void build_self() {
+    const auto ext =
+        std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
+    impl::clang{m_name + ext, obj_name(m_name)}.add_arg("-c").with_deps().run();
+  }
+  virtual pathset self_objects() const {
+    pathset res{};
+    res.insert(obj_name(name()));
+    return res;
+  }
+
 public:
   explicit unit(std::string name) : m_name{name} {}
 
   void add_system_library(const std::string &name) {
     add_link_flag("-l" + name);
   }
+  void add_wsdep(std::string name, std::shared_ptr<unit> ref) {
+    m_wsdeps[name] = ref;
+
+    const auto flags = ref->link_flags();
+    std::for_each(flags.begin(), flags.end(),
+                  [this](auto flag) { this->add_link_flag(flag); });
+  }
+
   template <typename FTp> auto add_feat() {
     auto f = std::make_shared<FTp>();
     m_features.push_back(f);
     return f;
   }
   virtual void visit(features f, strmap &out) const {
+    std::for_each(m_wsdeps.begin(), m_wsdeps.end(),
+                  [f, &out](auto &kv) { kv.second->visit(f, out); });
     std::for_each(m_features.begin(), m_features.end(),
                   [f, &out](auto &mf) { mf->visit(f, out); });
   }
 
-  virtual void build() {
-    const auto ext =
-        std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
-    impl::clang{m_name + ext, obj_name(m_name)}.add_arg("-c").with_deps().run();
+  void build() {
+    std::for_each(m_wsdeps.begin(), m_wsdeps.end(), [this](auto &v) {
+      wsdeps::curpath_raii c{v.first};
+      v.second->build();
+    });
+
+    wsdeps::target t{m_wsdeps};
+
+    build_self();
   }
 
   [[nodiscard]] virtual strset link_flags() const { return m_link_flags; }
 
-  [[nodiscard]] virtual pathset objects() const {
-    pathset res{};
-    res.insert(obj_name(name()));
+  [[nodiscard]] pathset objects() const {
+    pathset res = self_objects();
+    for (const auto &[k, u] : m_wsdeps) {
+      const auto objs = u->objects();
+      for (const auto &obj : objs) {
+        if (obj.is_absolute()) {
+          res.insert(obj);
+          continue;
+        }
+
+        const auto p = std::filesystem::current_path().parent_path();
+        res.insert(p / k / obj);
+      }
+    }
     return res;
   }
 

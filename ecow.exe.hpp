@@ -11,13 +11,10 @@ class exe : public seq {
 protected:
   [[nodiscard]] virtual std::string exe_name() const { return name(); }
 
-public:
-  using seq::seq;
-
-  virtual void build() override {
+  virtual void build_self() override {
     using namespace std::string_literals;
 
-    seq::build();
+    seq::build_self();
 
     const auto exe_nm = final_exe_name();
     const auto exe_time = impl::last_write_time(exe_nm);
@@ -44,5 +41,8 @@ public:
     if (std::system(cmd.c_str()) != 0)
       throw impl::clang_failed{cmd};
   }
+
+public:
+  using seq::seq;
 };
 } // namespace ecow

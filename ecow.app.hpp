@@ -111,12 +111,7 @@ protected:
     return impl::current_target()->app_exe_name(name());
   }
 
-public:
-  explicit app(const std::string &name) : exe{name} {}
-
-  void add_resource(const std::string &name) { m_resources.push_back(name); }
-
-  void build() override {
+  void build_self() override {
     if (target_supports(webassembly))
       build_wasm();
 
@@ -125,7 +120,12 @@ public:
       impl::run_copy(res, res_fld / res);
     }
 
-    exe::build();
+    exe::build_self();
   };
+
+public:
+  explicit app(const std::string &name) : exe{name} {}
+
+  void add_resource(const std::string &name) { m_resources.push_back(name); }
 };
 } // namespace ecow

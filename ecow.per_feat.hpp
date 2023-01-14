@@ -8,6 +8,25 @@ namespace ecow {
 template <typename UTp> class per_feat : public unit {
   std::unordered_map<features, UTp> m_map;
 
+protected:
+  void build_self() override {
+    for (auto &[f, u] : m_map) {
+      if (target_supports(f))
+        u.build();
+    }
+  }
+  [[nodiscard]] pathset self_objects() const override {
+    pathset res{};
+    for (auto &[f, u] : m_map) {
+      if (!target_supports(f))
+        continue;
+
+      auto fw = u.objects();
+      std::copy(fw.begin(), fw.end(), std::inserter(res, res.end()));
+    }
+    return res;
+  }
+
 public:
   using unit::unit;
 
@@ -22,12 +41,6 @@ public:
     }
   }
 
-  void build() override {
-    for (auto &[f, u] : m_map) {
-      if (target_supports(f))
-        u.build();
-    }
-  }
   [[nodiscard]] strset link_flags() const override {
     strset res{};
     for (auto &[f, u] : m_map) {
@@ -35,17 +48,6 @@ public:
         continue;
 
       auto fw = u.link_flags();
-      std::copy(fw.begin(), fw.end(), std::inserter(res, res.end()));
-    }
-    return res;
-  }
-  [[nodiscard]] pathset objects() const override {
-    pathset res{};
-    for (auto &[f, u] : m_map) {
-      if (!target_supports(f))
-        continue;
-
-      auto fw = u.objects();
       std::copy(fw.begin(), fw.end(), std::inserter(res, res.end()));
     }
     return res;

@@ -32,14 +32,7 @@ protected:
     seq::build_self();
   }
 
-public:
-  using seq::add_unit;
-  using seq::seq;
-
-  void add_impl(std::string impl) { m_impls.push_back(impl); }
-  void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
-
-  [[nodiscard]] pathset objects() const override {
+  [[nodiscard]] pathset self_objects() const override {
     pathset res = seq::objects();
     res.insert(obj_name(name()));
     std::for_each(m_parts.begin(), m_parts.end(),
@@ -48,5 +41,12 @@ public:
                   [&](auto w) { res.insert(obj_name(w)); });
     return res;
   }
+
+public:
+  using seq::add_unit;
+  using seq::seq;
+
+  void add_impl(std::string impl) { m_impls.push_back(impl); }
+  void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 };
 } // namespace ecow
