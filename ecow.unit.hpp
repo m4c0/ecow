@@ -57,10 +57,6 @@ public:
   }
   void add_wsdep(std::string name, std::shared_ptr<unit> ref) {
     m_wsdeps[name] = ref;
-
-    const auto flags = ref->link_flags();
-    std::for_each(flags.begin(), flags.end(),
-                  [this](auto flag) { this->add_link_flag(flag); });
   }
 
   template <typename FTp> auto add_feat() {
@@ -86,7 +82,11 @@ public:
     build_self();
   }
 
-  [[nodiscard]] virtual strset link_flags() const { return m_link_flags; }
+  [[nodiscard]] virtual strset link_flags() const {
+    auto flags = m_link_flags;
+    std::copy(flags.begin(), flags.end(), std::inserter(flags, flags.end()));
+    return flags;
+  }
 
   [[nodiscard]] pathset objects() const {
     pathset res = self_objects();
