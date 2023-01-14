@@ -52,9 +52,6 @@ protected:
 public:
   explicit unit(std::string name) : m_name{name} {}
 
-  void add_system_library(const std::string &name) {
-    add_link_flag("-l" + name);
-  }
   void add_wsdep(std::string name, std::shared_ptr<unit> ref) {
     m_wsdeps[name] = ref;
   }
@@ -83,9 +80,12 @@ public:
   }
 
   [[nodiscard]] virtual strset link_flags() const {
-    auto flags = m_link_flags;
-    std::copy(flags.begin(), flags.end(), std::inserter(flags, flags.end()));
-    return flags;
+    strset res = m_link_flags;
+    for (const auto &[k, u] : m_wsdeps) {
+      const auto flags = u->link_flags();
+      std::copy(flags.begin(), flags.end(), std::inserter(res, res.end()));
+    }
+    return res;
   }
 
   [[nodiscard]] pathset objects() const {
