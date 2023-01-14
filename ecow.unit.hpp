@@ -38,7 +38,7 @@ protected:
 
   void add_link_flag(const std::string &name) { m_link_flags.insert(name); }
 
-  virtual void build_self() {
+  virtual void build_self() const {
     const auto ext =
         std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
     impl::clang{m_name + ext, obj_name(m_name)}.add_arg("-c").with_deps().run();
@@ -68,7 +68,7 @@ public:
                   [f, &out](auto &mf) { mf->visit(f, out); });
   }
 
-  void build() {
+  void build() const {
     std::for_each(m_wsdeps.begin(), m_wsdeps.end(), [this](auto &v) {
       wsdeps::curpath_raii c{v.first};
       v.second->build();

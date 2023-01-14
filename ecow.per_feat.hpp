@@ -9,7 +9,7 @@ template <typename UTp> class per_feat : public unit {
   std::unordered_map<features, UTp> m_map;
 
 protected:
-  void build_self() override {
+  void build_self() const override {
     for (auto &[f, u] : m_map) {
       if (target_supports(f))
         u.build();

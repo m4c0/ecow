@@ -5,7 +5,7 @@
 namespace ecow {
 class objc : public unit {
 protected:
-  void build_self() override {
+  void build_self() const override {
     if (target_supports(objective_c))
       unit::build_self();
   }

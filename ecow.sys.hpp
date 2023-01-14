@@ -8,7 +8,7 @@ struct command_failed : public std::runtime_error {
 };
 class sys : public unit {
 protected:
-  void build_self() override {
+  void build_self() const override {
     if (std::system(name().c_str()) != 0)
       throw command_failed(name());
   }

@@ -9,16 +9,16 @@ namespace ecow {
 class app : public exe {
   std::vector<std::string> m_resources;
 
-  void build_wasm() {
+  [[nodiscard]] auto exports_path() const noexcept {
+    const auto fdir = impl::current_target()->build_path();
+    return (fdir / exe_name()).replace_extension("exports");
+  }
+
+  void build_wasm() const {
     const auto fdir =
         std::filesystem::path{impl::current_target()->build_folder()};
     const auto fname = (fdir / exe_name()).replace_extension("js");
-    const auto ename = (fdir / exe_name()).replace_extension("exports");
-
-    add_link_flag("-Wl,--allow-undefined-file=" + ename.string());
-    add_link_flag("-mexec-model=reactor");
-    add_link_flag("-flto");
-    add_link_flag("-Wl,--lto-O3");
+    const auto ename = exports_path();
 
     std::cerr << "javascripting " << fname.string() << " and " << ename.string()
               << std::endl;
@@ -54,10 +54,8 @@ class app : public exe {
   const imp = {
     env: {)";
     for (auto &[k, v] : env) {
-      if (v == "") {
-        add_link_flag("-Wl,--export=" + k);
+      if (v == "")
         continue;
-      }
       o << "\n          " << k << ": " << v << ",";
       exp << k << "\n";
     }
@@ -111,7 +109,7 @@ protected:
     return impl::current_target()->app_exe_name(name());
   }
 
-  void build_self() override {
+  void build_self() const override {
     if (target_supports(webassembly))
       build_wasm();
 
@@ -127,5 +125,24 @@ public:
   explicit app(const std::string &name) : exe{name} {}
 
   void add_resource(const std::string &name) { m_resources.push_back(name); }
+
+  [[nodiscard]] strset link_flags() const override {
+    auto res = exe::link_flags();
+
+    if (target_supports(webassembly)) {
+      res.insert("-Wl,--allow-undefined-file=" + exports_path().string());
+      res.insert("-mexec-model=reactor");
+      res.insert("-flto");
+      res.insert("-Wl,--lto-O3");
+
+      strmap env;
+      visit(webassembly, env);
+      for (auto &[k, v] : env)
+        if (v == "")
+          res.insert("-Wl,--export=" + k);
+    }
+
+    return res;
+  }
 };
 } // namespace ecow

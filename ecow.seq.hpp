@@ -12,7 +12,7 @@ class seq : public unit {
   std::vector<std::shared_ptr<unit>> m_units;
 
 protected:
-  virtual void build_self() override {
+  virtual void build_self() const override {
     std::for_each(m_units.begin(), m_units.end(), std::mem_fn(&unit::build));
   }
   [[nodiscard]] virtual pathset self_objects() const override {

@@ -48,6 +48,9 @@ public:
   [[nodiscard]] std::string build_folder() const {
     return "out/" + build_subfolder() + "/";
   }
+  [[nodiscard]] auto build_path() const {
+    return std::filesystem::path{build_folder()};
+  }
   [[nodiscard]] virtual std::set<std::string> prebuilt_module_paths() const {
     std::set<std::string> res;
     res.insert(build_folder());

@@ -14,7 +14,7 @@ class mod : public seq {
         .run();
     impl::clang{pcm_name(who), obj_name(who)}.add_arg("-c").run();
   }
-  void compile_impl(const std::string &who) {
+  void compile_impl(const std::string &who) const {
     impl::clang{who + ".cpp", obj_name(who)}
         .add_arg("-c")
         .add_arg("-fmodule-file=" + pcm_name(name()))
@@ -23,7 +23,7 @@ class mod : public seq {
   }
 
 protected:
-  void build_self() override {
+  void build_self() const override {
     std::for_each(m_parts.begin(), m_parts.end(),
                   [this](auto w) { return compile_part(w); });
     compile_part(name());

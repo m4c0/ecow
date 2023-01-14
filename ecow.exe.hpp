@@ -11,7 +11,7 @@ class exe : public seq {
 protected:
   [[nodiscard]] virtual std::string exe_name() const { return name(); }
 
-  virtual void build_self() override {
+  virtual void build_self() const override {
     using namespace std::string_literals;
 
     seq::build_self();
