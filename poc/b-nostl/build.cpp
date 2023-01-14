@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
   m->add_wsdep("a-nostl", a);
 
   auto myapp = all->add_unit<app>("bee");
-  myapp->add_wsdep("a-nostl", a);
+  myapp->add_ref(m);
   myapp->add_unit<>("bee-exe");
 
   return run_main(all, argc, argv);
