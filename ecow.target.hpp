@@ -29,7 +29,7 @@ protected:
 #elif WIN32
     return "clang++ ";
 #else
-    return "clang++-15 ";
+    return "/home/linuxbrew/.linuxbrew/bin/clang++ ";
 #endif
   }
 
