@@ -7,6 +7,12 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: 🛒 Checkout ECOW
+      uses: actions/checkout@v3
+      with:
+        repository: m4c0/ecow
+        path: ecow
+
     - name: 🍺 Brewing
       if: inputs.os == 'ubuntu-latest'
       shell: bash
