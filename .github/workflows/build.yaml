@@ -9,49 +9,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  linus:
-    runs-on: ubuntu-latest
+  build-pocs:
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: 🧰 Setup
         uses: m4c0/ecow/.github/actions/setup@main
         with:
-          os: ubuntu-latest
+          os: ${{ matrix.os }}
           cwd: ecow/poc
-      - run: clang++ -std=c++20 build.cpp -o build.exe
-        working-directory: ecow/poc/a-nostl
-      - run: ./build.exe wasm android
-        working-directory: ecow/poc/a-nostl
-      - run: clang++ -std=c++20 build.cpp -o build.exe
-        working-directory: ecow/poc/b-nostl
-      - run: ./build.exe wasm android
-        working-directory: ecow/poc/b-nostl
-  steve:
-    runs-on: macos-latest
-    steps:
-      - name: 🧰 Setup
-        uses: m4c0/ecow/.github/actions/setup@main
+      - name: 🔨 Build POC A
+        uses: m4c0/ecow/.github/actions/compile@main
         with:
-          os: macos-latest
-      - run: clang++ -std=c++20 build.cpp -o build.exe
-        working-directory: ecow/poc/a-nostl
-      - run: ./build.exe macosx iphoneos
-        working-directory: ecow/poc/a-nostl
-      - run: clang++ -std=c++20 build.cpp -o build.exe
-        working-directory: ecow/poc/b-nostl
-      - run: ./build.exe macosx iphoneos
-        working-directory: ecow/poc/b-nostl
-  bill:
-    runs-on: windows-latest
-    steps:
-      - name: 🧰 Setup
-        uses: m4c0/ecow/.github/actions/setup@main
+          os: ${{ matrix.os }}
+          project: ecow/poc/a-nostl
+      - name: 🔨 Build POC B
+        uses: m4c0/ecow/.github/actions/compile@main
         with:
-          os: windows-latest
-      - run: clang++ -std=c++20 build.cpp -o build.exe
-        working-directory: ecow/poc/a-nostl
-      - run: .\build.exe
-        working-directory: ecow/poc/a-nostl
-      - run: clang++ -std=c++20 build.cpp -o build.exe
-        working-directory: ecow/poc/b-nostl
-      - run: .\build.exe
-        working-directory: ecow/poc/b-nostl
+          os: ${{ matrix.os }}
+          project: ecow/poc/b-nostl
