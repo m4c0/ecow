@@ -14,8 +14,8 @@ jobs:
     steps:
       - name: 🛒 Checkout
         uses: actions/checkout@v3
-      - name: 🍺 Brewing LLVM
-        uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+      - name: 🍺 Brewing
+        uses: m4c0/ecow/.github/actions/setup@main
         with:
           os: ubuntu-latest
           cwd: poc
@@ -32,8 +32,8 @@ jobs:
     steps:
       - name: 🛒 Checkout
         uses: actions/checkout@v3
-      - name: 🍺 Brewing LLVM
-        uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+      - name: 🍺 Brewing
+        uses: m4c0/ecow/.github/actions/setup@main
         with:
           os: macos-latest
       - run: clang++ -std=c++20 build.cpp -o build.exe
@@ -49,8 +49,8 @@ jobs:
     steps:
       - name: 🛒 Checkout
         uses: actions/checkout@v3
-      - name: 🍺 Brewing LLVM
-        uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+      - name: 🍺 Brewing
+        uses: m4c0/ecow/.github/actions/setup@main
         with:
           os: windows-latest
       - run: clang++ -std=c++20 build.cpp -o build.exe

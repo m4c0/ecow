@@ -1,4 +1,4 @@
-name: 🧰 Upgrade LLVM
+name: 🧰 Setup Enviroment
 inputs:
   os:
     required: true
