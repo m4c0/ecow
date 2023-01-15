@@ -9,20 +9,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  oreo:
+  linus:
     runs-on: ubuntu-latest
     steps:
-      - uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+      - name: 🛒 Checkout
+        uses: actions/checkout@v3
+      - name: 🍺 Brewing LLVM
+        uses: m4c0/ecow/.github/actions/upgrade_llvm@main
         with:
           os: ubuntu-latest
-      - uses: actions/checkout@v3
-      - run: |
-          cd poc
-          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sysroot-17.0.tar.gz
-          tar xfv wasi-sysroot-17.0.tar.gz
-          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/libclang_rt.builtins-wasm32-wasi-17.0.tar.gz
-          cd wasi-sysroot
-          tar xvf ../libclang_rt.builtins-wasm32-wasi-17.0.tar.gz
+          cwd: poc
       - run: clang++ -std=c++20 build.cpp -o build.exe
         working-directory: poc/a-nostl
       - run: ./build.exe wasm android
@@ -34,10 +30,12 @@ jobs:
   steve:
     runs-on: macos-latest
     steps:
-      - uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+      - name: 🛒 Checkout
+        uses: actions/checkout@v3
+      - name: 🍺 Brewing LLVM
+        uses: m4c0/ecow/.github/actions/upgrade_llvm@main
         with:
           os: macos-latest
-      - uses: actions/checkout@v3
       - run: clang++ -std=c++20 build.cpp -o build.exe
         working-directory: poc/a-nostl
       - run: ./build.exe macosx iphoneos
@@ -49,10 +47,12 @@ jobs:
   bill:
     runs-on: windows-latest
     steps:
-      - uses: m4c0/ecow/.github/actions/upgrade_llvm@main
+      - name: 🛒 Checkout
+        uses: actions/checkout@v3
+      - name: 🍺 Brewing LLVM
+        uses: m4c0/ecow/.github/actions/upgrade_llvm@main
         with:
           os: windows-latest
-      - uses: actions/checkout@v3
       - run: clang++ -std=c++20 build.cpp -o build.exe
         working-directory: poc/a-nostl
       - run: .\build.exe

@@ -2,6 +2,8 @@ name: 🧰 Upgrade LLVM
 inputs:
   os:
     required: true
+  cwd:
+    default: .
 runs:
   using: composite
   steps:
@@ -15,6 +17,16 @@ runs:
       if: inputs.os == 'ubuntu-latest'
       shell: bash
       run: /home/linuxbrew/.linuxbrew/bin/clang++ -v  
+    - name: ⚙️  Install WASI
+      if: inputs.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sysroot-17.0.tar.gz
+        tar xfv wasi-sysroot-17.0.tar.gz
+        wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/libclang_rt.builtins-wasm32-wasi-17.0.tar.gz
+        cd wasi-sysroot
+        tar xvf ../libclang_rt.builtins-wasm32-wasi-17.0.tar.gz
+      working-directory: ${{ inputs.cwd }}
 
     - name: 🍺 Brewing
       if: inputs.os == 'macos-latest'
