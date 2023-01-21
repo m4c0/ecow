@@ -86,7 +86,7 @@ public:
     if (fext == ".mm") {
       add_arg("-fobjc-arc");
     } else {
-      add_arg("-std=c++20");
+      add_arg("-std=c++2b");
     }
 
     add_arg("-O3");
