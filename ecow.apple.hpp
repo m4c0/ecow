@@ -73,6 +73,7 @@ public:
     case uikit:
       return f == m_main_api;
     case objective_c:
+    case posix:
       return true;
     default:
       return false;

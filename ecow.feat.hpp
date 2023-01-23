@@ -9,6 +9,7 @@ namespace ecow {
 enum features {
   android_ndk,
   cocoa,
+  posix,
   objective_c,
   uikit,
   windows_api,

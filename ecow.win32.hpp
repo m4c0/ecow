@@ -28,6 +28,7 @@ public:
 
   [[nodiscard]] bool supports(features f) const override {
     switch (f) {
+    case posix:
     case windows_api:
       return true;
     default:
