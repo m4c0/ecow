@@ -60,13 +60,14 @@ public:
     const auto llvm = find_llvm().string();
 
     const auto flags =
-        "-fPIC -DANDROID -fdata-sections -ffunction-sections "
+        "-fdata-sections -ffunction-sections "
         "-funwind-tables "
         "-fstack-protector-strong -no-canonical-prefixes --target=" +
         tgt + " --sysroot " + llvm + "/sysroot";
 
     m_clang = default_clang() + flags;
-    m_ld = llvm + "/bin/clang++ " + flags + " -shared -static-libstdc++";
+    m_ld = llvm + "/bin/clang++ " + flags +
+           " -shared -static-libstdc++ -Wl,-Bsymbolic";
   }
 
   [[nodiscard]] std::string cxx() const override { return m_clang; }
