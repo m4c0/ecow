@@ -56,7 +56,21 @@ class app : public exe {
     for (auto &[k, v] : env) {
       if (v == "")
         continue;
-      o << "\n          " << k << ": " << v << ",";
+
+      o << "\n          " << k << ": ";
+
+      bool first = true;
+      std::istringstream vv{v};
+      for (std::string line; std::getline(vv, line);) {
+        if (first) {
+          first = false;
+        } else {
+          o << "\n          ";
+        }
+        o << line;
+      }
+
+      o << ",";
       exp << k << "\n";
     }
     o << R"(
