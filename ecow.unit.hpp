@@ -52,6 +52,10 @@ protected:
 public:
   explicit unit(std::string name) : m_name{name} {}
 
+  void add_system_library(const std::string &name) {
+    add_link_flag("-l" + name);
+  }
+
   void add_wsdep(std::string name, std::shared_ptr<unit> ref) {
     m_wsdeps[name] = ref;
   }
