@@ -97,6 +97,12 @@ public:
       add_arg("-fprebuilt-module-path=" + path);
   }
 
+  clang &add_include_dirs(const auto &incs) {
+    for (auto &i : incs) {
+      add_arg("-I" + i);
+    }
+    return *this;
+  }
   clang &add_arg(const std::string &a) {
     m_args.insert(a);
     return *this;
