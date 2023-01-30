@@ -107,4 +107,17 @@ public:
     return m_prev->resource_path(name);
   }
 };
+
+[[nodiscard]] static inline std::string cxx() {
+  if (const char *exe = std::getenv("CXX")) {
+    return exe;
+  }
+  return current_target()->cxx();
+}
+[[nodiscard]] static inline std::string ld() {
+  if (const char *exe = std::getenv("LD")) {
+    return exe;
+  }
+  return current_target()->ld();
+}
 } // namespace ecow::impl

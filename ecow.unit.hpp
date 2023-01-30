@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ecow.clang.hpp"
 #include "ecow.core.hpp"
 #include "ecow.feat.hpp"
 #include "ecow.wsdep.hpp"
