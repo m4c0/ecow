@@ -31,9 +31,6 @@ public:
     }
 
     add_arg("-O3");
-    add_arg("-fmodules");
-    add_arg("-fmodules-cache-path=" +
-            current_target()->module_cache_path().string());
     for (const auto &path : current_target()->prebuilt_module_paths())
       add_arg("-fprebuilt-module-path=" + path);
   }
