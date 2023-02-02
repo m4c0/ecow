@@ -4,14 +4,13 @@
 
 namespace ecow {
 class mod : public seq {
-  strset m_incs;
   strvec m_impls;
   strvec m_parts;
 
   void compile_part(const std::string &who) const {
     impl::clang{who + ".cppm", pcm_name(who)}
         .add_arg("--precompile")
-        .add_include_dirs(m_incs)
+        .add_include_dirs(include_dirs())
         .with_deps()
         .run();
     impl::clang{pcm_name(who), obj_name(who)}.add_arg("-c").run();
@@ -20,7 +19,7 @@ class mod : public seq {
     impl::clang{who + ".cpp", obj_name(who)}
         .add_arg("-c")
         .add_arg("-fmodule-file=" + pcm_name(name()))
-        .add_include_dirs(m_incs)
+        .add_include_dirs(include_dirs())
         .with_deps()
         .run();
   }
@@ -48,8 +47,6 @@ protected:
 public:
   using seq::add_unit;
   using seq::seq;
-
-  void add_include_dir(std::string dir) { m_incs.insert(dir); }
 
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }

@@ -17,6 +17,7 @@ class unit {
   std::string m_name;
   std::unordered_set<std::string> m_link_flags{};
   std::vector<std::shared_ptr<feat>> m_features{};
+  std::unordered_set<std::string> m_include_dirs{};
   wsdeps::map_t m_wsdeps;
 
 protected:
@@ -33,6 +34,9 @@ protected:
   }
 
   [[nodiscard]] constexpr const auto &name() const noexcept { return m_name; }
+  [[nodiscard]] constexpr const auto &include_dirs() const noexcept {
+    return m_include_dirs;
+  }
   [[nodiscard]] bool target_supports(features f) const noexcept {
     return impl::current_target()->supports(f);
   }
@@ -42,7 +46,11 @@ protected:
   virtual void build_self() const {
     const auto ext =
         std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
-    impl::clang{m_name + ext, obj_name(m_name)}.add_arg("-c").with_deps().run();
+    impl::clang{m_name + ext, obj_name(m_name)}
+        .add_arg("-c")
+        .add_include_dirs(m_include_dirs)
+        .with_deps()
+        .run();
   }
   virtual pathset self_objects() const {
     pathset res{};
@@ -52,6 +60,8 @@ protected:
 
 public:
   explicit unit(std::string name) : m_name{name} {}
+
+  void add_include_dir(std::string dir) { m_include_dirs.insert(dir); }
 
   void add_system_library(const std::string &name) {
     add_link_flag("-l" + name);
