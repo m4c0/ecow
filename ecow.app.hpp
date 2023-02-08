@@ -127,12 +127,12 @@ protected:
     if (target_supports(webassembly))
       build_wasm();
 
+    exe::build_self();
+
     const auto res_fld = impl::current_target()->resource_path(name());
     for (const auto &res : m_resources) {
       impl::run_copy(res, res_fld / res);
     }
-
-    exe::build_self();
   };
 
 public:
