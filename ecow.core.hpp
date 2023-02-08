@@ -56,11 +56,18 @@ must_recompile(const auto &depfn, const auto &from, const auto &to) {
 
 static inline void run_copy(const std::filesystem::path &from,
                             const std::filesystem::path &to) {
-  if (!must_recompile(from, to))
+  auto actual_from = from;
+  if (!std::filesystem::exists(from)) {
+    actual_from = "out" / from;
+    if (!std::filesystem::exists(actual_from)) {
+      throw std::runtime_error(std::string{"missing file: "} + from.c_str());
+    }
+  }
+  if (!must_recompile(actual_from, to))
     return;
 
   std::cout << "copying " << to.string() << "\n";
-  std::filesystem::copy(from, to,
+  std::filesystem::copy(actual_from, to,
                         std::filesystem::copy_options::update_existing);
 }
 } // namespace ecow::impl
