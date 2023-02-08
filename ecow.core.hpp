@@ -60,7 +60,7 @@ static inline void run_copy(const std::filesystem::path &from,
   if (!std::filesystem::exists(from)) {
     actual_from = "out" / from;
     if (!std::filesystem::exists(actual_from)) {
-      throw std::runtime_error(std::string{"missing file: "} + from.c_str());
+      throw std::runtime_error(std::string{"missing file: "} + from.string());
     }
   }
   if (!must_recompile(actual_from, to))
