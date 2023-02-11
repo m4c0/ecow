@@ -28,10 +28,11 @@ public:
     if (!std::filesystem::exists(sysroot))
       throw std::runtime_error("Invalid wasi sysroot");
 
-    auto clang = default_clang() + target + " --sysroot " + sysroot.string();
+    auto flags = std::string{target} + " --sysroot " + sysroot.string();
 
-    m_cxxflags = "-D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
-    m_ld = clang + " -resource-dir " + sysroot.string();
+    m_cxxflags =
+        flags + " -D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
+    m_ld = default_clang() + flags + " -resource-dir " + sysroot.string();
   }
 
   [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
