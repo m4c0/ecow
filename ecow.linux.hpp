@@ -10,7 +10,7 @@ protected:
   [[nodiscard]] std::string build_subfolder() const override { return "linux"; }
 
 public:
-  [[nodiscard]] std::string cxx() const override { return "clang++"; }
+  [[nodiscard]] std::string cxxflags() const override { return ""; }
   [[nodiscard]] std::string ld() const override { return "clang++"; }
 
   [[nodiscard]] std::string
