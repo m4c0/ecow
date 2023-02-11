@@ -10,8 +10,8 @@ protected:
   [[nodiscard]] std::string build_subfolder() const override { return "win32"; }
 
 public:
-  [[nodiscard]] std::string cxx() const override {
-    return "clang++ -fno-ms-compatibility";
+  [[nodiscard]] std::string cxxflags() const override {
+    return "-fno-ms-compatibility";
   }
   [[nodiscard]] std::string ld() const override { return "clang++"; }
 

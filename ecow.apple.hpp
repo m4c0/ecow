@@ -52,9 +52,7 @@ public:
     }
   }
 
-  [[nodiscard]] std::string cxx() const override {
-    return "/usr/local/opt/llvm/bin/clang++ " + m_extra_cflags;
-  }
+  [[nodiscard]] std::string cxxflags() const override { return m_extra_cflags; }
   [[nodiscard]] std::string ld() const override {
     return "clang++ " + m_extra_cflags;
   }

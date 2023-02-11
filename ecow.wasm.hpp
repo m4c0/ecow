@@ -6,7 +6,7 @@
 
 namespace ecow::impl {
 class wasm_target : public target {
-  std::string m_cxx;
+  std::string m_cxxflags;
   std::string m_ld;
 
   [[nodiscard]] static inline auto sysroot_path() {
@@ -30,11 +30,11 @@ public:
 
     auto clang = default_clang() + target + " --sysroot " + sysroot.string();
 
-    m_cxx = clang + " -D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
+    m_cxxflags = "-D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
     m_ld = clang + " -resource-dir " + sysroot.string();
   }
 
-  [[nodiscard]] std::string cxx() const override { return m_cxx; }
+  [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
   [[nodiscard]] std::string ld() const override { return m_ld; }
 
   [[nodiscard]] std::string

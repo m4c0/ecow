@@ -23,6 +23,15 @@ class target {
 protected:
   [[nodiscard]] virtual std::string build_subfolder() const = 0;
 
+public:
+  target() { target_stack().push_back(this); }
+  virtual ~target() { target_stack().pop_back(); }
+
+  [[nodiscard]] virtual bool supports(features f) const { return false; }
+
+  [[nodiscard]] virtual std::string cxxflags() const = 0;
+  [[nodiscard]] virtual std::string ld() const = 0;
+
   [[nodiscard]] static inline std::string default_clang() {
 #ifdef __APPLE__
     return "/usr/local/opt/llvm/bin/clang++ ";
@@ -32,15 +41,9 @@ protected:
     return "/home/linuxbrew/.linuxbrew/bin/clang++ ";
 #endif
   }
-
-public:
-  target() { target_stack().push_back(this); }
-  virtual ~target() { target_stack().pop_back(); }
-
-  [[nodiscard]] virtual bool supports(features f) const { return false; }
-
-  [[nodiscard]] virtual std::string cxx() const = 0;
-  [[nodiscard]] virtual std::string ld() const = 0;
+  [[nodiscard]] std::string cxx() const {
+    return default_clang() + " " + cxxflags();
+  }
 
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const = 0;
@@ -83,8 +86,8 @@ public:
     return m_prev->supports(f);
   }
 
-  [[nodiscard]] virtual std::string cxx() const override {
-    return m_prev->cxx();
+  [[nodiscard]] virtual std::string cxxflags() const override {
+    return m_prev->cxxflags();
   }
   [[nodiscard]] virtual std::string ld() const override { return m_prev->ld(); }
 

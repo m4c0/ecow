@@ -7,7 +7,7 @@
 
 namespace ecow::impl {
 class android_target : public target {
-  std::string m_clang;
+  std::string m_cxxflags;
   std::string m_ld;
   std::string m_target;
 
@@ -59,18 +59,16 @@ public:
   explicit android_target(const std::string &tgt) : m_target{tgt} {
     const auto llvm = find_llvm().string();
 
-    const auto flags =
-        "-fdata-sections -ffunction-sections "
-        "-funwind-tables "
-        "-fstack-protector-strong -no-canonical-prefixes --target=" +
-        tgt + " --sysroot " + llvm + "/sysroot";
+    m_cxxflags = "-fdata-sections -ffunction-sections "
+                 "-funwind-tables "
+                 "-fstack-protector-strong -no-canonical-prefixes --target=" +
+                 tgt + " --sysroot " + llvm + "/sysroot";
 
-    m_clang = default_clang() + flags;
-    m_ld = llvm + "/bin/clang++ " + flags +
+    m_ld = llvm + "/bin/clang++ " + m_cxxflags +
            " -shared -static-libstdc++ -Wl,-Bsymbolic";
   }
 
-  [[nodiscard]] std::string cxx() const override { return m_clang; }
+  [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
   [[nodiscard]] std::string ld() const override { return m_ld; }
 
   [[nodiscard]] std::string
