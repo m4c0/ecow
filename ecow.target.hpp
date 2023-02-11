@@ -35,7 +35,7 @@ public:
   [[nodiscard]] static inline std::string default_clang() {
 #ifdef __APPLE__
     return "/usr/local/opt/llvm/bin/clang++ ";
-#elif WIN32
+#elif defined(_WIN32)
     return "clang++ ";
 #else
     return "/home/linuxbrew/.linuxbrew/bin/clang++ ";
