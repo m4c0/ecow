@@ -34,7 +34,7 @@ public:
     using namespace std::string_literals;
     m_build_folder = sdk;
     m_extra_cflags =
-        "-isysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
+        "--sysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
     if (sdk == "iphoneos"s) {
       m_extra_cflags += " -target arm64-apple-ios13.0";
       m_exe_path = "";
@@ -54,7 +54,7 @@ public:
 
   [[nodiscard]] std::string cxxflags() const override { return m_extra_cflags; }
   [[nodiscard]] std::string ld() const override {
-    return "clang++ " + m_extra_cflags;
+    return cxx() + " " + m_extra_cflags;
   }
 
   [[nodiscard]] std::string
