@@ -7,7 +7,7 @@
 namespace ecow::impl {
 class wasm_target : public target {
   std::string m_cxxflags;
-  std::string m_ld;
+  std::string m_ldflags;
 
   [[nodiscard]] static inline auto sysroot_path() {
     const auto env = std::getenv("WASI_SYSROOT");
@@ -32,11 +32,11 @@ public:
 
     m_cxxflags =
         flags + " -D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
-    m_ld = cxx() + flags + " -resource-dir " + sysroot.string();
+    m_ldflags = flags + " -resource-dir " + sysroot.string();
   }
 
   [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
-  [[nodiscard]] std::string ld() const override { return m_ld; }
+  [[nodiscard]] std::string ldflags() const override { return m_ldflags; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {

@@ -8,7 +8,7 @@
 namespace ecow::impl {
 class android_target : public target {
   std::string m_cxxflags;
-  std::string m_ld;
+  std::string m_ldflags;
   std::string m_target;
 
   [[nodiscard]] static inline auto sdk_path() {
@@ -64,12 +64,13 @@ public:
                  "-fstack-protector-strong -no-canonical-prefixes --target=" +
                  tgt + " --sysroot " + llvm + "/sysroot";
 
-    m_ld = llvm + "/bin/clang++ " + m_cxxflags +
-           " -shared -static-libstdc++ -Wl,-Bsymbolic";
+    m_ldflags = m_cxxflags +
+                " -shared -static-libstdc++ -Wl,-Bsymbolic -fuse-ld=lld " +
+                " -resource-dir " + llvm + "/lib64/clang/*";
   }
 
   [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
-  [[nodiscard]] std::string ld() const override { return m_ld; }
+  [[nodiscard]] std::string ldflags() const override { return m_ldflags; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {

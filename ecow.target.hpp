@@ -30,7 +30,7 @@ public:
   [[nodiscard]] virtual bool supports(features f) const { return false; }
 
   [[nodiscard]] virtual std::string cxxflags() const = 0;
-  [[nodiscard]] virtual std::string ld() const = 0;
+  [[nodiscard]] virtual std::string ldflags() const = 0;
 
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const = 0;
@@ -76,7 +76,9 @@ public:
   [[nodiscard]] virtual std::string cxxflags() const override {
     return m_prev->cxxflags();
   }
-  [[nodiscard]] virtual std::string ld() const override { return m_prev->ld(); }
+  [[nodiscard]] virtual std::string ldflags() const override {
+    return m_prev->ldflags();
+  }
 
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const override {

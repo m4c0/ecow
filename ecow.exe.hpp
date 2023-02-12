@@ -18,9 +18,10 @@ protected:
 
     const auto exe_nm = final_exe_name();
     const auto exe_time = impl::last_write_time(exe_nm);
+    const auto ldflags = impl::current_target()->ldflags();
 
     bool any_is_newer = false;
-    std::string cmd = impl::current_target()->ld() + " -o " + exe_nm;
+    std::string cmd = impl::cxx() + ldflags + " -o " + exe_nm;
     for (const auto &obj : objects()) {
       const auto otime = impl::last_write_time(obj);
       if (otime > exe_time)

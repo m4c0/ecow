@@ -53,9 +53,7 @@ public:
   }
 
   [[nodiscard]] std::string cxxflags() const override { return m_extra_cflags; }
-  [[nodiscard]] std::string ld() const override {
-    return cxx() + " " + m_extra_cflags;
-  }
+  [[nodiscard]] std::string ldflags() const override { return m_extra_cflags; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
