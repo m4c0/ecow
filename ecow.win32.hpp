@@ -13,7 +13,7 @@ public:
   [[nodiscard]] std::string cxxflags() const override {
     return "-fno-ms-compatibility";
   }
-  [[nodiscard]] std::string ld() const override { return "clang++"; }
+  [[nodiscard]] std::string ldflags() const override { return ""; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
