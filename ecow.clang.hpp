@@ -64,7 +64,7 @@ public:
     const auto &tgt = impl::current_target();
 
     std::stringstream cbuf;
-    cbuf << tgt->cxx();
+    cbuf << cxx();
     cbuf << tgt->cxxflags();
     for (const auto &a : m_args)
       cbuf << " " << a;

@@ -32,16 +32,6 @@ public:
   [[nodiscard]] virtual std::string cxxflags() const = 0;
   [[nodiscard]] virtual std::string ld() const = 0;
 
-  [[nodiscard]] static inline std::string cxx() {
-#ifdef __APPLE__
-    return "/usr/local/opt/llvm/bin/clang++ ";
-#elif defined(_WIN32)
-    return "clang++ ";
-#else
-    return "/home/linuxbrew/.linuxbrew/bin/clang++ ";
-#endif
-  }
-
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const = 0;
 
