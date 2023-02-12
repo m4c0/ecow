@@ -20,7 +20,7 @@ protected:
     const auto exe_time = impl::last_write_time(exe_nm);
 
     bool any_is_newer = false;
-    std::string cmd = impl::ld() + " -o " + exe_nm;
+    std::string cmd = impl::current_target()->ld() + " -o " + exe_nm;
     for (const auto &obj : objects()) {
       const auto otime = impl::last_write_time(obj);
       if (otime > exe_time)

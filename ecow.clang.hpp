@@ -61,8 +61,11 @@ public:
 
     std::cerr << "compiling " << m_to << std::endl;
 
+    const auto &tgt = impl::current_target();
+
     std::stringstream cbuf;
-    cbuf << cxx();
+    cbuf << tgt->cxx();
+    cbuf << tgt->cxxflags();
     for (const auto &a : m_args)
       cbuf << " " << a;
     cbuf << " " << m_from;

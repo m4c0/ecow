@@ -32,7 +32,7 @@ public:
   [[nodiscard]] virtual std::string cxxflags() const = 0;
   [[nodiscard]] virtual std::string ld() const = 0;
 
-  [[nodiscard]] static inline std::string default_clang() {
+  [[nodiscard]] static inline std::string cxx() {
 #ifdef __APPLE__
     return "/usr/local/opt/llvm/bin/clang++ ";
 #elif defined(_WIN32)
@@ -40,9 +40,6 @@ public:
 #else
     return "/home/linuxbrew/.linuxbrew/bin/clang++ ";
 #endif
-  }
-  [[nodiscard]] std::string cxx() const {
-    return default_clang() + " " + cxxflags();
   }
 
   [[nodiscard]] virtual std::string
@@ -110,17 +107,4 @@ public:
     return m_prev->resource_path(name);
   }
 };
-
-[[nodiscard]] static inline std::string cxx() {
-  if (const char *exe = std::getenv("CXX")) {
-    return exe;
-  }
-  return current_target()->cxx();
-}
-[[nodiscard]] static inline std::string ld() {
-  if (const char *exe = std::getenv("LD")) {
-    return exe;
-  }
-  return current_target()->ld();
-}
 } // namespace ecow::impl

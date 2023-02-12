@@ -32,7 +32,7 @@ public:
 
     m_cxxflags =
         flags + " -D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
-    m_ld = default_clang() + flags + " -resource-dir " + sysroot.string();
+    m_ld = cxx() + flags + " -resource-dir " + sysroot.string();
   }
 
   [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
