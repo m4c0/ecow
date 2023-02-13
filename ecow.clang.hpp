@@ -14,6 +14,7 @@ struct clang_failed : public std::runtime_error {
 
 class clang {
   std::set<std::string> m_args{};
+  std::string m_compiler;
   std::string m_from;
   std::string m_to;
   bool m_with_deps{false};
@@ -24,15 +25,22 @@ public:
   clang(const std::string &from, const std::string &to)
       : m_from{from}, m_to{to} {
     const auto fext = std::filesystem::path{from}.extension();
-    if (fext == ".mm") {
+    if ((fext == ".mm") || (fext == ".m")) {
       add_arg("-fobjc-arc");
-    } else {
+    } else if (fext != ".c") {
       add_arg("-std=c++2b");
     }
 
     add_arg("-O3");
-    for (const auto &path : current_target()->prebuilt_module_paths())
-      add_arg("-fprebuilt-module-path=" + path);
+
+    if (fext == ".c" || fext == ".m") {
+      m_compiler = c();
+    } else {
+      m_compiler = cxx();
+
+      for (const auto &path : current_target()->prebuilt_module_paths())
+        add_arg("-fprebuilt-module-path=" + path);
+    }
   }
 
   clang &add_include_dirs(const auto &incs) {
@@ -64,7 +72,7 @@ public:
     const auto &tgt = impl::current_target();
 
     std::stringstream cbuf;
-    cbuf << cxx();
+    cbuf << m_compiler;
     cbuf << tgt->cxxflags();
     for (const auto &a : m_args)
       cbuf << " " << a;
