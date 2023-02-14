@@ -17,5 +17,9 @@ public:
   app_exe_name(const std::string &name) const override {
     return name;
   }
+
+  [[nodiscard]] virtual bool supports(features f) const override {
+    return f == host;
+  }
 };
 } // namespace ecow::impl

@@ -33,3 +33,8 @@ jobs:
         with:
           os: ${{ matrix.os }}
           project: ecow/poc/b-nostl
+      - name: 🔨 Build Tooling POC
+        uses: m4c0/ecow/.github/actions/compile@main
+        with:
+          os: ${{ matrix.os }}
+          project: ecow/poc/tooling
