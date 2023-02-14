@@ -19,7 +19,7 @@ runs:
       working-directory: ${{ inputs.project }}
       run: |
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        ./build.exe wasm android
+        ./build.exe linux wasm android
 
     - name: 🐮 Build ECOW
       if: inputs.os == 'macos-latest'
