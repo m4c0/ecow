@@ -9,19 +9,6 @@ runs:
   using: composite
   steps:
     - name: 🐮 Build ECOW
-      if: inputs.os == 'ubuntu-latest'
-      shell: bash
-      working-directory: ${{ inputs.project }}
-      run: clang++ -I../ecow -std=c++20 build.cpp -o build.exe
-    - name: 🍼 Build Project
-      if: inputs.os == 'ubuntu-latest'
-      shell: bash
-      working-directory: ${{ inputs.project }}
-      run: |
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        ./build.exe linux wasm
-
-    - name: 🐮 Build ECOW
       if: inputs.os == 'macos-latest'
       shell: bash
       working-directory: ${{ inputs.project }}
@@ -30,7 +17,7 @@ runs:
       if: inputs.os == 'macos-latest'
       shell: bash
       working-directory: ${{ inputs.project }}
-      run: ./build.exe macosx iphoneos iphonesimulator android
+      run: ./build.exe macosx iphoneos iphonesimulator wasm android
 
     - name: 🐮 Build ECOW
       if: inputs.os == 'windows-latest'

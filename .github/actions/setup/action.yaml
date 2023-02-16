@@ -13,18 +13,8 @@ runs:
         repository: m4c0/ecow
         path: ecow
 
-    - name: 🍺 Brewing
-      if: inputs.os == 'ubuntu-latest'
-      shell: bash
-      run: |
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        brew install llvm
-    - name: 🔎 Check Clang Version
-      if: inputs.os == 'ubuntu-latest'
-      shell: bash
-      run: /home/linuxbrew/.linuxbrew/bin/clang++ -v  
     - name: ⚙️  Install WASI
-      if: inputs.os == 'ubuntu-latest'
+      if: inputs.os == 'macos-latest'
       shell: bash
       run: |
         wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sysroot-17.0.tar.gz
@@ -34,19 +24,21 @@ runs:
         tar xvf ../libclang_rt.builtins-wasm32-wasi-17.0.tar.gz
       working-directory: ${{ inputs.cwd }}
 
-    - name: 🍺 Brewing
-      if: inputs.os == 'macos-latest'
-      shell: bash
-      run: brew install llvm
+    # Not needed for now, since GHA provides LLVM 15 now
+    # - name: 🍺 Brewing
+    #   if: inputs.os == 'macos-latest'
+    #   shell: bash
+    #   run: brew install llvm
     - name: 🔎 Check Clang Version
       if: inputs.os == 'macos-latest'
       shell: bash
       run: /usr/local/opt/llvm/bin/clang++ -v  
 
-    - name: 🍫 Brewing
-      if: inputs.os == 'windows-latest'
-      shell: pwsh
-      run: choco upgrade llvm -y
+    # Not needed for now, since GHA provides LLVM 15 now
+    # - name: 🍫 Brewing
+    #   if: inputs.os == 'windows-latest'
+    #   shell: pwsh
+    #   run: choco upgrade llvm -y
     - name: 🔎 Check Clang Version
       if: inputs.os == 'windows-latest'
       shell: pwsh
