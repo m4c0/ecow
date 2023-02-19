@@ -33,6 +33,10 @@ protected:
     if (!any_is_newer)
       return;
 
+    if (std::getenv("ECOW_DEBUG")) {
+      cmd.append(" -g");
+    }
+
     for (const auto &f : link_flags()) {
       cmd.append(" ");
       cmd.append(f);

@@ -31,7 +31,11 @@ public:
       add_arg("-std=c++2b");
     }
 
-    add_arg("-O3");
+    if (std::getenv("ECOW_DEBUG")) {
+      add_arg("-O0");
+    } else {
+      add_arg("-O3");
+    }
 
     if (fext == ".c" || fext == ".m") {
       m_compiler = c();
