@@ -45,6 +45,7 @@ public:
 
   [[nodiscard]] bool supports(features f) const override {
     switch (f) {
+    case application:
     case webassembly:
       return true;
     default:

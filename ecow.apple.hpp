@@ -76,6 +76,7 @@ public:
       return f == m_main_api;
     case host:
       return m_main_api == cocoa;
+    case application:
     case objective_c:
     case posix:
       return true;

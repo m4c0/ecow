@@ -8,6 +8,7 @@
 namespace ecow {
 enum features {
   android_ndk,
+  application,
   cocoa,
   host,
   posix,
