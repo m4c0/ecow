@@ -14,6 +14,18 @@ class app : public exe {
     return (fdir / exe_name()).replace_extension("exports");
   }
 
+  void build_fn(std::ofstream &o, std::istream &vv) const {
+    bool first = true;
+    for (std::string line; std::getline(vv, line);) {
+      if (first) {
+        first = false;
+      } else {
+        o << "\n      ";
+      }
+      o << line;
+    }
+  }
+
   void build_wasm() const {
     const auto fdir =
         std::filesystem::path{impl::current_target()->build_folder()};
@@ -54,20 +66,17 @@ class app : public exe {
   const imp = {
     env: {)";
     for (auto &[k, v] : env) {
-      if (v == "")
+      auto jsf = k + ".js";
+      if (!std::filesystem::exists(jsf) && v == "")
         continue;
 
-      o << "\n          " << k << ": ";
-
-      bool first = true;
-      std::istringstream vv{v};
-      for (std::string line; std::getline(vv, line);) {
-        if (first) {
-          first = false;
-        } else {
-          o << "\n          ";
-        }
-        o << line;
+      o << "\n      " << k << ": ";
+      if (std::filesystem::exists(jsf)) {
+        std::ifstream i{jsf};
+        build_fn(o, i);
+      } else {
+        std::istringstream i{v};
+        build_fn(o, i);
       }
 
       o << ",";
@@ -152,7 +161,7 @@ public:
       strmap env;
       visit(webassembly, env);
       for (auto &[k, v] : env)
-        if (v == "")
+        if (!std::filesystem::exists(k + ".js") && v == "")
           res.insert("-Wl,--export=" + k);
     }
 
