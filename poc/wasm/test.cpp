@@ -1,1 +1,1 @@
-extern "C" void exported() {}
+int main() {}

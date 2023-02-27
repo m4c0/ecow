@@ -8,9 +8,8 @@ auto exported() {
   m->add_part("impl_part");
   m->add_impl("impl");
 
-  auto mjs = m->add_feat<js>();
-  mjs->set("main", "");
-  mjs->set("test", "() => console.log('hello')");
+  m->add_feat<export_symbol>("main");
+  m->add_feat<inline_js>("test", "() => console.log('hello')");
 
   return m;
 }

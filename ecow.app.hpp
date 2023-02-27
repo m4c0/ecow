@@ -35,7 +35,13 @@ class app : public exe {
     std::cerr << "javascripting " << fname.string() << " and " << ename.string()
               << std::endl;
     std::ofstream o{fname};
+
     std::ofstream exp{ename};
+    strmap exps;
+    visit(export_syms, exps);
+    for (const auto &[k, v] : exps) {
+      exp << k << "\n";
+    }
 
     strmap env;
     visit(webassembly, env);
@@ -45,13 +51,10 @@ class app : public exe {
              name() + R"(";
   var env = {)";
     for (auto &[k, v] : env) {
-      auto jsf = k + ".js";
-      if (!std::filesystem::exists(jsf) && v == "")
-        continue;
 
       o << "\n    " << k << ": ";
-      if (std::filesystem::exists(jsf)) {
-        std::ifstream i{jsf};
+      if (v == "") {
+        std::ifstream i{k + ".js"};
         build_fn(o, i);
       } else {
         std::istringstream i{v};
@@ -59,7 +62,6 @@ class app : public exe {
       }
 
       o << ",";
-      exp << k << "\n";
     }
     o << R"(
   };

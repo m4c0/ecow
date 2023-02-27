@@ -10,6 +10,7 @@ enum features {
   android_ndk,
   application,
   cocoa,
+  export_syms,
   host,
   posix,
   objective_c,
@@ -32,5 +33,24 @@ public:
     if (f == type())
       visit(out);
   }
+};
+
+template <features F> class t_feat_pair : public feat {
+  std::string m_name;
+  std::string m_value;
+
+protected:
+  [[nodiscard]] features type() const noexcept override { return F; }
+  void visit(strmap &out) const noexcept override { out[m_name] = m_value; }
+
+  t_feat_pair(std::string name, std::string value)
+      : m_name{name}, m_value{value} {}
+};
+
+struct export_symbol : t_feat_pair<export_syms> {
+  export_symbol(std::string name) : t_feat_pair{name, ""} {}
+};
+struct inline_js : t_feat_pair<webassembly> {
+  inline_js(std::string name, std::string value) : t_feat_pair{name, value} {}
 };
 } // namespace ecow

@@ -71,8 +71,8 @@ public:
     m_wsdeps[name] = ref;
   }
 
-  template <typename FTp> auto add_feat() {
-    auto f = std::make_shared<FTp>();
+  template <typename FTp, typename... Args> auto add_feat(Args &&...args) {
+    auto f = std::make_shared<FTp>(std::forward<Args>(args)...);
     m_features.push_back(f);
     return f;
   }
