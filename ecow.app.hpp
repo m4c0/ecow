@@ -51,9 +51,10 @@ class app : public exe {
     const auto ename = exports_path();
     std::cerr << "generating " << ename.string() << std::endl;
 
-    std::ofstream exp{ename};
     strmap exps;
     visit(export_syms, exps);
+
+    std::ofstream exp{ename};
     for (const auto &[k, v] : exps) {
       exp << k << "\n";
     }

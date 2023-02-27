@@ -52,7 +52,7 @@
     ecow_buffer = obj.instance.exports.memory.buffer;
     obj.instance.exports._initialize();
     for (var i in inits) {
-      i(obj);
+      inits[i](obj);
     }
     return obj;
   }

@@ -36,7 +36,7 @@ public:
   void visit(features vf, strmap &out) const override {
     unit::visit(vf, out);
     for (auto &[f, u] : m_map) {
-      if (target_supports(f))
+      if (target_supports(f) && target_supports(vf))
         u.visit(vf, out);
     }
   }
