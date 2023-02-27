@@ -77,8 +77,10 @@ public:
     return f;
   }
   virtual void visit(features f, strmap &out) const {
-    std::for_each(m_wsdeps.begin(), m_wsdeps.end(),
-                  [f, &out](auto &kv) { kv.second->visit(f, out); });
+    std::for_each(m_wsdeps.begin(), m_wsdeps.end(), [f, &out](auto &kv) {
+      wsdeps::curpath_raii c{kv.first};
+      kv.second->visit(f, out);
+    });
     std::for_each(m_features.begin(), m_features.end(),
                   [f, &out](auto &mf) { mf->visit(f, out); });
   }

@@ -25,16 +25,9 @@ class app : public exe {
       o << line;
     }
   }
-  void build_fn(std::ofstream &o, const std::string &k,
-                const std::string &v) const {
-    std::ifstream ifs{k + ".js"};
-    if (ifs) {
-      build_fn(o, ifs);
-    } else {
-      std::istringstream i{v};
-      build_fn(o, i);
-    }
-
+  void build_fn(std::ofstream &o, const std::string &v) const {
+    std::istringstream i{v};
+    build_fn(o, i);
     o << ",";
   }
   void build_env(std::ofstream &o) const {
@@ -42,15 +35,15 @@ class app : public exe {
     visit(wasm_env, env);
     for (auto &[k, v] : env) {
       o << "\n    " << k << ": ";
-      build_fn(o, k, v);
+      build_fn(o, v);
     }
   }
-  void build_inits(std::ofstream &vish) const {
+  void build_inits(std::ofstream &o) const {
     strmap env;
     visit(wasm_setup, env);
     for (auto &[k, v] : env) {
-      vish << "\n    ";
-      build_fn(vish, k, k);
+      o << "\n    ";
+      build_fn(o, v);
     }
   }
 

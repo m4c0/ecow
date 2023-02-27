@@ -9,7 +9,8 @@ auto exported() {
   m->add_impl("impl");
 
   m->add_feat<export_symbol>("main");
-  m->add_feat<inline_js>("test", "() => console.log('hello')");
+  m->add_feat<inline_js>("test", "test");
+  m->add_feat<setup_js>("console");
 
   return m;
 }

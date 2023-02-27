@@ -1,7 +1,9 @@
 #pragma once
 
+#include <fstream>
 #include <iterator>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -39,23 +41,47 @@ public:
 
 template <features F> class t_feat_pair : public feat {
   std::string m_name;
+
+protected:
+  [[nodiscard]] const std::string &name() const noexcept { return m_name; }
+  [[nodiscard]] virtual std::string value() const noexcept = 0;
+  [[nodiscard]] features type() const noexcept override { return F; }
+  void visit(strmap &out) const noexcept override { out[m_name] = value(); }
+
+  t_feat_pair(std::string name) : m_name{name} {}
+};
+
+class export_symbol : public t_feat_pair<export_syms> {
+protected:
+  [[nodiscard]] std::string value() const noexcept override { return ""; }
+
+public:
+  export_symbol(std::string name) : t_feat_pair{name} {}
+};
+
+template <features F> class file_feat : public t_feat_pair<F> {
   std::string m_value;
 
 protected:
-  [[nodiscard]] features type() const noexcept override { return F; }
-  void visit(strmap &out) const noexcept override { out[m_name] = m_value; }
+  file_feat(std::string name, std::string value)
+      : t_feat_pair<F>{name}, m_value{value} {}
 
-  t_feat_pair(std::string name, std::string value)
-      : m_name{name}, m_value{value} {}
+  [[nodiscard]] std::string value() const noexcept override {
+    std::ifstream ifs{this->name() + ".js"};
+    if (ifs) {
+      std::ostringstream i{};
+      i << ifs.rdbuf();
+      return i.str();
+    } else {
+      return m_value;
+    }
+  }
 };
 
-struct export_symbol : t_feat_pair<export_syms> {
-  export_symbol(std::string name) : t_feat_pair{name, ""} {}
+struct inline_js : file_feat<wasm_env> {
+  inline_js(std::string name, std::string value) : file_feat{name, value} {}
 };
-struct inline_js : t_feat_pair<wasm_env> {
-  inline_js(std::string name, std::string value) : t_feat_pair{name, value} {}
-};
-struct setup_js : t_feat_pair<wasm_setup> {
-  setup_js(std::string fn) : t_feat_pair{fn, ""} {}
+struct setup_js : file_feat<wasm_setup> {
+  setup_js(std::string fn) : file_feat{fn, fn} {}
 };
 } // namespace ecow
