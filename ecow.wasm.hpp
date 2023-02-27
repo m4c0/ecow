@@ -46,6 +46,7 @@ public:
   [[nodiscard]] bool supports(features f) const override {
     switch (f) {
     case application:
+    case export_syms:
     case wasm_env:
     case wasm_setup:
     case webassembly:
