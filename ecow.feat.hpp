@@ -19,27 +19,18 @@ enum features {
 };
 
 class feat {
-  std::map<std::string, std::string> m_values{};
-
 protected:
+  using strmap = std::map<std::string, std::string>;
+
   [[nodiscard]] virtual features type() const noexcept = 0;
-
-  void set(const std::string &k, const std::string &v) {
-    m_values.emplace(k, v);
-  }
-
-  [[nodiscard]] constexpr const auto &values() const noexcept {
-    return m_values;
-  }
+  virtual void visit(strmap &out) const noexcept = 0;
 
 public:
   virtual ~feat() = default;
 
-  void visit(features f, decltype(m_values) &out) const {
-    if (f != type())
-      return;
-
-    std::copy(m_values.begin(), m_values.end(), std::inserter(out, out.end()));
+  void visit(features f, strmap &out) const {
+    if (f == type())
+      visit(out);
   }
 };
 } // namespace ecow
