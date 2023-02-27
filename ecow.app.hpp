@@ -20,7 +20,7 @@ class app : public exe {
       if (first) {
         first = false;
       } else {
-        o << "\n      ";
+        o << "\n    ";
       }
       o << line;
     }
@@ -41,36 +41,15 @@ class app : public exe {
     visit(webassembly, env);
 
     o << R"(function ecow(options) {
-  var ecow_buffer;
-  var ecow_globals = {};
-
-  function dump(fn, iovs, iovs_len, nwritten) {
-    const view = new DataView(ecow_buffer);
-    const decoder = new TextDecoder()
-    var written = 0;
-    var text = ''
-
-    for (var i = 0; i < iovs_len; i++) {
-      const ptr = iovs + i * 8;
-      const buf = view.getUint32(ptr, true);
-      const buf_len = view.getUint32(ptr + 4, true);
-      text += decoder.decode(new Uint8Array(ecow_buffer, buf, buf_len));
-      written += buf_len;
-    }
-
-    view.setUint32(nwritten, written, true);
-    fn(text);
-    return 0;
-  }
-
-  const imp = {
-    env: {)";
+  var name = ")" +
+             name() + R"(";
+  var env = {)";
     for (auto &[k, v] : env) {
       auto jsf = k + ".js";
       if (!std::filesystem::exists(jsf) && v == "")
         continue;
 
-      o << "\n      " << k << ": ";
+      o << "\n    " << k << ": ";
       if (std::filesystem::exists(jsf)) {
         std::ifstream i{jsf};
         build_fn(o, i);
@@ -83,48 +62,11 @@ class app : public exe {
       exp << k << "\n";
     }
     o << R"(
-    },
-    wasi_snapshot_preview1: new Proxy({
-      clock_time_get : (id, precision, out) => {
-        if (id != 0) console.log("Unsupported clock type", id);
-        var arr = new BigUint64Array(ecow_buffer, out, 3);
-        arr[0] = BigInt(Date.now() * 1000000);
-      }, 
-      fd_close : (fd) => 0,
-      fd_fdstat_get : (fd, stat) => 0,
-      fd_write : (fd, iovs, iovs_len, nwritten) => {
-        switch (fd) {
-          case 1: return dump(console.log, iovs, iovs_len, nwritten);
-          case 2: return dump(console.error, iovs, iovs_len, nwritten);
-          default: return 24;
-        }
-      },
-      proc_exit : () => { throw "oops" },
-      ...options.extra_syscalls,
-    }, {
-      get(obj, prop) {
-        return prop in obj ? obj[prop] : (... args) => {
-          console.log(prop, ... args);
-          throw prop + " is not defined";
-        };
-      },
-    }),
   };
-  function start(obj) {
-    ecow_buffer = obj.instance.exports.memory.buffer;
-    obj.instance.exports._initialize();
-    return obj;
-  }
-  return fetch(options.base_dir + "/)" +
-             name() + R"(.wasm")
-    .then(response => response.arrayBuffer())
-    .then(bytes => WebAssembly.instantiate(bytes, imp))
-    .then(obj => ({
-      exports: obj.instance.exports,
-      start: () => start(obj),
-    }));
-}
 )";
+    const auto me = std::filesystem::path{__FILE__}.parent_path();
+    o << std::ifstream(me / "ecow.js").rdbuf();
+    o << "}";
   }
 
 protected:
