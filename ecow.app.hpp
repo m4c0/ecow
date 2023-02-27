@@ -25,16 +25,38 @@ class app : public exe {
       o << line;
     }
   }
+  void build_fn(std::ofstream &o, const std::string &k,
+                const std::string &v) const {
+    std::ifstream ifs{k + ".js"};
+    if (ifs) {
+      build_fn(o, ifs);
+    } else {
+      std::istringstream i{v};
+      build_fn(o, i);
+    }
 
-  void build_wasm() const {
-    const auto fdir =
-        std::filesystem::path{impl::current_target()->build_folder()};
-    const auto fname = (fdir / exe_name()).replace_extension("js");
+    o << ",";
+  }
+  void build_env(std::ofstream &o) const {
+    strmap env;
+    visit(wasm_env, env);
+    for (auto &[k, v] : env) {
+      o << "\n    " << k << ": ";
+      build_fn(o, k, v);
+    }
+  }
+  void build_inits(std::ofstream &vish) const {
+    strmap env;
+    visit(wasm_setup, env);
+    for (auto &[k, v] : env) {
+      vish << "\n    ";
+      build_fn(vish, k, k);
+    }
+  }
+
+  void build_exports() const {
     const auto ename = exports_path();
-
-    std::cerr << "javascripting " << fname.string() << " and " << ename.string()
-              << std::endl;
-    std::ofstream o{fname};
+    std::cerr << "generating " << ename.string() << std::endl;
 
     std::ofstream exp{ename};
     strmap exps;
@@ -42,27 +64,27 @@ class app : public exe {
     for (const auto &[k, v] : exps) {
       exp << k << "\n";
     }
+  }
 
-    strmap env;
-    visit(webassembly, env);
+  void build_wasm() const {
+    build_exports();
+
+    const auto fdir =
+        std::filesystem::path{impl::current_target()->build_folder()};
+    const auto fname = (fdir / exe_name()).replace_extension("js");
+
+    std::cerr << "javascripting " << fname.string() << std::endl;
+    std::ofstream o{fname};
 
     o << R"(function ecow(options) {
   var name = ")" +
              name() + R"(";
+  var inits = [)";
+    build_inits(o);
+    o << R"(
+  ];
   var env = {)";
-    for (auto &[k, v] : env) {
-
-      o << "\n    " << k << ": ";
-      if (v == "") {
-        std::ifstream i{k + ".js"};
-        build_fn(o, i);
-      } else {
-        std::istringstream i{v};
-        build_fn(o, i);
-      }
-
-      o << ",";
-    }
+    build_env(o);
     o << R"(
   };
 )";

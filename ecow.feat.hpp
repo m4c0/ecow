@@ -12,11 +12,13 @@ enum features {
   cocoa,
   export_syms,
   host,
-  posix,
   objective_c,
+  posix,
   uikit,
-  windows_api,
+  wasm_env,
+  wasm_setup,
   webassembly,
+  windows_api,
 };
 
 class feat {
@@ -50,7 +52,10 @@ protected:
 struct export_symbol : t_feat_pair<export_syms> {
   export_symbol(std::string name) : t_feat_pair{name, ""} {}
 };
-struct inline_js : t_feat_pair<webassembly> {
+struct inline_js : t_feat_pair<wasm_env> {
   inline_js(std::string name, std::string value) : t_feat_pair{name, value} {}
+};
+struct setup_js : t_feat_pair<wasm_setup> {
+  setup_js(std::string fn) : t_feat_pair{fn, ""} {}
 };
 } // namespace ecow

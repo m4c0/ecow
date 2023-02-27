@@ -51,6 +51,9 @@
   function start(obj) {
     ecow_buffer = obj.instance.exports.memory.buffer;
     obj.instance.exports._initialize();
+    for (var i in inits) {
+      i(obj);
+    }
     return obj;
   }
   return fetch(options.base_dir + "/" + name + ".wasm")
