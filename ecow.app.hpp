@@ -9,9 +9,9 @@ namespace ecow {
 class app : public exe {
   std::vector<std::string> m_resources;
 
-  [[nodiscard]] auto exports_path() const noexcept {
+  [[nodiscard]] auto undefs_path() const noexcept {
     const auto fdir = impl::current_target()->build_path();
-    return (fdir / exe_name()).replace_extension("exports");
+    return (fdir / exe_name()).replace_extension("syms");
   }
 
   void build_fn(std::ofstream &o, std::istream &vv) const {
@@ -47,12 +47,12 @@ class app : public exe {
     }
   }
 
-  void build_exports() const {
-    const auto ename = exports_path();
+  void build_undefs() const {
+    const auto ename = undefs_path();
     std::cerr << "generating " << ename.string() << std::endl;
 
     strmap exps;
-    visit(export_syms, exps);
+    visit(wasm_env, exps);
 
     std::ofstream exp{ename};
     for (const auto &[k, v] : exps) {
@@ -61,7 +61,7 @@ class app : public exe {
   }
 
   void build_wasm() const {
-    build_exports();
+    build_undefs();
 
     const auto fdir =
         std::filesystem::path{impl::current_target()->build_folder()};
@@ -113,16 +113,15 @@ public:
     auto res = exe::link_flags();
 
     if (target_supports(webassembly)) {
-      res.insert("-Wl,--allow-undefined-file=" + exports_path().string());
+      res.insert("-Wl,--allow-undefined-file=" + undefs_path().string());
       res.insert("-mexec-model=reactor");
       res.insert("-flto");
       res.insert("-Wl,--lto-O3");
 
       strmap env;
-      visit(webassembly, env);
+      visit(export_syms, env);
       for (auto &[k, v] : env)
-        if (!std::filesystem::exists(k + ".js") && v == "")
-          res.insert("-Wl,--export=" + k);
+        res.insert("-Wl,--export=" + k);
     }
 
     return res;

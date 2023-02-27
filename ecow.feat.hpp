@@ -56,7 +56,7 @@ protected:
   [[nodiscard]] std::string value() const noexcept override { return ""; }
 
 public:
-  export_symbol(std::string name) : t_feat_pair{name} {}
+  explicit export_symbol(std::string name) : t_feat_pair{name} {}
 };
 
 template <features F> class file_feat : public t_feat_pair<F> {
@@ -82,6 +82,6 @@ struct inline_js : file_feat<wasm_env> {
   inline_js(std::string name, std::string value) : file_feat{name, value} {}
 };
 struct setup_js : file_feat<wasm_setup> {
-  setup_js(std::string fn) : file_feat{fn, fn} {}
+  explicit setup_js(std::string fn) : file_feat{fn, fn} {}
 };
 } // namespace ecow
