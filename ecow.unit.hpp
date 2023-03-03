@@ -63,6 +63,10 @@ public:
 
   void add_include_dir(std::string dir) { m_include_dirs.insert(dir); }
 
+  void add_framework(const std::string &name) {
+    add_link_flag("-framework " + name);
+  }
+
   void add_system_library(const std::string &name) {
     add_link_flag("-l" + name);
   }

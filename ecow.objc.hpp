@@ -26,10 +26,6 @@ protected:
 public:
   explicit objc(const std::string &name) : unit{name + ".mm"} {}
 
-  void add_framework(const std::string &name) {
-    add_link_flag("-framework " + name);
-  }
-
   [[nodiscard]] virtual strset link_flags() const override {
     return target_supports(objective_c) ? unit::link_flags() : strset{};
   }
