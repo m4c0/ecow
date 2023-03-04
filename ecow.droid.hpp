@@ -65,7 +65,8 @@ public:
                  tgt + " --sysroot " + llvm + "/sysroot";
 
     m_ldflags = m_cxxflags +
-                " -shared -static-libstdc++ -Wl,-Bsymbolic -fuse-ld=lld " +
+                " -shared -static-libstdc++ -Wl,-Bsymbolic -fuse-ld=lld "
+                " -Wl,--no-undefined " +
                 " -resource-dir " + llvm + "/lib64/clang/*";
   }
 
