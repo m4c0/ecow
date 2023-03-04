@@ -71,6 +71,9 @@ class app : public exe {
     std::ofstream o{fname};
 
     o << R"(function ecow(options) {
+  var ecow_buffer;
+  var ecow_globals = {};
+
   var name = ")" +
              name() + R"(";
   var inits = [)";
