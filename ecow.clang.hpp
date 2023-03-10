@@ -36,6 +36,7 @@ public:
       add_arg("-O0");
     } else {
       add_arg("-O3");
+      add_arg("-flto");
     }
 
     if (fext == ".c" || fext == ".m") {

@@ -35,6 +35,8 @@ protected:
 
     if (std::getenv("ECOW_DEBUG")) {
       cmd.append(" -g");
+    } else {
+      cmd.append(" -O3 -flto");
     }
 
     for (const auto &f : link_flags()) {
