@@ -72,6 +72,7 @@ class app : public exe {
 
     o << R"(function ecow(options) {
   var ecow_buffer;
+  var ecow_exports;
   var ecow_globals = {};
 
   var name = ")" +

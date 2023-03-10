@@ -47,6 +47,8 @@
   };
   function start(obj) {
     ecow_buffer = obj.instance.exports.memory.buffer;
+    ecow_exports = obj.instance.exports;
+
     obj.instance.exports._initialize();
     for (var i in inits) {
       inits[i](obj);
