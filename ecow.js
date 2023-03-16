@@ -19,13 +19,6 @@
 
   const imp = {
     env,
-    js: { 
-      mem: new WebAssembly.Memory({
-        initial: 10,
-        maximum: 100,
-        shared: true,
-      }),
-    },
     wasi_snapshot_preview1: new Proxy({
       clock_time_get : (id, precision, out) => {
         if (id != 0) console.log("Unsupported clock type", id);
