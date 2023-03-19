@@ -52,5 +52,17 @@ public:
     }
     return res;
   }
+
+  [[nodiscard]] pathset resources() const override {
+    pathset res{};
+    for (auto &[f, u] : m_map) {
+      if (!target_supports(f))
+        continue;
+
+      auto fw = u.resources();
+      std::copy(fw.begin(), fw.end(), std::inserter(res, res.end()));
+    }
+    return res;
+  }
 };
 } // namespace ecow

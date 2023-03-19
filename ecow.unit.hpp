@@ -18,6 +18,7 @@ class unit {
   std::unordered_set<std::string> m_link_flags{};
   std::vector<std::shared_ptr<feat>> m_features{};
   std::unordered_set<std::string> m_include_dirs{};
+  std::unordered_set<std::string> m_resources{};
   wsdeps::map_t m_wsdeps;
 
 protected:
@@ -58,10 +59,25 @@ protected:
     return res;
   }
 
+  void merge_wsdep(const std::string &k, const pathset &objs,
+                   pathset &res) const {
+    for (const auto &obj : objs) {
+      if (obj.is_absolute()) {
+        res.insert(obj);
+        continue;
+      }
+
+      const auto p = std::filesystem::current_path().parent_path();
+      res.insert(p / k / obj);
+    }
+  }
+
 public:
   explicit unit(std::string name) : m_name{name} {}
 
   void add_include_dir(std::string dir) { m_include_dirs.insert(dir); }
+
+  void add_resource(std::string res) { m_resources.insert(res); }
 
   void add_framework(const std::string &name) {
     add_link_flag("-framework " + name);
@@ -109,19 +125,23 @@ public:
     return res;
   }
 
+  [[nodiscard]] virtual pathset resources() const {
+    pathset res{};
+    for (const auto &r : m_resources) {
+      res.insert(r);
+    }
+    for (const auto &[k, u] : m_wsdeps) {
+      const auto r = u->resources();
+      merge_wsdep(k, r, res);
+    }
+    return res;
+  }
+
   [[nodiscard]] pathset objects() const {
     pathset res = self_objects();
     for (const auto &[k, u] : m_wsdeps) {
       const auto objs = u->objects();
-      for (const auto &obj : objs) {
-        if (obj.is_absolute()) {
-          res.insert(obj);
-          continue;
-        }
-
-        const auto p = std::filesystem::current_path().parent_path();
-        res.insert(p / k / obj);
-      }
+      merge_wsdep(k, objs, res);
     }
     return res;
   }

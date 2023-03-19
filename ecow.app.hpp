@@ -7,8 +7,6 @@
 
 namespace ecow {
 class app : public exe {
-  std::vector<std::string> m_resources;
-
   [[nodiscard]] auto undefs_path() const noexcept {
     const auto fdir = impl::current_target()->build_path();
     return (fdir / exe_name()).replace_extension("syms");
@@ -103,15 +101,13 @@ protected:
     exe::build_self();
 
     const auto res_fld = impl::current_target()->resource_path(name());
-    for (const auto &res : m_resources) {
-      impl::run_copy(res, res_fld / res);
+    for (const auto &res : resources()) {
+      impl::run_copy(res, res_fld / res.filename());
     }
   };
 
 public:
   explicit app(const std::string &name) : exe{name} {}
-
-  void add_resource(const std::string &name) { m_resources.push_back(name); }
 
   [[nodiscard]] strset link_flags() const override {
     auto res = exe::link_flags();

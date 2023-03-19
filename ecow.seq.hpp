@@ -48,5 +48,14 @@ public:
     }
     return res;
   }
+
+  [[nodiscard]] virtual pathset resources() const override {
+    pathset res{unit::resources()};
+    for (const auto &u : m_units) {
+      const auto fws = u->resources();
+      std::copy(fws.begin(), fws.end(), std::inserter(res, res.end()));
+    }
+    return res;
+  }
 };
 } // namespace ecow
