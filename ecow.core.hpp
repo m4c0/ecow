@@ -79,9 +79,14 @@ static inline auto find_actual_file(const std::filesystem::path &from) {
   if (std::filesystem::exists(from))
     return from;
 
-  auto actual_from = "out" / from;
+  auto actual_from = from.parent_path() / "out" / from.filename();
   if (std::filesystem::exists(actual_from))
-    return from;
+    return actual_from;
+
+  actual_from = from.parent_path() / impl::current_target()->build_path() /
+                from.filename();
+  if (std::filesystem::exists(actual_from))
+    return actual_from;
 
   throw std::runtime_error(std::string{"missing file: "} + from.string());
 }
