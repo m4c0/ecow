@@ -75,15 +75,19 @@ must_recompile(const auto &depfn, const auto &from, const auto &to) {
   return false;
 }
 
+static inline auto find_actual_file(const std::filesystem::path &from) {
+  if (std::filesystem::exists(from))
+    return from;
+
+  auto actual_from = "out" / from;
+  if (std::filesystem::exists(actual_from))
+    return from;
+
+  throw std::runtime_error(std::string{"missing file: "} + from.string());
+}
 static inline void run_copy(const std::filesystem::path &from,
                             const std::filesystem::path &to) {
-  auto actual_from = from;
-  if (!std::filesystem::exists(from)) {
-    actual_from = "out" / from;
-    if (!std::filesystem::exists(actual_from)) {
-      throw std::runtime_error(std::string{"missing file: "} + from.string());
-    }
-  }
+  auto actual_from = find_actual_file(from);
   if (!must_recompile(actual_from, to))
     return;
 
