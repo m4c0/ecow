@@ -32,7 +32,7 @@ runs:
     - name: 🔎 Check Clang Version
       if: inputs.os == 'macos-latest'
       shell: bash
-      run: /usr/local/opt/llvm/bin/clang++ -v  
+      run: $(brew --prefix llvm@15)/bin/clang++ -v
 
     # Not needed for now, since GHA provides LLVM 15 now
     # - name: 🍫 Brewing

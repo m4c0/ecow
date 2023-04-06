@@ -16,7 +16,7 @@ namespace ecow::impl {
 [[nodiscard]] static inline std::string c() {
   // NOTE: this are host-dependent, not target-dependent
 #ifdef __APPLE__
-  return "/usr/local/opt/llvm/bin/clang ";
+  return "$(brew --prefix llvm@15)/bin/clang ";
 #elif defined(_WIN32)
   return "clang ";
 #else
@@ -26,7 +26,7 @@ namespace ecow::impl {
 [[nodiscard]] static inline std::string cxx() {
   // NOTE: this are host-dependent, not target-dependent
 #ifdef __APPLE__
-  return "/usr/local/opt/llvm/bin/clang++ ";
+  return "$(brew --prefix llvm@15)/bin/clang++ ";
 #elif defined(_WIN32)
   return "clang++ ";
 #else
