@@ -41,7 +41,7 @@ public:
       m_res_path = "";
       m_main_api = uikit;
     } else if (sdk == "iphonesimulator"s) {
-      m_extra_cflags += " -target arm64-apple-ios13.0-simulator";
+      m_extra_cflags += " -target x86_64-apple-ios13.0-simulator";
       m_exe_path = "";
       m_res_path = "";
       m_main_api = uikit;
