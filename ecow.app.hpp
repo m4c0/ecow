@@ -108,20 +108,5 @@ protected:
 
 public:
   explicit app(const std::string &name) : exe{name} {}
-
-  [[nodiscard]] strset link_flags() const override {
-    auto res = exe::link_flags();
-
-    if (target_supports(webassembly)) {
-      res.insert("-Wl,--allow-undefined-file=" + undefs_path().string());
-
-      strmap env;
-      visit(export_syms, env);
-      for (auto &[k, v] : env)
-        res.insert("-Wl,--export=" + k);
-    }
-
-    return res;
-  }
 };
 } // namespace ecow

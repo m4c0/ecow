@@ -12,7 +12,6 @@ enum features {
   android_ndk,
   application,
   cocoa,
-  export_syms,
   host,
   objective_c,
   posix,
@@ -49,14 +48,6 @@ protected:
   void visit(strmap &out) const noexcept override { out[m_name] = value(); }
 
   t_feat_pair(std::string name) : m_name{name} {}
-};
-
-class export_symbol : public t_feat_pair<export_syms> {
-protected:
-  [[nodiscard]] std::string value() const noexcept override { return ""; }
-
-public:
-  explicit export_symbol(std::string name) : t_feat_pair{name} {}
 };
 
 template <features F> class file_feat : public t_feat_pair<F> {
