@@ -114,9 +114,6 @@ public:
 
     if (target_supports(webassembly)) {
       res.insert("-Wl,--allow-undefined-file=" + undefs_path().string());
-      res.insert("-mexec-model=reactor");
-      res.insert("-flto");
-      res.insert("-Wl,--lto-O3");
 
       strmap env;
       visit(export_syms, env);

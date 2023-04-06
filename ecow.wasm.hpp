@@ -32,7 +32,8 @@ public:
 
     m_cxxflags =
         flags + " -D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
-    m_ldflags = flags + " -resource-dir " + sysroot.string();
+    m_ldflags = flags + " -resource-dir " + sysroot.string() +
+                " -mexec-model=reactor -flto -Wl,--lto-O3";
   }
 
   [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
