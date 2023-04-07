@@ -24,6 +24,10 @@ class host_target : public target {
   std::string m_build_folder{};
   features m_main_api{cocoa};
 
+  [[nodiscard]] auto bundle_path(const std::string &name) const {
+    return build_path() / (name + ".app");
+  }
+
 protected:
   [[nodiscard]] std::string build_subfolder() const override {
     return m_build_folder;
@@ -68,8 +72,7 @@ public:
   }
   [[nodiscard]] std::filesystem::path
   resource_path(const std::string &name) const override {
-    const auto res =
-        std::filesystem::path{build_folder()} / (name + ".app") / m_res_path;
+    const auto res = bundle_path(name) / m_res_path;
     std::filesystem::create_directories(res);
     return res;
   }
@@ -88,6 +91,44 @@ public:
     default:
       return false;
     }
+  }
+
+  void bundle(const std::string &name, const unit &u) const override {
+    if (m_main_api == cocoa)
+      return;
+
+    auto path = bundle_path(name) / "Info.plist";
+    std::cerr << "generating " << path.string() << std::endl;
+    std::ofstream o{path};
+    o << R"(
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>)"
+      << name << R"(</string>
+    <key>CFBundleExecutable</key>
+    <string>)"
+      << name << R"(</string>
+    <key>CFBundleIdentifier</key>
+    <string>br.com.tpk.)"
+      << name << R"(</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+  </dict>
+</plist>
+)";
   }
 };
 } // namespace ecow::impl
