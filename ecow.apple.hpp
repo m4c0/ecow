@@ -36,12 +36,14 @@ public:
     m_extra_cflags =
         "--sysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
     if (sdk == "iphoneos"s) {
-      m_extra_cflags += " -target arm64-apple-ios13.0";
+      m_extra_cflags +=
+          " -target arm64-apple-ios13.0 -Wl,-rpath,@executable_path";
       m_exe_path = "";
       m_res_path = "";
       m_main_api = uikit;
     } else if (sdk == "iphonesimulator"s) {
-      m_extra_cflags += " -target x86_64-apple-ios13.0-simulator";
+      m_extra_cflags +=
+          " -target x86_64-apple-ios13.0-simulator -Wl,-rpath,@executable_path";
       m_exe_path = "";
       m_res_path = "";
       m_main_api = uikit;
