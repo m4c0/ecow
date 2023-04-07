@@ -18,6 +18,7 @@ namespace ecow::impl {
 
 class host_target : public target {
   std::string m_extra_cflags{};
+  std::string m_extra_ldflags{};
   std::string m_exe_path{"Contents/MacOS/"};
   std::string m_res_path{"Contents/Resources/"};
   std::string m_build_folder{};
@@ -36,14 +37,14 @@ public:
     m_extra_cflags =
         "--sysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
     if (sdk == "iphoneos"s) {
-      m_extra_cflags +=
-          " -target arm64-apple-ios13.0 -Wl,-rpath,@executable_path";
+      m_extra_cflags += " -target arm64-apple-ios13.0";
+      m_extra_ldflags = " -Wl,-rpath,@executable_path";
       m_exe_path = "";
       m_res_path = "";
       m_main_api = uikit;
     } else if (sdk == "iphonesimulator"s) {
-      m_extra_cflags +=
-          " -target x86_64-apple-ios13.0-simulator -Wl,-rpath,@executable_path";
+      m_extra_cflags += " -target x86_64-apple-ios13.0-simulator";
+      m_extra_ldflags = " -Wl,-rpath,@executable_path";
       m_exe_path = "";
       m_res_path = "";
       m_main_api = uikit;
@@ -55,7 +56,9 @@ public:
   }
 
   [[nodiscard]] std::string cxxflags() const override { return m_extra_cflags; }
-  [[nodiscard]] std::string ldflags() const override { return m_extra_cflags; }
+  [[nodiscard]] std::string ldflags() const override {
+    return m_extra_cflags + m_extra_ldflags;
+  }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
