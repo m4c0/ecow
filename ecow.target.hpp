@@ -18,11 +18,6 @@ static inline target *&current_target() { return target_stack().back(); }
 
 class deco_target;
 class target {
-  friend class deco_target;
-
-protected:
-  [[nodiscard]] virtual std::string build_subfolder() const = 0;
-
 public:
   target() { target_stack().push_back(this); }
   virtual ~target() { target_stack().pop_back(); }
@@ -35,6 +30,7 @@ public:
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const = 0;
 
+  [[nodiscard]] virtual std::string build_subfolder() const = 0;
   [[nodiscard]] std::string build_folder() const {
     return "out/" + build_subfolder() + "/";
   }
