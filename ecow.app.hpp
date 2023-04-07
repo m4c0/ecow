@@ -6,8 +6,8 @@
 #include <numeric>
 
 namespace ecow {
-class app : public exe {
-  void build_fn(std::ofstream &o, std::istream &vv) const {
+class wasm_bundler {
+  static void build_fn(std::ofstream &o, std::istream &vv) {
     bool first = true;
     for (std::string line; std::getline(vv, line);) {
       if (first) {
@@ -18,32 +18,33 @@ class app : public exe {
       o << line;
     }
   }
-  void build_fn(std::ofstream &o, const std::string &v) const {
+  static void build_fn(std::ofstream &o, const std::string &v) {
     std::istringstream i{v};
     build_fn(o, i);
     o << ",";
   }
-  void build_env(std::ofstream &o) const {
-    strmap env;
-    visit(wasm_env, env);
+  static void build_env(std::ofstream &o, const unit &u) {
+    std::map<std::string, std::string> env;
+    u.visit(wasm_env, env);
     for (auto &[k, v] : env) {
       o << "\n    " << k << ": ";
       build_fn(o, v);
     }
   }
-  void build_inits(std::ofstream &o) const {
-    strmap env;
-    visit(wasm_setup, env);
+  static void build_inits(std::ofstream &o, const unit &u) {
+    std::map<std::string, std::string> env;
+    u.visit(wasm_setup, env);
     for (auto &[k, v] : env) {
       o << "\n    ";
       build_fn(o, v);
     }
   }
 
-  void build_wasm() const {
+public:
+  static void build_wasm(const std::string &name, const unit &u) {
     const auto fdir =
         std::filesystem::path{impl::current_target()->build_folder()};
-    const auto fname = (fdir / exe_name()).replace_extension("js");
+    const auto fname = (fdir / name).replace_extension("js");
 
     std::cerr << "javascripting " << fname.string() << std::endl;
     std::ofstream o{fname};
@@ -54,13 +55,13 @@ class app : public exe {
   var ecow_globals = {};
 
   var name = ")" +
-             name() + R"(";
+             name + R"(";
   var inits = [)";
-    build_inits(o);
+    build_inits(o, u);
     o << R"(
   ];
   var env = {)";
-    build_env(o);
+    build_env(o, u);
     o << R"(
   };
 )";
@@ -68,7 +69,9 @@ class app : public exe {
     o << std::ifstream(me / "ecow.js").rdbuf();
     o << "}";
   }
+};
 
+class app : public exe {
 protected:
   [[nodiscard]] std::string exe_name() const override {
     return impl::current_target()->app_exe_name(name());
@@ -76,7 +79,7 @@ protected:
 
   void build_self() const override {
     if (target_supports(webassembly))
-      build_wasm();
+      wasm_bundler::build_wasm(name(), *this);
 
     exe::build_self();
 
