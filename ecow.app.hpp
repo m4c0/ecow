@@ -7,11 +7,6 @@
 
 namespace ecow {
 class app : public exe {
-  [[nodiscard]] auto undefs_path() const noexcept {
-    const auto fdir = impl::current_target()->build_path();
-    return (fdir / exe_name()).replace_extension("syms");
-  }
-
   void build_fn(std::ofstream &o, std::istream &vv) const {
     bool first = true;
     for (std::string line; std::getline(vv, line);) {
@@ -45,22 +40,7 @@ class app : public exe {
     }
   }
 
-  void build_undefs() const {
-    const auto ename = undefs_path();
-    std::cerr << "generating " << ename.string() << std::endl;
-
-    strmap exps;
-    visit(wasm_env, exps);
-
-    std::ofstream exp{ename};
-    for (const auto &[k, v] : exps) {
-      exp << k << "\n";
-    }
-  }
-
   void build_wasm() const {
-    build_undefs();
-
     const auto fdir =
         std::filesystem::path{impl::current_target()->build_folder()};
     const auto fname = (fdir / exe_name()).replace_extension("js");
