@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+namespace ecow {
+class unit;
+}
 namespace ecow::impl {
 class target;
 
@@ -52,6 +55,8 @@ public:
   resource_path(const std::string &name) const {
     return build_folder();
   }
+
+  virtual void bundle(const std::string &name, const unit &u) const {}
 };
 
 class deco_target : public target {
@@ -93,6 +98,10 @@ public:
   [[nodiscard]] virtual std::filesystem::path
   resource_path(const std::string &name) const override {
     return m_prev->resource_path(name);
+  }
+
+  virtual void bundle(const std::string &name, const unit &u) const override {
+    return m_prev->bundle(name, u);
   }
 };
 } // namespace ecow::impl
