@@ -30,6 +30,7 @@ public:
     switch (f) {
     case application:
     case host:
+    case native:
     case posix:
     case windows_api:
       return true;

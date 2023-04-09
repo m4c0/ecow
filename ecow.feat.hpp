@@ -13,6 +13,7 @@ enum features {
   application,
   cocoa,
   host,
+  native,
   objective_c,
   posix,
   uikit,

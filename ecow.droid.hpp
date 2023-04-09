@@ -82,6 +82,7 @@ public:
     switch (f) {
     case application:
     case android_ndk:
+    case native:
       return true;
     default:
       return false;
