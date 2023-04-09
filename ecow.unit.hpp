@@ -18,6 +18,7 @@ class unit {
   std::unordered_set<std::string> m_link_flags{};
   std::vector<std::shared_ptr<feat>> m_features{};
   std::unordered_set<std::string> m_include_dirs{};
+  std::unordered_set<features> m_requirements{};
   std::unordered_set<std::string> m_resources{};
   wsdeps::map_t m_wsdeps;
 
@@ -75,13 +76,13 @@ protected:
 public:
   explicit unit(std::string name) : m_name{name} {}
 
-  void add_include_dir(std::string dir) { m_include_dirs.insert(dir); }
-
-  void add_resource(std::string res) { m_resources.insert(res); }
-
   void add_framework(const std::string &name) {
     add_link_flag("-framework " + name);
   }
+
+  void add_include_dir(std::string dir) { m_include_dirs.insert(dir); }
+  void add_resource(std::string res) { m_resources.insert(res); }
+  void add_requirement(features r) { m_requirements.insert(r); }
 
   void add_system_library(const std::string &name) {
     add_link_flag("-l" + name);
@@ -106,6 +107,12 @@ public:
   }
 
   void build() const {
+    auto supported =
+        std::all_of(m_requirements.begin(), m_requirements.end(),
+                    [](auto r) { return impl::current_target()->supports(r); });
+    if (!supported)
+      return;
+
     std::for_each(m_wsdeps.begin(), m_wsdeps.end(), [this](auto &v) {
       wsdeps::curpath_raii c{v.first};
       v.second->build();
