@@ -45,6 +45,52 @@ class host_target : public target {
 )";
   }
 
+  void gen_app_plist(const std::string &name) const {
+    gen_plist(bundle_path(name) / "Info.plist", [&](auto &o) {
+      o << R"(
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>)"
+        << name << R"(</string>
+    <key>CFBundleExecutable</key>
+    <string>)"
+        << name << R"(</string>
+    <key>CFBundleIdentifier</key>
+    <string>br.com.tpk.)"
+        << name << R"(</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+)";
+    });
+  }
+
+  void gen_export_plist(const std::string &name) const {
+    gen_plist(build_path() / "export.plist", [&](auto &o) {
+      o << R"(
+    <key>method</key>
+    <string>developer</string>
+    <key>teamID</key>
+    <string>TBD</string>
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
+    <key>provisioningProfiles</key>
+    <dict>
+      <string>br.com.tpk.)"
+        << name << R"(</string>
+      <string>TBD</string>
+    </dict>)";
+    });
+  }
+
 protected:
   [[nodiscard]] std::string build_subfolder() const override {
     return m_build_folder;
@@ -116,31 +162,8 @@ public:
     if (m_main_api == cocoa)
       return;
 
-    gen_plist(bundle_path(name) / "Info.plist", [&](auto &o) {
-      o << R"(
-    <key>CFBundleDevelopmentRegion</key>
-    <string>en</string>
-    <key>CFBundleDisplayName</key>
-    <string>)"
-        << name << R"(</string>
-    <key>CFBundleExecutable</key>
-    <string>)"
-        << name << R"(</string>
-    <key>CFBundleIdentifier</key>
-    <string>br.com.tpk.)"
-        << name << R"(</string>
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
-    <key>CFBundleVersion</key>
-    <string>1.0.0</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-)";
-    });
+    gen_app_plist(name);
+    gen_export_plist(name);
   }
 };
 } // namespace ecow::impl
