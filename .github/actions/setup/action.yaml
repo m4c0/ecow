@@ -1,7 +1,5 @@
 name: 🧰 Setup Enviroment
 inputs:
-  os:
-    required: true
   cwd:
     default: .
 runs:
@@ -14,7 +12,7 @@ runs:
         path: ecow
 
     - name: ⚙️  Install WASI
-      if: inputs.os == 'macos-latest'
+      if: runner.os == 'macOS'
       shell: bash
       run: |
         wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sysroot-17.0.tar.gz
@@ -26,20 +24,20 @@ runs:
 
     # Not needed for now, since GHA provides LLVM 15 now
     # - name: 🍺 Brewing
-    #   if: inputs.os == 'macos-latest'
+    #   if: runner.os == 'macOS'
     #   shell: bash
     #   run: brew install llvm
     - name: 🔎 Check Clang Version
-      if: inputs.os == 'macos-latest'
+      if: runner.os == 'macOS'
       shell: bash
       run: $(brew --prefix llvm@15)/bin/clang++ -v
 
     # Not needed for now, since GHA provides LLVM 15 now
     # - name: 🍫 Brewing
-    #   if: inputs.os == 'windows-latest'
+    #   if: runner.os == 'Windows'
     #   shell: pwsh
     #   run: choco upgrade llvm -y
     - name: 🔎 Check Clang Version
-      if: inputs.os == 'windows-latest'
+      if: runner.os == 'Windows'
       shell: pwsh
       run: clang++ -v  

@@ -20,25 +20,20 @@ jobs:
       - name: 🧰 Setup
         uses: m4c0/ecow/.github/actions/setup@main
         with:
-          os: ${{ matrix.os }}
           cwd: ecow/poc
       - name: 🔨 Build POC A
         uses: m4c0/ecow/.github/actions/compile@main
         with:
-          os: ${{ matrix.os }}
           project: ecow/poc/a-nostl
       - name: 🔨 Build POC B
         uses: m4c0/ecow/.github/actions/compile@main
         with:
-          os: ${{ matrix.os }}
           project: ecow/poc/b-nostl
       - name: 🔨 Build Tooling POC
         uses: m4c0/ecow/.github/actions/compile@main
         with:
-          os: ${{ matrix.os }}
           project: ecow/poc/tooling
       - name: 🔨 Build WASM POC
         uses: m4c0/ecow/.github/actions/compile@main
         with:
-          os: ${{ matrix.os }}
           project: ecow/poc/wasm
