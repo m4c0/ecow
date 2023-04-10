@@ -73,6 +73,45 @@ class host_target : public target {
     });
   }
 
+  void gen_archive_plist(const std::string &name) const {
+    gen_plist(build_path() / "export.xcarchive/Info.plist", [&](auto &o) {
+      o << R"(
+    <key>ApplicationProperties</key>
+    <dict>
+      <key>ApplicationPath</key>
+      <string>Applications/)"
+        << name << R"(.app</string>
+      <key>Architectures</key>
+      <array>
+        <string>armv7</string>
+        <string>arm64</string>
+      </array>
+      <key>CFBundleIdentifier</key>
+      <string>br.com.tpk.)"
+        << name << R"(</string>
+      <key>CFBundleShortVersionString</key>
+      <string>1.0.0</string>
+      <key>CFBundleVersion</key>
+      <string>0</string>
+      <key>SigningIdentity</key>
+      <string>TBD</string>
+      <key>Team</key>
+      <string>TBD</string>
+    </dict>
+    <key>ArchiveVersion</key>
+    <integer>1</integer>
+    <key>CreationDate</key>
+    <date>2023-03-30T00:00:00Z</date>
+    <key>Name</key>
+    <string>)"
+        << name << R"(</string>
+    <key>SchemeName</key>
+    <string>)"
+        << name << R"(</string>
+)";
+    });
+  }
+
   void gen_export_plist(const std::string &name) const {
     gen_plist(build_path() / "export.plist", [&](auto &o) {
       o << R"(
@@ -164,6 +203,7 @@ public:
 
     gen_app_plist(name);
     gen_export_plist(name);
+    gen_archive_plist(name);
   }
 };
 } // namespace ecow::impl
