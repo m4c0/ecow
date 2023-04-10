@@ -22,10 +22,11 @@ class host_target : public target {
   std::string m_exe_path{"Contents/MacOS/"};
   std::string m_res_path{"Contents/Resources/"};
   std::string m_build_folder{};
+  std::string m_app_path{};
   features m_main_api{cocoa};
 
   [[nodiscard]] auto bundle_path(const std::string &name) const {
-    return build_path() / (name + ".app");
+    return build_path() / m_app_path / (name + ".app");
   }
 
 protected:
@@ -46,6 +47,7 @@ public:
       m_exe_path = "";
       m_res_path = "";
       m_main_api = uikit;
+      m_app_path = "export.xcarchive/Product/Applications/";
     } else if (sdk == "iphonesimulator"s) {
       m_extra_cflags += " -target x86_64-apple-ios13.0-simulator";
       m_extra_ldflags = " -Wl,-rpath,@executable_path";
@@ -66,7 +68,7 @@ public:
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
-    auto path = name + ".app/" + m_exe_path;
+    auto path = m_app_path + name + ".app/" + m_exe_path;
     std::filesystem::create_directories(build_folder() + path);
     return path + name;
   }
