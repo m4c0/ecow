@@ -130,6 +130,11 @@ class host_target : public target {
     });
   }
 
+  void run_export() const {
+    // xcodebuild -exportArchive -archivePath export.xcarchive -exportPath ...
+    // -exportOptionsPlist export.plist
+  }
+
 protected:
   [[nodiscard]] std::string build_subfolder() const override {
     return m_build_folder;
@@ -204,6 +209,7 @@ public:
     gen_app_plist(name);
     gen_export_plist(name);
     gen_archive_plist(name);
+    run_export();
   }
 };
 } // namespace ecow::impl
