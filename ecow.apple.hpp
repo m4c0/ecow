@@ -116,15 +116,15 @@ class host_target : public target {
     gen_plist(build_path() / "export.plist", [&](auto &o) {
       o << R"(
     <key>method</key>
-    <string>developer</string>
+    <string>development</string>
     <key>teamID</key>
     <string>TBD</string>
     <key>thinning</key>
     <string>&lt;none&gt;</string>
     <key>provisioningProfiles</key>
     <dict>
-      <string>br.com.tpk.)"
-        << name << R"(</string>
+      <key>br.com.tpk.)"
+        << name << R"(</key>
       <string>TBD</string>
     </dict>)";
     });
@@ -153,7 +153,7 @@ public:
       m_exe_path = "";
       m_res_path = "";
       m_main_api = uikit;
-      m_app_path = "export.xcarchive/Product/Applications/";
+      m_app_path = "export.xcarchive/Products/Applications/";
     } else if (sdk == "iphonesimulator"s) {
       m_extra_cflags += " -target x86_64-apple-ios13.0-simulator";
       m_extra_ldflags = " -Wl,-rpath,@executable_path";
