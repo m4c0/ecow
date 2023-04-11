@@ -1,0 +1,18 @@
+name: Checkout with Cache
+inputs:
+  path:
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: cache-repo
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ runner.os }}-${{ inputs.path }}
+    - uses: actions/checkout@v3
+      if: steps.cache-repo.outputs.cache-hit != 'true'
+      with:
+        repository: m4c0/${{ inputs.path }}
+        path: ${{ inputs.path }}
+        submodules: true
