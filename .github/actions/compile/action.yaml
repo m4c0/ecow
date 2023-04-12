@@ -26,4 +26,4 @@ runs:
       if: runner.os == 'Windows'
       shell: pwsh
       working-directory: ${{ inputs.project }}
-      run: ./build.exe clean
+      run: ./build.exe clean windows
