@@ -15,7 +15,7 @@ runs:
       if: runner.os == 'macOS'
       shell: bash
       working-directory: ${{ inputs.project }}
-      run: ./build.exe macosx iphoneos iphonesimulator wasm android
+      run: ./build.exe clean macosx iphoneos iphonesimulator wasm android
 
     - name: 🐮 Build ECOW
       if: runner.os == 'Windows'
@@ -26,4 +26,4 @@ runs:
       if: runner.os == 'Windows'
       shell: pwsh
       working-directory: ${{ inputs.project }}
-      run: ./build.exe
+      run: ./build.exe clean
