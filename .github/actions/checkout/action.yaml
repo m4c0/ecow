@@ -9,6 +9,7 @@ runs:
   using: composite
   steps:
     - id: cache-repo
+      if: github.repository != format('m4c0/{0}', inputs.path)
       uses: actions/cache@v3
       with:
         path: ${{ inputs.path }}
