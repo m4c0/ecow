@@ -2,6 +2,9 @@ name: Checkout with Cache
 inputs:
   path:
     required: true
+outputs:
+  cache-hit:
+    value: ${{ steps.cache-repo.outputs.cache-hit }}
 runs:
   using: composite
   steps:
