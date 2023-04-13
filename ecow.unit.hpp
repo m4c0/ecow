@@ -73,6 +73,12 @@ protected:
     }
   }
 
+  [[nodiscard]] bool current_target_supports_me() const noexcept {
+    return std::all_of(
+        m_requirements.begin(), m_requirements.end(),
+        [](auto r) { return impl::current_target()->supports(r); });
+  }
+
 public:
   explicit unit(std::string name) : m_name{name} {}
 
@@ -98,6 +104,9 @@ public:
     return f;
   }
   virtual void visit(features f, strmap &out) const {
+    if (!current_target_supports_me())
+      return;
+
     std::for_each(m_wsdeps.begin(), m_wsdeps.end(), [f, &out](auto &kv) {
       wsdeps::curpath_raii c{kv.first};
       kv.second->visit(f, out);
@@ -107,10 +116,7 @@ public:
   }
 
   void build() const {
-    auto supported =
-        std::all_of(m_requirements.begin(), m_requirements.end(),
-                    [](auto r) { return impl::current_target()->supports(r); });
-    if (!supported)
+    if (!current_target_supports_me())
       return;
 
     std::for_each(m_wsdeps.begin(), m_wsdeps.end(), [this](auto &v) {
@@ -124,6 +130,9 @@ public:
   }
 
   [[nodiscard]] virtual strset link_flags() const {
+    if (!current_target_supports_me())
+      return {};
+
     strset res = m_link_flags;
     for (const auto &[k, u] : m_wsdeps) {
       const auto flags = u->link_flags();
@@ -133,6 +142,9 @@ public:
   }
 
   [[nodiscard]] virtual pathset resources() const {
+    if (!current_target_supports_me())
+      return {};
+
     pathset res{};
     for (const auto &r : m_resources) {
       res.insert(r);
@@ -145,6 +157,9 @@ public:
   }
 
   [[nodiscard]] pathset objects() const {
+    if (!current_target_supports_me())
+      return {};
+
     pathset res = self_objects();
     for (const auto &[k, u] : m_wsdeps) {
       const auto objs = u->objects();
