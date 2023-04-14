@@ -23,7 +23,7 @@ static inline void build(unit &u, Args &&...args) {
   std::ofstream cdb{tgt.build_folder() + "compile_commands.json"};
   cdb << "[\n";
   for (const auto &obj : u.objects()) {
-    std::ifstream p{obj.string() + ".json"};
+    std::ifstream p{obj.string() + ".cdb-json"};
     cdb << p.rdbuf();
   }
   cdb << "]\n";

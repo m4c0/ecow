@@ -83,7 +83,7 @@ public:
       cbuf << " " << a;
     cbuf << " " << m_from;
     cbuf << " -o " << m_to;
-    cbuf << " -MJ " << m_to << ".json";
+    cbuf << " -MJ " << m_to << ".cdb-json";
 
     auto cmd = cbuf.str();
     if (std::system(cmd.c_str()))
