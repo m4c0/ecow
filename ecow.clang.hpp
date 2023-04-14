@@ -31,9 +31,9 @@ public:
       add_arg("-std=c++2b");
     }
 
-    if (std::getenv("ECOW_DEBUG")) {
-      add_arg("-g");
-      add_arg("-O0");
+    auto *xtra_cflags = std::getenv("ECOW_CFLAGS");
+    if (xtra_cflags != nullptr) {
+      add_arg(xtra_cflags);
     } else {
       add_arg("-O3");
     }
