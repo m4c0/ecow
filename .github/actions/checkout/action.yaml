@@ -8,14 +8,15 @@ outputs:
 runs:
   using: composite
   steps:
-    - id: cache-repo
-      if: github.repository != format('m4c0/{0}', inputs.path) && hashFiles(format('{0}/build.hpp', inputs.path)) == ''
-      uses: actions/cache@v3
-      with:
-        path: ${{ inputs.path }}
-        key: ${{ runner.os }}-${{ inputs.path }}
+    #- id: cache-repo
+    #  if: github.repository != format('m4c0/{0}', inputs.path) && hashFiles(format('{0}/build.hpp', inputs.path)) == ''
+    #  uses: actions/cache@v3
+    #  with:
+    #    path: ${{ inputs.path }}
+    #    key: ${{ runner.os }}-${{ inputs.path }}
     - uses: actions/checkout@v3
-      if: steps.cache-repo.outputs.cache-hit != 'true' && hashFiles(format('{0}/build.hpp', inputs.path)) == ''
+      if: hashFiles(format('{0}/build.hpp', inputs.path)) == ''
+      # if: steps.cache-repo.outputs.cache-hit != 'true' && hashFiles(format('{0}/build.hpp', inputs.path)) == ''
       with:
         repository: m4c0/${{ inputs.path }}
         path: ${{ inputs.path }}
