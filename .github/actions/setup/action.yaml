@@ -22,21 +22,19 @@ runs:
         tar xvf ../libclang_rt.builtins-wasm32-wasi-17.0.tar.gz
       working-directory: ${{ inputs.cwd }}
 
-    # Not needed for now, since GHA provides LLVM 15 now
-    # - name: 🍺 Brewing
-    #   if: runner.os == 'macOS'
-    #   shell: bash
-    #   run: brew install llvm
+    - name: 🍺 Brewing
+      if: runner.os == 'macOS'
+      shell: bash
+      run: brew install llvm
     - name: 🔎 Check Clang Version
       if: runner.os == 'macOS'
       shell: bash
-      run: $(brew --prefix llvm@15)/bin/clang++ -v
+      run: $(brew --prefix llvm@16)/bin/clang++ -v
 
-    # Not needed for now, since GHA provides LLVM 15 now
-    # - name: 🍫 Brewing
-    #   if: runner.os == 'Windows'
-    #   shell: pwsh
-    #   run: choco upgrade llvm -y
+    - name: 🍫 Brewing
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: choco upgrade llvm -y
     - name: 🔎 Check Clang Version
       if: runner.os == 'Windows'
       shell: pwsh
