@@ -53,8 +53,17 @@ static inline void run_main(unit &u, int argc, char **argv) {
       continue;
     }
 #ifdef __APPLE__
-    if ((arg == "macosx"sv) || (arg == "iphoneos"sv) ||
-        (arg == "iphonesimulator"sv)) {
+    if (arg == "ios"sv) {
+      build<host_target>(u, "iphoneos");
+      build<host_target>(u, "iphonesimulator");
+      continue;
+    } else if (arg == "apple"sv) {
+      build<host_target>(u, "macosx");
+      build<host_target>(u, "iphoneos");
+      build<host_target>(u, "iphonesimulator");
+      continue;
+    } else if ((arg == "macosx"sv) || (arg == "iphoneos"sv) ||
+               (arg == "iphonesimulator"sv)) {
       build<host_target>(u, arg);
       continue;
     }
