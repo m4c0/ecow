@@ -21,7 +21,11 @@ protected:
     const auto ldflags = impl::current_target()->ldflags();
 
     bool any_is_newer = false;
-    std::string cmd = impl::cxx() + ldflags + " -o " + exe_nm;
+    std::string cmd = impl::cxx() + " -o " + exe_nm;
+    for (const auto &f : ldflags) {
+      cmd.append(" ");
+      cmd.append(f);
+    }
     for (const auto &obj : objects()) {
       const auto otime = impl::last_write_time(obj);
       if (otime > exe_time)

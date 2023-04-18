@@ -71,9 +71,6 @@ public:
 };
 
 class wasm_target : public target {
-  std::string m_cxxflags;
-  std::string m_ldflags;
-
   [[nodiscard]] static inline auto sysroot_path() {
     const auto env = std::getenv("WASI_SYSROOT");
     if (env)
@@ -87,22 +84,15 @@ protected:
 
 public:
   wasm_target() {
-    constexpr const auto target = " -target wasm32-wasi ";
-
     auto sysroot = sysroot_path();
     if (!std::filesystem::exists(sysroot))
       throw std::runtime_error("Invalid wasi sysroot");
 
-    auto flags = std::string{target} + " --sysroot " + sysroot.string();
-
-    m_cxxflags =
-        flags + " -D_LIBCPP_SETJMP_H -D_LIBCPP_CSIGNAL -fno-exceptions";
-    m_ldflags = flags + " -resource-dir " + sysroot.string() +
-                " -mexec-model=reactor -flto -Wl,--lto-O3";
+    add_flags("-target", "wasm32-wasi", "--sysroot", sysroot.string());
+    add_cxxflags("-D_LIBCPP_SETJMP_H", "-D_LIBCPP_CSIGNAL", "-fno-exceptions");
+    add_ldflags("-resource-dir", sysroot.string(), "-mexec-model=reactor",
+                "-flto", "-Wl,--lto-O3");
   }
-
-  [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
-  [[nodiscard]] std::string ldflags() const override { return m_ldflags; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {

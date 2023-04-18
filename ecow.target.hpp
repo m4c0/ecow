@@ -19,16 +19,28 @@ static auto &target_stack() {
 }
 static inline target *&current_target() { return target_stack().back(); }
 
-class deco_target;
 class target {
+  std::vector<std::string> m_cxxflags{};
+  std::vector<std::string> m_ldflags{};
+
+protected:
+  void add_cxxflags(const auto &...as) { (m_cxxflags.push_back(as), ...); }
+  void add_ldflags(const auto &...as) { (m_ldflags.push_back(as), ...); }
+  void add_flags(const auto &...as) {
+    add_cxxflags(as...);
+    add_ldflags(as...);
+  }
+
 public:
+  using flags = std::vector<std::string>;
+
   target() { target_stack().push_back(this); }
   virtual ~target() { target_stack().pop_back(); }
 
   [[nodiscard]] virtual bool supports(features f) const { return false; }
 
-  [[nodiscard]] virtual std::string cxxflags() const = 0;
-  [[nodiscard]] virtual std::string ldflags() const = 0;
+  [[nodiscard]] virtual flags cxxflags() const { return m_cxxflags; }
+  [[nodiscard]] virtual flags ldflags() const { return m_ldflags; }
 
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const = 0;
@@ -74,10 +86,10 @@ public:
     return m_prev->supports(f);
   }
 
-  [[nodiscard]] virtual std::string cxxflags() const override {
+  [[nodiscard]] virtual flags cxxflags() const override {
     return m_prev->cxxflags();
   }
-  [[nodiscard]] virtual std::string ldflags() const override {
+  [[nodiscard]] virtual flags ldflags() const override {
     return m_prev->ldflags();
   }
 

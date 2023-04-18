@@ -23,7 +23,8 @@ class clang {
 
   void arguments(std::ostream &o, std::string_view sep) const {
     o << m_compiler;
-    o << sep << current_target()->cxxflags();
+    for (const auto &a : current_target()->cxxflags())
+      o << sep << a;
     for (const auto &a : m_args)
       o << sep << a;
     o << sep << m_from;
@@ -71,7 +72,7 @@ public:
   }
   clang &with_deps() {
     add_arg("-MMD");
-    add_arg("-MF " + depfile());
+    add_arg("-MF" + depfile());
     m_with_deps = true;
     return *this;
   }

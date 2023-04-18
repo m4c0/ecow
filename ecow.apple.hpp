@@ -17,8 +17,6 @@ namespace ecow::impl {
 }
 
 class apple_target : public target {
-  std::vector<std::string> m_cflags{};
-  std::vector<std::string> m_ldflags{};
   std::string m_sdk;
 
   [[nodiscard]] auto bundle_path(const std::string &name) const {
@@ -76,28 +74,9 @@ protected:
     });
   }
 
-  void add_cflags(const auto &...as) { (m_cflags.push_back(as), ...); }
-  void add_ldflags(const auto &...as) { (m_ldflags.push_back(as), ...); }
-  void add_flags(const auto &...as) {
-    add_cflags(as...);
-    add_ldflags(as...);
-  }
-
 public:
   explicit apple_target(const std::string &sdk) : m_sdk{sdk} {
     add_flags("--sysroot", impl::popen("xcrun --show-sdk-path --sdk " + sdk));
-  }
-  [[nodiscard]] std::string cxxflags() const override {
-    std::ostringstream o{};
-    for (const auto &s : m_cflags)
-      o << " " << s;
-    return o.str();
-  }
-  [[nodiscard]] std::string ldflags() const override {
-    std::ostringstream o{};
-    for (const auto &s : m_ldflags)
-      o << " " << s;
-    return o.str();
   }
 
   [[nodiscard]] std::string

@@ -7,8 +7,6 @@
 
 namespace ecow::impl {
 class android_target : public target {
-  std::string m_cxxflags;
-  std::string m_ldflags;
   std::string m_target;
 
   [[nodiscard]] static inline auto sdk_path() {
@@ -59,19 +57,14 @@ public:
   explicit android_target(const std::string &tgt) : m_target{tgt} {
     const auto llvm = find_llvm().string();
 
-    m_cxxflags = "-fdata-sections -ffunction-sections "
-                 "-funwind-tables "
-                 "-fstack-protector-strong -no-canonical-prefixes --target=" +
-                 tgt + " --sysroot " + llvm + "/sysroot";
+    add_flags("-fdata-sections", "-ffunction-sections", "-funwind-tables",
+              "-fstack-protector-strong", "-no-canonical-prefixes",
+              " --target=" + tgt, "--sysroot", llvm + "/sysroot");
 
-    m_ldflags = m_cxxflags +
-                " -shared -static-libstdc++ -Wl,-Bsymbolic -fuse-ld=lld "
-                " -Wl,--no-undefined " +
-                " -resource-dir " + llvm + "/lib64/clang/*";
+    add_ldflags("-shared", "-static-libstdc++", "-Wl,-Bsymbolic",
+                "-fuse-ld=lld", "-Wl,--no-undefined", "-resource-dir",
+                llvm + "/lib64/clang/*");
   }
-
-  [[nodiscard]] std::string cxxflags() const override { return m_cxxflags; }
-  [[nodiscard]] std::string ldflags() const override { return m_ldflags; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {

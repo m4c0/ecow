@@ -10,10 +10,7 @@ protected:
   [[nodiscard]] std::string build_subfolder() const override { return "win32"; }
 
 public:
-  [[nodiscard]] std::string cxxflags() const override {
-    return "-fno-ms-compatibility";
-  }
-  [[nodiscard]] std::string ldflags() const override { return ""; }
+  explicit host_target() { add_cxxflags("-fno-ms-compatibility"); }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
