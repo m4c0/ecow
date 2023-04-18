@@ -7,21 +7,24 @@ class mod : public seq {
   strvec m_impls;
   strvec m_parts;
 
-  void compile_part(const std::string &who) const {
-    impl::clang{who + ".cppm", pcm_name(who)}
+  [[nodiscard]] auto clang_part(const std::string &who) const {
+    return impl::clang{who + ".cppm", pcm_name(who)}
         .add_arg("--precompile")
         .add_include_dirs(include_dirs())
-        .with_deps()
-        .run();
-    impl::clang{pcm_name(who), obj_name(who)}.add_arg("-c").run();
+        .with_deps();
   }
-  void compile_impl(const std::string &who) const {
-    impl::clang{who + ".cpp", obj_name(who)}
+  [[nodiscard]] auto clang_impl(const std::string &who) const {
+    return impl::clang{who + ".cpp", obj_name(who)}
         .add_arg("-c")
         .add_include_dirs(include_dirs())
-        .with_deps()
-        .run();
+        .with_deps();
   }
+
+  void compile_part(const std::string &who) const {
+    clang_part(who).run();
+    impl::clang{pcm_name(who), obj_name(who)}.add_arg("-c").run();
+  }
+  void compile_impl(const std::string &who) const { clang_impl(who).run(); }
 
 protected:
   void build_self() const override {
@@ -31,6 +34,14 @@ protected:
     std::for_each(m_impls.begin(), m_impls.end(),
                   [this](auto w) { return compile_impl(w); });
     seq::build_self();
+  }
+  void create_self_cdb(std::ostream &o) const override {
+    std::for_each(m_parts.begin(), m_parts.end(),
+                  [&](auto w) { clang_part(w).create_cdb(o); });
+    clang_part(name()).create_cdb(o);
+    std::for_each(m_impls.begin(), m_impls.end(),
+                  [&](auto w) { clang_impl(w).create_cdb(o); });
+    seq::create_self_cdb(o);
   }
 
   [[nodiscard]] pathset self_objects() const override {

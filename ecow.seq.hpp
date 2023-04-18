@@ -15,6 +15,11 @@ protected:
   virtual void build_self() const override {
     std::for_each(m_units.begin(), m_units.end(), std::mem_fn(&unit::build));
   }
+  virtual void create_self_cdb(std::ostream &o) const override {
+    for (const auto &u : m_units) {
+      u->create_cdb(o);
+    }
+  }
   [[nodiscard]] virtual pathset self_objects() const override {
     pathset res{};
     for (const auto &u : m_units) {
