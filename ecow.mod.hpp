@@ -18,7 +18,6 @@ class mod : public seq {
   void compile_impl(const std::string &who) const {
     impl::clang{who + ".cpp", obj_name(who)}
         .add_arg("-c")
-        .add_arg("-fmodule-file=" + pcm_name(name()))
         .add_include_dirs(include_dirs())
         .with_deps()
         .run();
