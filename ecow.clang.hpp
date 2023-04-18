@@ -21,6 +21,15 @@ class clang {
 
   [[nodiscard]] auto depfile() const { return m_to + ".deps"; }
 
+  void arguments(std::ostream &o, std::string_view sep) const {
+    o << m_compiler;
+    o << sep << current_target()->cxxflags();
+    for (const auto &a : m_args)
+      o << sep << a;
+    o << sep << m_from;
+    o << sep << "-o" << sep << m_to;
+  }
+
 public:
   clang(const std::string &from, const std::string &to)
       : m_from{from}, m_to{to} {
@@ -79,17 +88,20 @@ public:
     const auto &tgt = impl::current_target();
 
     std::stringstream cbuf;
-    cbuf << m_compiler;
-    cbuf << tgt->cxxflags();
-    for (const auto &a : m_args)
-      cbuf << " " << a;
-    cbuf << " " << m_from;
-    cbuf << " -o " << m_to;
-    cbuf << " -MJ " << m_to << ".cdb-json";
+    arguments(cbuf, " ");
 
     auto cmd = cbuf.str();
     if (std::system(cmd.c_str()))
       throw clang_failed{cmd};
+  }
+
+  void create_cdb(std::ostream &o) const {
+    o << R"({ "directory": ")" << std::filesystem::current_path().string()
+      << R"(", "file": ")" << m_from << R"(", "output": ")" << m_to
+      << R"(", "arguments": [")";
+    arguments(o, R"(", ")");
+    o << R"("]},)"
+      << "\n";
   }
 };
 } // namespace ecow::impl

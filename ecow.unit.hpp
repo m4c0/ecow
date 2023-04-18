@@ -22,16 +22,25 @@ class unit {
   std::unordered_set<std::string> m_resources{};
   wsdeps::map_t m_wsdeps;
 
+  [[nodiscard]] auto clang() const {
+    const auto ext =
+        std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
+    return impl::clang{m_name + ext, obj_name(m_name)}
+        .add_arg("-c")
+        .add_include_dirs(m_include_dirs)
+        .with_deps();
+  }
+
 protected:
   using pathset = std::set<std::filesystem::path>;
   using strmap = std::map<std::string, std::string>;
   using strvec = std::vector<std::string>;
   using strset = std::unordered_set<std::string>;
 
-  [[nodiscard]] static auto pcm_name(const std::string &who) {
+  [[nodiscard]] static std::string pcm_name(const std::string &who) {
     return impl::current_target()->build_folder() + who + ".pcm";
   }
-  [[nodiscard]] static auto obj_name(const std::string &who) {
+  [[nodiscard]] static std::string obj_name(const std::string &who) {
     return impl::current_target()->build_folder() + who + ".o";
   }
 
@@ -45,17 +54,8 @@ protected:
 
   void add_link_flag(const std::string &name) { m_link_flags.insert(name); }
 
-  virtual void build_self() const {
-    const auto ext =
-        std::filesystem::path{m_name}.has_extension() ? "" : ".cpp";
-    impl::clang{m_name + ext, obj_name(m_name)}
-        .add_arg("-c")
-        .add_include_dirs(m_include_dirs)
-        .with_deps()
-        .run();
-  }
-
-  virtual void create_self_cdb(std::ostream &o) const {}
+  virtual void build_self() const { clang().run(); }
+  virtual void create_self_cdb(std::ostream &o) const { clang().create_cdb(o); }
 
   virtual pathset self_objects() const {
     pathset res{};
