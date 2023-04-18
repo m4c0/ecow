@@ -68,6 +68,9 @@ protected:
     <string>1.0.0</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
+    <key>DTPlatformName</key>
+    <string>)"
+        << m_sdk << R"(</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
 )";
