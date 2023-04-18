@@ -54,6 +54,9 @@ protected:
         .with_deps()
         .run();
   }
+
+  virtual void create_self_cdb(std::ostream &o) const {}
+
   virtual pathset self_objects() const {
     pathset res{};
     res.insert(obj_name(name()));
@@ -125,8 +128,17 @@ public:
     });
 
     wsdeps::target t{m_wsdeps};
-
     build_self();
+  }
+
+  void create_cdb(std::ostream &o) const {
+    if (!current_target_supports_me())
+      return;
+
+    create_self_cdb(o);
+    for (const auto &[k, u] : m_wsdeps) {
+      u->create_self_cdb(o);
+    }
   }
 
   [[nodiscard]] virtual strset link_flags() const {
