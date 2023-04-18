@@ -67,7 +67,7 @@ static inline void run_main(unit &u, int argc, char **argv) {
       build<iphonesimulator_target>(u);
       continue;
     } else if (arg == "macosx"sv) {
-      build<host_target>(u, arg);
+      build<host_target>(u);
       continue;
     }
 #elif _WIN32
