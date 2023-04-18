@@ -149,11 +149,6 @@ public:
         "--sysroot " + impl::popen("xcrun --show-sdk-path --sdk " + sdk);
     if (sdk == "iphoneos"s) {
     } else if (sdk == "iphonesimulator"s) {
-      m_extra_cflags += " -target x86_64-apple-ios13.0-simulator";
-      m_extra_ldflags = " -Wl,-rpath,@executable_path";
-      m_exe_path = "";
-      m_res_path = "";
-      m_main_api = uikit;
     } else if (sdk == "macosx") {
       m_extra_cflags += " -mmacosx-version-min=11.6";
     } else {
@@ -397,6 +392,31 @@ public:
     gen_export_plist(name);
     gen_archive_plist(name);
     run_export();
+  }
+
+  [[nodiscard]] virtual bool supports(features f) const override {
+    switch (f) {
+    case uikit:
+      return true;
+    default:
+      return apple_target::supports(f);
+    }
+  }
+};
+
+class iphonesimulator_target : public apple_target {
+protected:
+  [[nodiscard]] std::string app_path() const override { return ""; }
+  [[nodiscard]] std::string exe_path() const override { return ""; }
+  [[nodiscard]] std::string res_path() const override { return ""; }
+
+public:
+  explicit iphonesimulator_target() : apple_target("iphonesimulator") {
+    add_flags("-target", "x86_64-apple-ios13.0-simulator");
+    add_ldflags("-Wl,-rpath,@executable_path");
+  }
+  void bundle(const std::string &name, const unit &u) const override {
+    gen_app_plist(name);
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {
