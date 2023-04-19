@@ -56,11 +56,11 @@ namespace ecow::impl {
 class apple_target : public target {
   std::string m_sdk;
 
+protected:
   [[nodiscard]] auto bundle_path(const std::string &name) const {
     return build_path() / app_path() / (name + ".app");
   }
 
-protected:
   [[nodiscard]] virtual std::string app_path() const = 0;
   [[nodiscard]] virtual std::string exe_path() const = 0;
   [[nodiscard]] virtual std::string res_path() const = 0;
@@ -81,19 +81,16 @@ protected:
 )";
   }
 
-  void gen_app_plist(const std::string &name) const {
-    gen_plist(bundle_path(name) / "Info.plist", [&](auto d) {
-      d.string("CFBundleDevelopmentRegion", "en");
-      d.string("CFBundleDisplayName", name);
-      d.string("CFBundleExecutable", name);
-      d.string("CFBundleIdentifier", "br.com.tpk." + name);
-      d.string("CFBundleInfoDictionaryVersion", "6.0");
-      d.string("CFBundlePackageType", "APPL");
-      d.string("CFBundleShortVersionString", "1.0.0");
-      d.string("CFBundleVersion", "1.0.0");
-      d.string("DTPlatformName", m_sdk);
-      d.boolean("LSRequiresIPhoneOS", true);
-    });
+  void build_common_app_plist(const std::string &name, plist::dict &d) const {
+    d.string("CFBundleDevelopmentRegion", "en");
+    d.string("CFBundleDisplayName", name);
+    d.string("CFBundleExecutable", name);
+    d.string("CFBundleIdentifier", "br.com.tpk." + name);
+    d.string("CFBundleInfoDictionaryVersion", "6.0");
+    d.string("CFBundlePackageType", "APPL");
+    d.string("CFBundleShortVersionString", "1.0.0");
+    d.string("CFBundleVersion", "1.0.0");
+    d.string("DTPlatformName", m_sdk);
   }
 
 public:
@@ -134,6 +131,16 @@ class iphone_target : public apple_target {
   }
 
   [[nodiscard]] static std::string team_id() { return env("ECOW_IOS_TEAM"); }
+
+  void gen_app_plist(const std::string &name) const {
+    gen_plist(bundle_path(name) / "Info.plist", [&](auto d) {
+      build_common_app_plist(name, d);
+      d.array("CFBundleSupportedPlatforms", "iPhoneOS");
+      d.string("MinimumOSVersion", "13.0");
+      d.boolean("LSRequiresIPhoneOS", true);
+      d.integer("UIDeviceFamily", 1); // iPhone
+    });
+  }
 
   void gen_archive_plist(const std::string &name) const {
     gen_plist(build_path() / "export.xcarchive/Info.plist", [&](auto d) {
@@ -235,7 +242,10 @@ public:
     add_ldflags("-Wl,-rpath,@executable_path");
   }
   void bundle(const std::string &name, const unit &u) const override {
-    gen_app_plist(name);
+    gen_plist(bundle_path(name) / "Info.plist", [&](auto d) {
+      build_common_app_plist(name, d);
+      d.boolean("LSRequiresIPhoneOS", true);
+    });
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {
