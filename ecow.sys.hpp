@@ -3,9 +3,6 @@
 #include "ecow.unit.hpp"
 
 namespace ecow {
-struct command_failed : public std::runtime_error {
-  using runtime_error::runtime_error;
-};
 class sys : public unit {
 protected:
   void build_self() const override {

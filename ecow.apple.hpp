@@ -133,6 +133,8 @@ class iphone_target : public apple_target {
     return (v == nullptr) ? "TBD" : std::string{v};
   }
 
+  [[nodiscard]] static std::string team_id() { return env("ECOW_IOS_TEAM"); }
+
   void gen_archive_plist(const std::string &name) const {
     gen_plist(build_path() / "export.xcarchive/Info.plist", [&](auto d) {
       d.dictionary("ApplicationProperties", [&](auto dd) {
@@ -142,7 +144,7 @@ class iphone_target : public apple_target {
         dd.string("CFBundleShortVersionString", "1.0.0");
         dd.string("CFBundleVersion", "0");
         dd.string("SigningIdentity", env("ECOW_IOS_SIGN_ID"));
-        dd.string("Team", env("ECOW_IOS_TEAM"));
+        dd.string("Team", team_id());
       });
       d.integer("ArchiveVersion", 1);
       d.date("CreationDate");
@@ -154,7 +156,7 @@ class iphone_target : public apple_target {
   void gen_export_plist(const std::string &name) const {
     gen_plist(build_path() / "export.plist", [&](auto d) {
       d.string("method", "ad-hoc");
-      d.string("teamID", env("ECOW_IOS_TEAM"));
+      d.string("teamID", team_id());
       d.string("thinning", "&lt;none&gt;");
       d.dictionary("provisioningProfiles", [&](auto dd) {
         dd.string("br.com.tpk." + name, env("ECOW_IOS_PROV_PROF"));
@@ -162,9 +164,29 @@ class iphone_target : public apple_target {
     });
   }
 
-  void run_export() const {
-    // xcodebuild -exportArchive -archivePath export.xcarchive -exportPath ...
-    // -exportOptionsPlist export.plist
+  void code_sign(const std::string &name) const {
+    const auto app = build_path() / app_path() / name;
+    const auto cmd =
+        "codesign -f -s " + team_id() + " " + app.string() + ".app";
+
+    std::cerr << "codesigning " << name << std::endl;
+    if (std::system(cmd.c_str()) != 0) {
+      throw command_failed(cmd);
+    }
+  }
+
+  void run_export(const std::string &name) const {
+    const auto xcarchive = build_path() / "export.xcarchive";
+    const auto exp_path = build_path() / "export";
+    const auto exp_plist = build_path() / "export.plist";
+    const auto cmd = "xcodebuild -exportArchive -archivePath " +
+                     xcarchive.string() + " -exportPath " + exp_path.string() +
+                     " -exportOptionsPlist " + exp_plist.string();
+
+    std::cerr << "exporting " << name << std::endl;
+    if (std::system(cmd.c_str()) != 0) {
+      throw command_failed(cmd);
+    }
   }
 
 protected:
@@ -183,7 +205,8 @@ public:
     gen_app_plist(name);
     gen_export_plist(name);
     gen_archive_plist(name);
-    run_export();
+    code_sign(name);
+    run_export(name);
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {

@@ -13,6 +13,10 @@
 #include <vector>
 
 namespace ecow {
+struct command_failed : public std::runtime_error {
+  using runtime_error::runtime_error;
+};
+
 class unit {
   std::string m_name;
   std::unordered_set<std::string> m_link_flags{};
