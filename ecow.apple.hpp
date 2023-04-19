@@ -128,6 +128,11 @@ public:
 };
 
 class iphone_target : public apple_target {
+  [[nodiscard]] static std::string env(const char *key) {
+    const auto v = std::getenv(key);
+    return (v == nullptr) ? "TBD" : std::string{v};
+  }
+
   void gen_archive_plist(const std::string &name) const {
     gen_plist(build_path() / "export.xcarchive/Info.plist", [&](auto d) {
       d.dictionary("ApplicationProperties", [&](auto dd) {
@@ -136,8 +141,8 @@ class iphone_target : public apple_target {
         dd.string("CFBundleIdentifier", "br.com.tpk." + name);
         dd.string("CFBundleShortVersionString", "1.0.0");
         dd.string("CFBundleVersion", "0");
-        dd.string("SigningIdentity", "TBD");
-        dd.string("Team", "TBD");
+        dd.string("SigningIdentity", env("ECOW_IOS_SIGN_ID"));
+        dd.string("Team", env("ECOW_IOS_TEAM"));
       });
       d.integer("ArchiveVersion", 1);
       d.date("CreationDate");
@@ -149,10 +154,11 @@ class iphone_target : public apple_target {
   void gen_export_plist(const std::string &name) const {
     gen_plist(build_path() / "export.plist", [&](auto d) {
       d.string("method", "ad-hoc");
-      d.string("teamID", "TBD");
+      d.string("teamID", env("ECOW_IOS_TEAM"));
       d.string("thinning", "&lt;none&gt;");
-      d.dictionary("provisioningProfiles",
-                   [&](auto dd) { dd.string("br.com.tpk." + name, "TBD"); });
+      d.dictionary("provisioningProfiles", [&](auto dd) {
+        dd.string("br.com.tpk." + name, env("ECOW_IOS_PROV_PROF"));
+      });
     });
   }
 
