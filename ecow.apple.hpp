@@ -13,10 +13,30 @@ class dict {
 public:
   explicit constexpr dict(std::ostream &o) : o{o} {}
 
+  void array(const std::string &key, auto &&...v) {
+    o << "<key>" << key << "</key><array>\n";
+    ((o << "<string>" << v << "</string>"), ...);
+    o << "</array>\n";
+  }
   void boolean(const std::string &key, bool v) {
     o << "<key>" << key << "</key>";
     o << (v ? "<true/>" : "<false/>");
     o << "\n";
+  }
+  void date(const std::string &key) {
+    time_t now;
+    time(&now);
+    char buf[128];
+    strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
+    o << "<key>" << key << "</key><date>" << buf << "</date>\n";
+  }
+  void dictionary(const std::string &key, auto &&fn) {
+    o << "<key>" << key << "</key><dict>\n";
+    fn(dict{o});
+    o << "</dict>\n";
+  }
+  void integer(const std::string &key, int value) {
+    o << "<key>" << key << "</key><integer>" << value << "</integer>\n";
   }
   void string(const std::string &key, const std::string &value) {
     o << "<key>" << key << "</key><string>" << value << "</string>\n";
@@ -55,15 +75,14 @@ protected:
 <plist version="1.0">
 <dict>
 )";
-    fn(o);
+    fn(plist::dict{o});
     o << R"(</dict>
 </plist>
 )";
   }
 
   void gen_app_plist(const std::string &name) const {
-    gen_plist(bundle_path(name) / "Info.plist", [&](auto &o) {
-      plist::dict d{o};
+    gen_plist(bundle_path(name) / "Info.plist", [&](auto d) {
       d.string("CFBundleDevelopmentRegion", "en");
       d.string("CFBundleDisplayName", name);
       d.string("CFBundleExecutable", name);
@@ -110,59 +129,30 @@ public:
 
 class iphone_target : public apple_target {
   void gen_archive_plist(const std::string &name) const {
-    gen_plist(build_path() / "export.xcarchive/Info.plist", [&](auto &o) {
-      o << R"(
-    <key>ApplicationProperties</key>
-    <dict>
-      <key>ApplicationPath</key>
-      <string>Applications/)"
-        << name << R"(.app</string>
-      <key>Architectures</key>
-      <array>
-        <string>armv7</string>
-        <string>arm64</string>
-      </array>
-      <key>CFBundleIdentifier</key>
-      <string>br.com.tpk.)"
-        << name << R"(</string>
-      <key>CFBundleShortVersionString</key>
-      <string>1.0.0</string>
-      <key>CFBundleVersion</key>
-      <string>0</string>
-      <key>SigningIdentity</key>
-      <string>TBD</string>
-      <key>Team</key>
-      <string>TBD</string>
-    </dict>
-    <key>ArchiveVersion</key>
-    <integer>1</integer>
-    <key>CreationDate</key>
-    <date>2023-03-30T00:00:00Z</date>
-    <key>Name</key>
-    <string>)"
-        << name << R"(</string>
-    <key>SchemeName</key>
-    <string>)"
-        << name << R"(</string>
-)";
+    gen_plist(build_path() / "export.xcarchive/Info.plist", [&](auto d) {
+      d.dictionary("ApplicationProperties", [&](auto dd) {
+        dd.string("ApplicationPath", "Applications/" + name + ".app");
+        dd.array("Architectures", "arm64");
+        dd.string("CFBundleIdentifier", "br.com.tpk." + name);
+        dd.string("CFBundleShortVersionString", "1.0.0");
+        dd.string("CFBundleVersion", "0");
+        dd.string("SigningIdentity", "TBD");
+        dd.string("Team", "TBD");
+      });
+      d.integer("ArchiveVersion", 1);
+      d.date("CreationDate");
+      d.string("Name", name);
+      d.string("SchemeName", name);
     });
   }
 
   void gen_export_plist(const std::string &name) const {
-    gen_plist(build_path() / "export.plist", [&](auto &o) {
-      o << R"(
-    <key>method</key>
-    <string>development</string>
-    <key>teamID</key>
-    <string>TBD</string>
-    <key>thinning</key>
-    <string>&lt;none&gt;</string>
-    <key>provisioningProfiles</key>
-    <dict>
-      <key>br.com.tpk.)"
-        << name << R"(</key>
-      <string>TBD</string>
-    </dict>)";
+    gen_plist(build_path() / "export.plist", [&](auto d) {
+      d.string("method", "ad-hoc");
+      d.string("teamID", "TBD");
+      d.string("thinning", "&lt;none&gt;");
+      d.dictionary("provisioningProfiles",
+                   [&](auto dd) { dd.string("br.com.tpk." + name, "TBD"); });
     });
   }
 
