@@ -6,6 +6,23 @@
 #include <filesystem>
 #include <string>
 
+namespace ecow::impl::plist {
+class dict {
+  std::ostream &o;
+
+public:
+  explicit constexpr dict(std::ostream &o) : o{o} {}
+
+  void boolean(const std::string &key, bool v) {
+    o << "<key>" << key << "</key>";
+    o << (v ? "<true/>" : "<false/>");
+    o << "\n";
+  }
+  void string(const std::string &key, const std::string &value) {
+    o << "<key>" << key << "</key><string>" << value << "</string>\n";
+  }
+};
+} // namespace ecow::impl::plist
 namespace ecow::impl {
 [[nodiscard]] static inline std::string popen(const std::string &cmd) {
   auto f = ::popen(cmd.c_str(), "r");
@@ -33,47 +50,30 @@ protected:
   void gen_plist(const std::filesystem::path &path, auto fn) const {
     std::cerr << "generating " << path.string() << std::endl;
     std::ofstream o{path};
-    o << R"(
-<?xml version="1.0" encoding="UTF-8"?>
+    o << R"(<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-  <dict>
+<dict>
 )";
     fn(o);
-    o << R"(
-  </dict>
+    o << R"(</dict>
 </plist>
 )";
   }
 
   void gen_app_plist(const std::string &name) const {
     gen_plist(bundle_path(name) / "Info.plist", [&](auto &o) {
-      o << R"(
-    <key>CFBundleDevelopmentRegion</key>
-    <string>en</string>
-    <key>CFBundleDisplayName</key>
-    <string>)"
-        << name << R"(</string>
-    <key>CFBundleExecutable</key>
-    <string>)"
-        << name << R"(</string>
-    <key>CFBundleIdentifier</key>
-    <string>br.com.tpk.)"
-        << name << R"(</string>
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
-    <key>CFBundleVersion</key>
-    <string>1.0.0</string>
-    <key>DTPlatformName</key>
-    <string>)"
-        << m_sdk << R"(</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-)";
+      plist::dict d{o};
+      d.string("CFBundleDevelopmentRegion", "en");
+      d.string("CFBundleDisplayName", name);
+      d.string("CFBundleExecutable", name);
+      d.string("CFBundleIdentifier", "br.com.tpk." + name);
+      d.string("CFBundleInfoDictionaryVersion", "6.0");
+      d.string("CFBundlePackageType", "APPL");
+      d.string("CFBundleShortVersionString", "1.0.0");
+      d.string("CFBundleVersion", "1.0.0");
+      d.string("DTPlatformName", m_sdk);
+      d.boolean("LSRequiresIPhoneOS", true);
     });
   }
 
