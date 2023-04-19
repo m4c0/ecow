@@ -28,7 +28,8 @@ class clang {
     for (const auto &a : m_args)
       o << sep << a;
     o << sep << m_from;
-    o << sep << "-o" << sep << m_to;
+    o << sep << "-o" << sep
+      << (std::filesystem::current_path() / m_to).string();
   }
 
 public:
@@ -97,8 +98,9 @@ public:
   }
 
   void create_cdb(std::ostream &o) const {
-    o << R"({ "directory": ")" << std::filesystem::current_path().string()
-      << R"(", "file": ")" << m_from << R"(", "output": ")" << m_to
+    const auto dir = std::filesystem::current_path();
+    o << R"({ "directory": ")" << dir.string() << R"(", "file": ")" << m_from
+      << R"(", "output": ")" << (dir / m_to).string()
       << R"(", "arguments": [")";
     arguments(o, R"(", ")");
     o << R"("]},)"

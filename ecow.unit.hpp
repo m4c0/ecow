@@ -137,6 +137,7 @@ public:
 
     create_self_cdb(o);
     for (const auto &[k, u] : m_wsdeps) {
+      wsdeps::curpath_raii c{k};
       u->create_self_cdb(o);
     }
   }
