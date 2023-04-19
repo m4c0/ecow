@@ -205,8 +205,12 @@ public:
     gen_app_plist(name);
     gen_export_plist(name);
     gen_archive_plist(name);
-    code_sign(name);
-    run_export(name);
+    if (team_id() == "TBD") {
+      std::cerr << "skipping code sign/export" << std::endl;
+    } else {
+      code_sign(name);
+      run_export(name);
+    }
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {
