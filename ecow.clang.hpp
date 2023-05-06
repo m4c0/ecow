@@ -48,6 +48,9 @@ public:
     } else {
       add_arg("-O3");
     }
+    if (std::getenv("ECOW_DEBUG")) {
+      add_arg("-g");
+    }
 
     if (fext == ".c" || fext == ".m") {
       m_compiler = c();
