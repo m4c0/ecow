@@ -44,6 +44,7 @@ public:
 
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const = 0;
+  [[nodiscard]] virtual std::string exe_name(const std::string &name) const = 0;
 
   [[nodiscard]] virtual std::string build_subfolder() const = 0;
   [[nodiscard]] std::string build_folder() const {
@@ -96,6 +97,10 @@ public:
   [[nodiscard]] virtual std::string
   app_exe_name(const std::string &name) const override {
     return m_prev->app_exe_name(name);
+  }
+  [[nodiscard]] virtual std::string
+  exe_name(const std::string &name) const override {
+    return m_prev->exe_name(name);
   }
 
   [[nodiscard]] virtual std::filesystem::path

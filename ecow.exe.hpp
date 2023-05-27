@@ -9,7 +9,9 @@ class exe : public seq {
   }
 
 protected:
-  [[nodiscard]] virtual std::string exe_name() const { return name(); }
+  [[nodiscard]] virtual std::string exe_name() const {
+    return impl::current_target()->exe_name(name());
+  }
 
   virtual void build_self() const override {
     using namespace std::string_literals;

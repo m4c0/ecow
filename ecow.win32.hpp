@@ -16,6 +16,9 @@ public:
   app_exe_name(const std::string &name) const override {
     return name + ".exe";
   }
+  [[nodiscard]] std::string exe_name(const std::string &name) const override {
+    return name + ".exe";
+  }
 
   [[nodiscard]] virtual std::filesystem::path
   module_cache_path() const override {

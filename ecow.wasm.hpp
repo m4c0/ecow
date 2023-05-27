@@ -98,6 +98,9 @@ public:
   app_exe_name(const std::string &name) const override {
     return name + ".wasm";
   }
+  [[nodiscard]] std::string exe_name(const std::string &name) const override {
+    return name + ".wasm";
+  }
 
   [[nodiscard]] bool supports(features f) const override {
     switch (f) {

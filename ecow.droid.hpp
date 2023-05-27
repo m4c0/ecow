@@ -70,6 +70,9 @@ public:
   app_exe_name(const std::string &name) const override {
     return "lib" + name + ".so";
   }
+  [[nodiscard]] std::string exe_name(const std::string &name) const override {
+    return name;
+  }
 
   [[nodiscard]] bool supports(features f) const override {
     switch (f) {

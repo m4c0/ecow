@@ -104,6 +104,9 @@ public:
     std::filesystem::create_directories(build_folder() + path);
     return path + name;
   }
+  [[nodiscard]] std::string exe_name(const std::string &name) const override {
+    return name;
+  }
   [[nodiscard]] std::filesystem::path
   resource_path(const std::string &name) const override {
     const auto res = bundle_path(name) / res_path();
