@@ -13,7 +13,8 @@ public:
   using exe::exe;
 
   [[nodiscard]] auto executable() const {
-    return impl::host_target().build_path() / exe_name();
+    impl::host_target t{};
+    return t.build_path() / t.exe_name(name());
   }
 };
 } // namespace ecow
