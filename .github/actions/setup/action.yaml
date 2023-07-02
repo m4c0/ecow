@@ -22,6 +22,10 @@ runs:
         tar xvf ../libclang_rt.builtins-wasm32-wasi-17.0.tar.gz
       working-directory: ${{ inputs.cwd }}
 
+    - name: 🐞 Debug existing Clang version
+      if: runner.os == 'macOS'
+      shell: bash
+      run: clang++ -v
     - name: 🍺 Brewing
       if: runner.os == 'macOS'
       shell: bash
@@ -31,6 +35,10 @@ runs:
       shell: bash
       run: $(brew --prefix llvm@16)/bin/clang++ -v
 
+    - name: 🐞 Debug existing Clang version
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: clang++ -v  
     - name: 🍫 Brewing
       if: runner.os == 'Windows'
       shell: pwsh
