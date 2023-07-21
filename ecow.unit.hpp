@@ -122,6 +122,13 @@ public:
                   [f, &out](auto &mf) { mf->visit(f, out); });
   }
 
+  virtual void recurse_wsdeps(wsdeps::map_t &res) const {
+    for (auto &[k, v] : m_wsdeps) {
+      res[k] = v;
+      v->recurse_wsdeps(res);
+    }
+  }
+
   void build() const {
     if (!current_target_supports_me())
       return;
@@ -131,7 +138,10 @@ public:
       v.second->build();
     });
 
-    wsdeps::target t{m_wsdeps};
+    wsdeps::map_t wsd{};
+    recurse_wsdeps(wsd);
+
+    wsdeps::target t{wsd};
     build_self();
   }
 

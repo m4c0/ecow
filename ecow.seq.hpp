@@ -45,6 +45,13 @@ public:
                   [f, &out](auto &u) { u->visit(f, out); });
   }
 
+  virtual void recurse_wsdeps(wsdeps::map_t &res) const override {
+    unit::recurse_wsdeps(res);
+    for (const auto &u : m_units) {
+      u->recurse_wsdeps(res);
+    }
+  }
+
   [[nodiscard]] virtual strset link_flags() const override {
     strset res{unit::link_flags()};
     for (const auto &u : m_units) {
