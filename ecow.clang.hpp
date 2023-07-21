@@ -54,8 +54,6 @@ public:
 
     if (fext == ".c" || fext == ".m") {
       m_compiler = c();
-    } else if (fext == ".pcm") {
-      m_compiler = cxx();
     } else {
       m_compiler = cxx();
 
