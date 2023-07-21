@@ -1,15 +1,13 @@
 #include "../../ecow.hpp"
-#include "../a-nostl/build.hpp"
+#include "../c-nostl/build.hpp"
 
 using namespace ecow;
 
 int main(int argc, char **argv) {
-  auto a = exported();
-
   auto all = unit::create<seq>("all");
 
   auto m = all->add_unit<mod>("mb");
-  m->add_wsdep("a-nostl", a);
+  m->add_wsdep("c-nostl", dbl_exp());
 
   auto myapp = all->add_unit<app>("bee");
   myapp->add_ref(m);

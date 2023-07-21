@@ -1,2 +1,2 @@
 export module mb;
-export import m;
+export import c;
