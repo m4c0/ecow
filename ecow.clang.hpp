@@ -48,6 +48,7 @@ public:
     } else {
       add_arg("-O3");
     }
+    // TODO: use -gdwarf on windows
     if (std::getenv("ECOW_DEBUG")) {
       add_arg("-g");
     }

@@ -39,6 +39,12 @@ protected:
     if (!any_is_newer)
       return;
 
+    auto ldf = std::getenv("ECOW_LDFLAGS");
+    if (ldf != nullptr) {
+      cmd.append(" ");
+      cmd.append(ldf);
+    }
+    // TODO: use -gdwarf on windows
     if (std::getenv("ECOW_DEBUG")) {
       cmd.append(" -g");
     } else {
