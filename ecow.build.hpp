@@ -7,6 +7,7 @@
 #else
 #include "ecow.linux.hpp"
 #endif
+#include "ecow.deps.hpp"
 #include "ecow.droid.hpp"
 #include "ecow.unit.hpp"
 #include "ecow.wasm.hpp"
@@ -40,6 +41,8 @@ static inline void build(unit &u, Args &&...args) {
     std::cerr << "generating compilation dependencies" << std::endl;
     // not caring about return value since it fails for some sys hdr
     system(cdeps.c_str());
+
+    deps::parse_deps();
   }
 
   u.build();
