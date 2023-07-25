@@ -235,7 +235,7 @@ public:
       if (peek(',')) {
         consume(',');
       } else {
-        throw std::runtime_error("Could not find attribute " + name);
+        return "";
       }
     }
   }
@@ -246,10 +246,19 @@ void parse_deps() {
   stream{}.do_object([&](auto &s) {
     s.find_array_attr("rules", [&](auto &s) {
       s.do_object([&](auto &s) {
-        auto &pcm = dependency_map[s.find_string_attr("primary-output")];
+        auto pout = s.find_string_attr("primary-output");
+        if (pout == "")
+          return;
+
+        auto &pcm = dependency_map[pout];
         s.find_array_attr("requires", [&](auto &s) {
-          s.do_object(
-              [&](auto &s) { pcm.insert(s.find_string_attr("source-path")); });
+          s.do_object([&](auto &s) {
+            auto spath = s.find_string_attr("source-path");
+            if (spath == "")
+              return;
+
+            pcm.insert(spath);
+          });
         });
       });
     });
