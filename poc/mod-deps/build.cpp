@@ -188,9 +188,30 @@ public:
       do_any();
     }
 
-    if (m_t.peek() == token{token::chr, ","}) {
-      next();
+    if (peek(',')) {
+      consume(',');
       find_array_attr(name, fn);
+    }
+  }
+  std::string find_string_attr(const std::string &name) {
+    while (true) {
+      auto k = consume(token::str);
+      consume(':');
+
+      if (name == k) {
+        auto v = consume(token::str);
+        if (peek(',')) {
+          consume(',');
+        }
+        return v;
+      }
+
+      do_any();
+      if (peek(',')) {
+        consume(',');
+      } else {
+        throw std::runtime_error("Could not find attribute " + name);
+      }
     }
   }
 };
@@ -203,8 +224,8 @@ public:
     stream{}.do_object([](auto &s) {
       s.find_array_attr("rules", [](auto &s) {
         s.do_object([](auto &s) {
-          std::cerr << "found" << std::endl;
-          //   auto pcm = find_string_attr("primary-output")
+          auto pcm = s.find_string_attr("primary-output");
+          std::cerr << "pcm: " << pcm << std::endl;
           //   find_object_attr("requires", []{
           //     auto dep = find_string_attr("source-path")
         });
