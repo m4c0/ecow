@@ -1,4 +1,5 @@
 #pragma once
+#include "ecow.deps.hpp"
 #include "ecow.mod.hpp"
 #include "ecow.unit.hpp"
 
@@ -7,7 +8,16 @@ class box : public unit {
   std::vector<std::shared_ptr<mod>> m_mods;
 
   virtual void build_self() const override {
-    std::for_each(m_mods.begin(), m_mods.end(), std::mem_fn(&unit::build));
+    auto mods = m_mods;
+    std::sort(mods.begin(), mods.end(), [](const auto &a, const auto &b) {
+      auto anm = std::filesystem::current_path() / a->main_pcm_file();
+      auto bnm = std::filesystem::current_path() / b->main_cpp_file();
+      auto dps = deps::dependency_map[anm.string()];
+      return !dps.contains(bnm.string());
+    });
+    for (auto &m : mods) {
+      m->build();
+    }
   }
   virtual void create_self_cdb(std::ostream &o) const override {
     for (const auto &u : m_mods) {
@@ -20,15 +30,6 @@ class box : public unit {
       const auto objs = u->objects();
       std::copy(objs.begin(), objs.end(), std::inserter(res, res.end()));
     }
-    return res;
-  }
-
-public:
-  using unit::unit;
-
-  auto add_mod(const char *name) {
-    auto res = create<mod>(name);
-    m_mods.push_back(res);
     return res;
   }
 
@@ -60,6 +61,15 @@ public:
       const auto fws = u->resources();
       std::copy(fws.begin(), fws.end(), std::inserter(res, res.end()));
     }
+    return res;
+  }
+
+public:
+  using unit::unit;
+
+  auto add_mod(const char *name) {
+    auto res = create<mod>(name);
+    m_mods.push_back(res);
     return res;
   }
 };
