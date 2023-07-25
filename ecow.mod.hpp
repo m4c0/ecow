@@ -69,7 +69,7 @@ public:
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 
-  auto main_cpp_file() { return pcm_name(name()); }
-  auto main_pcm_file() { return name() + ".cppm"; }
+  auto main_cpp_file() { return name() + ".cppm"; }
+  auto main_pcm_file() { return pcm_name(name()); }
 };
 } // namespace ecow
