@@ -193,6 +193,27 @@ public:
       find_array_attr(name, fn);
     }
   }
+  [[nodiscard]] bool find_object_attr(const std::string &name, auto &&fn) {
+    while (true) {
+      auto k = consume(token::str);
+      consume(':');
+
+      if (name == k) {
+        do_object(fn);
+        if (peek(',')) {
+          consume(',');
+        }
+        return true;
+      }
+
+      do_any();
+      if (peek(',')) {
+        consume(',');
+      } else {
+        return false;
+      }
+    }
+  }
   std::string find_string_attr(const std::string &name) {
     while (true) {
       auto k = consume(token::str);
@@ -226,8 +247,12 @@ public:
         s.do_object([](auto &s) {
           auto pcm = s.find_string_attr("primary-output");
           std::cerr << "pcm: " << pcm << std::endl;
-          //   find_object_attr("requires", []{
-          //     auto dep = find_string_attr("source-path")
+          s.find_array_attr("requires", [&](auto &s) {
+            s.do_object([&](auto &s) {
+              auto dep = s.find_string_attr("source-path");
+              std::cerr << pcm << " -> " << dep << std::endl;
+            });
+          });
         });
       });
     });
