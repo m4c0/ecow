@@ -5,18 +5,21 @@
 
 namespace ecow {
 class box : public unit {
-  std::vector<std::shared_ptr<mod>> m_mods;
+  std::vector<std::shared_ptr<mod>> m_mods{};
+
+  void build_after_deps(std::shared_ptr<mod> m) const {
+    const auto &dps = deps::dependency_map[m->main_pcm_file()];
+    for (auto &m : m_mods) {
+      if (dps.contains(m->main_cpp_file())) {
+        build_after_deps(m);
+      }
+    }
+    m->build();
+  }
 
   virtual void build_self() const override {
-    auto mods = m_mods;
-    std::sort(mods.begin(), mods.end(), [](const auto &a, const auto &b) {
-      auto anm = std::filesystem::current_path() / a->main_pcm_file();
-      auto bnm = std::filesystem::current_path() / b->main_cpp_file();
-      auto dps = deps::dependency_map[anm.string()];
-      return !dps.contains(bnm.string());
-    });
-    for (auto &m : mods) {
-      m->build();
+    for (auto &m : m_mods) {
+      build_after_deps(m);
     }
   }
   virtual void create_self_cdb(std::ostream &o) const override {
