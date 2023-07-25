@@ -1,10 +1,20 @@
 #include "../../ecow.hpp"
 
+struct token {
+  enum t { empty, str, num, lit, chr, other } type;
+  std::string text;
+
+  constexpr explicit operator bool() noexcept { return type != empty; }
+  constexpr bool operator==(const token &o) const noexcept {
+    return type == o.type && text == o.text;
+  }
+};
+
 class tokeniser {
   std::ifstream m_in;
-  std::string m_peeked;
+  token m_peeked{};
 
-  std::string next_string() {
+  token next_string() {
     std::string res{};
     while (true) {
       switch (char c = m_in.get()) {
@@ -14,13 +24,13 @@ class tokeniser {
         m_in.get();
         break;
       case '"':
-        return res;
+        return {token::str, res};
       default:
         res += c;
       }
     }
   }
-  std::string next_number(char first) {
+  token next_number(char first) {
     std::string res{first};
     while (true) {
       char c = m_in.get();
@@ -28,11 +38,11 @@ class tokeniser {
         res += c;
       } else {
         m_in.unget();
-        return res;
+        return {token::num, res};
       }
     }
   }
-  std::string next_literal(char first) {
+  token next_literal(char first) {
     std::string res{first};
     while (true) {
       char c = m_in.get();
@@ -40,12 +50,12 @@ class tokeniser {
         res += c;
       } else {
         m_in.unget();
-        return res;
+        return {token::lit, res};
       }
     }
   }
 
-  std::string read_token() {
+  token read_token() {
     while (true) {
       switch (char c = m_in.get()) {
       case ' ':
@@ -59,7 +69,7 @@ class tokeniser {
       case ']':
       case ':':
       case ',':
-        return std::string{c};
+        return {token::chr, std::string{c}};
       case 't':
       case 'f':
         return next_literal(c);
@@ -68,7 +78,7 @@ class tokeniser {
       default:
         if (c >= '0' && c <= '9')
           return next_number(c);
-        return "";
+        return {token::other, ""};
       }
     }
   }
@@ -82,20 +92,106 @@ public:
       throw std::runtime_error("Failure opening compile deps");
   }
 
-  std::string next() {
-    if (m_peeked != "") {
+  token next() {
+    if (m_peeked) {
       auto res = m_peeked;
-      m_peeked = "";
+      m_peeked = {};
       return res;
     }
     return read_token();
   }
 
-  std::string peek() {
-    if (m_peeked == "") {
+  token peek() {
+    if (!m_peeked) {
       m_peeked = read_token();
     }
     return m_peeked;
+  }
+};
+class stream {
+  tokeniser m_t{};
+
+  [[nodiscard]] bool peek(char c) {
+    return m_t.peek() == token{token::chr, std::string{c}};
+  }
+  auto next() { return m_t.next(); }
+
+  void consume(token exp) {
+    auto t = next();
+    if (exp != t)
+      throw std::runtime_error("Expecting " + exp.text + ", got " + t.text +
+                               " around " + next().text);
+  }
+  void consume(char c) {
+    auto t = next();
+    if (t.type != token::chr || t.text[0] != c)
+      throw std::runtime_error("Expecting " + std::string{c} + " got " +
+                               t.text + " around " + next().text);
+  }
+  auto consume(token::t exp) {
+    auto t = next();
+    if (exp != t.type)
+      throw std::runtime_error("Expecting something else, got " + t.text +
+                               " around " + next().text);
+    return t.text;
+  }
+
+  void do_array(auto &&fn) {
+    consume('[');
+    while (!peek(']')) {
+      fn(*this);
+      if (peek(',')) {
+        consume(',');
+      } else {
+        break;
+      }
+    }
+    consume(']');
+  }
+  void do_any() {
+    if (peek('[')) {
+      do_array([](auto &s) { s.do_any(); });
+      return;
+    }
+    if (peek('{')) {
+      do_object([](auto &) {});
+      return;
+    }
+    next();
+  }
+
+public:
+  void do_object(auto &&fn) {
+    consume('{');
+
+    fn(*this);
+
+    while (!peek('}')) {
+      consume(token::str);
+      consume(':');
+      do_any();
+      if (peek(',')) {
+        consume(',');
+      } else {
+        break;
+      }
+    }
+    consume('}');
+  }
+  void find_array_attr(const std::string &name, auto &&fn) {
+    auto k = consume(token::str);
+    consume(':');
+
+    if (name == k) {
+      do_array(fn);
+    } else {
+      do_any();
+    }
+
+    if (m_t.peek() == token{token::chr, ","}) {
+      next();
+      find_array_attr(name, fn);
+    }
   }
 };
 
@@ -104,19 +200,16 @@ public:
   using unit::unit;
 
   void build_self() const override {
-    tokeniser t{};
-
-    // find_object();
-    // find_array_attr("rules", []{
-    //   find_object()
-    //   auto pcm = find_string_attr("primary-output")
-    //   find_object_attr("requires", []{
-    //     auto dep = find_string_attr("source-path")
-
-    std::string token;
-    while ((token = t.next()) != "") {
-      std::cerr << "T: " << token << std::endl;
-    }
+    stream{}.do_object([](auto &s) {
+      s.find_array_attr("rules", [](auto &s) {
+        s.do_object([](auto &s) {
+          std::cerr << "found" << std::endl;
+          //   auto pcm = find_string_attr("primary-output")
+          //   find_object_attr("requires", []{
+          //     auto dep = find_string_attr("source-path")
+        });
+      });
+    });
 
     throw "OK";
   }
