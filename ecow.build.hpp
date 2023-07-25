@@ -16,6 +16,13 @@
 namespace ecow::impl {
 const char *argv0;
 
+static inline void create_cdb(const std::string &cdb_file, const unit &u) {
+  std::ofstream cdb{cdb_file};
+  cdb << "[\n";
+  u.create_cdb(cdb);
+  cdb << "]\n";
+}
+
 template <typename T, typename... Args>
 static inline void build(unit &u, Args &&...args) {
   T tgt{std::forward<Args>(args)...};
@@ -24,11 +31,15 @@ static inline void build(unit &u, Args &&...args) {
   auto cdb_file = tgt.build_folder() + "compile_commands.json";
   if (impl::must_recompile(argv0, cdb_file)) {
     std::cerr << "generating compilation database" << std::endl;
+    create_cdb(cdb_file, u);
 
-    std::ofstream cdb{cdb_file};
-    cdb << "[\n";
-    u.create_cdb(cdb);
-    cdb << "]\n";
+    const auto dep_file = tgt.build_folder() + "compile_deps.json";
+    const auto cdeps = std::string{scandeps()} + " --compilation-database " +
+                       cdb_file + " --format=p1689 > " + dep_file;
+
+    std::cerr << "generating compilation dependencies" << std::endl;
+    // not caring about return value since it fails for some sys hdr
+    system(cdeps.c_str());
   }
 
   u.build();

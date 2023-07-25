@@ -33,6 +33,16 @@ namespace ecow::impl {
   return "/home/linuxbrew/.linuxbrew/bin/clang++ ";
 #endif
 }
+[[nodiscard]] static inline std::string scandeps() {
+  // NOTE: this are host-dependent, not target-dependent
+#ifdef __APPLE__
+  return "$(brew --prefix llvm@16)/bin/clang-scan-deps ";
+#elif defined(_WIN32)
+  return "clang-scan-deps ";
+#else
+  return "/home/linuxbrew/.linuxbrew/bin/clang-scan-deps ";
+#endif
+}
 
 [[nodiscard]] static inline auto last_write_time(auto path) {
   if (std::filesystem::exists(path))
