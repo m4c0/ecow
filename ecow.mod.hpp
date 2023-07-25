@@ -26,18 +26,24 @@ class mod : public seq {
   }
   void compile_impl(const std::string &who) const { clang_impl(who).run(); }
 
+  void build_part_after_deps(const std::string &who) const {
+    const auto who_fn = std::filesystem::current_path() / pcm_name(who);
+    const auto &dps = deps::dependency_map[who_fn];
+    for (auto &p : m_parts) {
+      const auto p_fn = std::filesystem::current_path() / (p + ".cppm");
+      if (dps.contains(p_fn)) {
+        build_part_after_deps(p);
+      }
+    }
+    compile_part(who);
+  }
+
 protected:
   void build_self() const override {
-    auto parts = m_parts;
-    std::sort(parts.begin(), parts.end(), [](const auto &a, const auto &b) {
-      auto anm = std::filesystem::current_path() / (a + ".cppm");
-      auto bnm = std::filesystem::current_path() / (b + ".cppm");
-      auto dps = deps::dependency_map[anm.string()];
-      return !dps.contains(bnm.string());
-    });
+    for (const auto &p : m_parts) {
+      build_part_after_deps(p);
+    }
 
-    std::for_each(parts.begin(), parts.end(),
-                  [this](auto w) { return compile_part(w); });
     compile_part(name());
     std::for_each(m_impls.begin(), m_impls.end(),
                   [this](auto w) { return compile_impl(w); });
@@ -69,7 +75,11 @@ public:
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 
-  auto main_cpp_file() { return name() + ".cppm"; }
-  auto main_pcm_file() { return pcm_name(name()); }
+  auto main_cpp_file() {
+    return std::filesystem::current_path() / (name() + ".cppm");
+  }
+  auto main_pcm_file() {
+    return std::filesystem::current_path() / (pcm_name(name()));
+  }
 };
 } // namespace ecow
