@@ -101,8 +101,8 @@ public:
 
   void create_cdb(std::ostream &o) const {
     const auto dir = std::filesystem::current_path();
-    o << R"({ "directory": ")" << dir.string() << R"(", "file": ")" << m_from
-      << R"(", "output": ")" << (dir / m_to).string()
+    o << R"({ "directory": ")" << dir.string() << R"(", "file": ")"
+      << (dir / m_from).string() << R"(", "output": ")" << (dir / m_to).string()
       << R"(", "arguments": [")";
     arguments(o, R"(", ")");
     o << R"("]},)"
