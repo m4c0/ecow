@@ -1,4 +1,7 @@
 #pragma once
+#include "ecow.target.hpp"
+#include <fstream>
+#include <string>
 
 namespace ecow::deps {
 struct token {
