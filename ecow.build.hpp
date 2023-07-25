@@ -41,10 +41,9 @@ static inline void build(unit &u, Args &&...args) {
     std::cerr << "generating compilation dependencies" << std::endl;
     // not caring about return value since it fails for some sys hdr
     system(cdeps.c_str());
-
-    deps::parse_deps();
   }
 
+  deps::parse_deps();
   u.build();
 }
 static inline void run_main(unit &u, int argc, char **argv) {
