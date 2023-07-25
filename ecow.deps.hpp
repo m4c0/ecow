@@ -250,14 +250,13 @@ void parse_deps() {
         if (pout == "")
           return;
 
-        auto &pcm = dependency_map[pout];
         s.find_array_attr("requires", [&](auto &s) {
           s.do_object([&](auto &s) {
             auto spath = s.find_string_attr("source-path");
             if (spath == "")
               return;
 
-            pcm.insert(spath);
+            dependency_map[pout].insert(spath);
           });
         });
       });
