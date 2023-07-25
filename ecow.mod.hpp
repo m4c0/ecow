@@ -28,7 +28,15 @@ class mod : public seq {
 
 protected:
   void build_self() const override {
-    std::for_each(m_parts.begin(), m_parts.end(),
+    auto parts = m_parts;
+    std::sort(parts.begin(), parts.end(), [](const auto &a, const auto &b) {
+      auto anm = std::filesystem::current_path() / (a + ".cppm");
+      auto bnm = std::filesystem::current_path() / (b + ".cppm");
+      auto dps = deps::dependency_map[anm.string()];
+      return !dps.contains(bnm.string());
+    });
+
+    std::for_each(parts.begin(), parts.end(),
                   [this](auto w) { return compile_part(w); });
     compile_part(name());
     std::for_each(m_impls.begin(), m_impls.end(),
