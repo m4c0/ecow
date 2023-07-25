@@ -14,19 +14,28 @@
 #include <iostream>
 
 namespace ecow::impl {
+const char *argv0;
+
 template <typename T, typename... Args>
 static inline void build(unit &u, Args &&...args) {
   T tgt{std::forward<Args>(args)...};
   std::filesystem::create_directories(tgt.build_folder());
 
-  std::ofstream cdb{tgt.build_folder() + "compile_commands.json"};
-  cdb << "[\n";
-  u.create_cdb(cdb);
-  cdb << "]\n";
+  auto cdb_file = tgt.build_folder() + "compile_commands.json";
+  if (impl::must_recompile(argv0, cdb_file)) {
+    std::cerr << "generating compilation database" << std::endl;
+
+    std::ofstream cdb{cdb_file};
+    cdb << "[\n";
+    u.create_cdb(cdb);
+    cdb << "]\n";
+  }
 
   u.build();
 }
 static inline void run_main(unit &u, int argc, char **argv) {
+  argv0 = argv[0];
+
   auto args = std::span{argv, static_cast<size_t>(argc)}.subspan(1);
   if (args.empty()) {
     build<host_target>(u);
