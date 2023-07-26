@@ -25,7 +25,7 @@ class tokeniser {
       case 0:
         throw std::runtime_error("Invalid compile deps");
       case '\\':
-        m_in.get();
+        res += m_in.get();
         break;
       case '"':
         return {token::str, res};
