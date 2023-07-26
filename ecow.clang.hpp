@@ -19,6 +19,14 @@ class clang {
   std::string m_to;
   bool m_with_deps{false};
 
+  static void escape(std::ostream &o, const std::filesystem::path p) {
+    for (auto c : p.string()) {
+      if (c == '\\')
+        o << "\\";
+      o << c;
+    }
+  }
+
   [[nodiscard]] auto depfile() const { return m_to + ".deps"; }
 
   void arguments(std::ostream &o, std::string_view sep) const {
@@ -28,8 +36,8 @@ class clang {
     for (const auto &a : m_args)
       o << sep << a;
     o << sep << m_from;
-    o << sep << "-o" << sep
-      << (std::filesystem::current_path() / m_to).string();
+    o << sep << "-o" << sep;
+    escape(o, std::filesystem::current_path() / m_to);
   }
 
 public:
@@ -101,9 +109,13 @@ public:
 
   void create_cdb(std::ostream &o) const {
     const auto dir = std::filesystem::current_path();
-    o << R"({ "directory": ")" << dir.string() << R"(", "file": ")"
-      << (dir / m_from).string() << R"(", "output": ")" << (dir / m_to).string()
-      << R"(", "arguments": [")";
+    o << R"({ "directory": ")";
+    escape(o, dir);
+    o << R"(", "file": ")";
+    escape(o, dir / m_from);
+    o << R"(", "output": ")";
+    escape(o, dir / m_to);
+    o << R"(", "arguments": [")";
     arguments(o, R"(", ")");
     o << R"("]},)"
       << "\n";
