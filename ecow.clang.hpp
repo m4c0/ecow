@@ -19,8 +19,8 @@ class clang {
   std::string m_to;
   bool m_with_deps{false};
 
-  static void escape(std::ostream &o, const std::filesystem::path p) {
-    for (auto c : p.string()) {
+  static void escape(std::ostream &o, std::filesystem::path p) {
+    for (auto c : p.make_preferred().string()) {
       if (c == '\\')
         o << "\\";
       o << c;

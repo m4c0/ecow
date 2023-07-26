@@ -27,11 +27,11 @@ class mod : public seq {
   void compile_impl(const std::string &who) const { clang_impl(who).run(); }
 
   void build_part_after_deps(const std::string &who) const {
-    const auto who_fn = std::filesystem::current_path() / pcm_name(who);
-    const auto &dps = deps::dependency_map[who_fn.string()];
+    auto who_fn = std::filesystem::current_path() / pcm_name(who);
+    const auto &dps = deps::dependency_map[who_fn.make_preferred().string()];
     for (auto &p : m_parts) {
-      const auto p_fn = std::filesystem::current_path() / (p + ".cppm");
-      if (dps.contains(p_fn.string())) {
+      auto p_fn = std::filesystem::current_path() / (p + ".cppm");
+      if (dps.contains(p_fn.make_preferred().string())) {
         build_part_after_deps(p);
       }
     }
@@ -76,10 +76,12 @@ public:
   void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
 
   auto main_cpp_file() {
-    return std::filesystem::current_path() / (name() + ".cppm");
+    auto p = std::filesystem::current_path() / (name() + ".cppm");
+    return p.make_preferred().string();
   }
   auto main_pcm_file() {
-    return std::filesystem::current_path() / (pcm_name(name()));
+    auto p = std::filesystem::current_path() / (pcm_name(name()));
+    return p.make_preferred().string();
   }
 };
 } // namespace ecow
