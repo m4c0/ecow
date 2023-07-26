@@ -28,10 +28,10 @@ class mod : public seq {
 
   void build_part_after_deps(const std::string &who) const {
     const auto who_fn = std::filesystem::current_path() / pcm_name(who);
-    const auto &dps = deps::dependency_map[who_fn];
+    const auto &dps = deps::dependency_map[who_fn.string()];
     for (auto &p : m_parts) {
       const auto p_fn = std::filesystem::current_path() / (p + ".cppm");
-      if (dps.contains(p_fn)) {
+      if (dps.contains(p_fn.string())) {
         build_part_after_deps(p);
       }
     }

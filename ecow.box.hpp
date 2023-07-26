@@ -8,9 +8,9 @@ class box : public unit {
   std::vector<std::shared_ptr<mod>> m_mods{};
 
   void build_after_deps(std::shared_ptr<mod> m) const {
-    const auto &dps = deps::dependency_map[m->main_pcm_file()];
+    const auto &dps = deps::dependency_map[m->main_pcm_file().string()];
     for (auto &m : m_mods) {
-      if (dps.contains(m->main_cpp_file())) {
+      if (dps.contains(m->main_cpp_file().string())) {
         build_after_deps(m);
       }
     }
