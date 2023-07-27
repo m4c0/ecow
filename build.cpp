@@ -1,11 +1,13 @@
-#include <stdlib.h>
+#include "ecow.hpp"
 
-#ifdef __APPLE__
-#define ECOW_OUTPUT "build"
-#else
-#define ECOW_OUTPUT "build.exe"
-#endif
+int main(int argc, char **argv) {
+  using namespace ecow;
 
-int main() {
-  return system("clang++ -std=c++20 -I../ecow build.cpp -o " ECOW_OUTPUT);
+  auto bld = unit::create<tool>("build");
+  bld->add_unit("build")->add_include_dir("../ecow");
+
+  auto all = unit::create<seq>("all");
+  all->add_ref(bld);
+  all->add_unit<sys>(bld->executable().string());
+  return run_main(all, argc, argv);
 }
