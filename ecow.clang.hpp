@@ -14,9 +14,9 @@ struct clang_failed : public std::runtime_error {
 
 class clang {
   std::set<std::string> m_args{};
-  std::string m_compiler;
   std::string m_from;
   std::string m_to;
+  bool m_cpp{};
   bool m_with_deps{false};
 
   static void escape(std::ostream &o, std::filesystem::path p) {
@@ -30,7 +30,7 @@ class clang {
   [[nodiscard]] auto depfile() const { return m_to + ".deps"; }
 
   void arguments(std::ostream &o, std::string_view sep) const {
-    o << m_compiler;
+    o << (m_cpp ? cxx() : c());
     for (const auto &a : current_target()->cxxflags())
       o << sep << a;
     for (const auto &a : m_args)
@@ -80,13 +80,9 @@ public:
       add_arg("-g");
     }
 
-    if (fext == ".c" || fext == ".m") {
-      m_compiler = c();
-    } else if (fext == ".pcm") {
-      m_compiler = cxx();
-    } else {
-      m_compiler = cxx();
+    m_cpp = (fext != ".c" && fext != ".m");
 
+    if (fext != ".c" && fext != ".m" && fext != ".pcm") {
       for (const auto &path : current_target()->prebuilt_module_paths())
         add_arg("-fprebuilt-module-path=" + path);
     }

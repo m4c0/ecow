@@ -286,7 +286,7 @@ public:
   void bundle(const std::string &name, const unit &u) const override {}
 
   [[nodiscard]] std::string triple() const override {
-    return "x86_64-apple-darwin";
+    return "x86_64-apple-macosx11.6.0";
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {
