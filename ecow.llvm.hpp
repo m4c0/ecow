@@ -18,6 +18,20 @@ static auto find_clang_exe(const char *name) {
 }
 } // namespace ecow::impl
 
+auto &dep_scan_srv() {
+  using namespace clang::tooling::dependencies;
+  using namespace clang;
+
+  static constexpr const auto scan_mode =
+      ScanningMode::DependencyDirectivesScan;
+  static constexpr const auto format = ScanningOutputFormat::P1689;
+  static constexpr const auto opt_args = false;
+  static constexpr const auto eager_load_mod = false;
+
+  static auto service =
+      DependencyScanningService{scan_mode, format, opt_args, eager_load_mod};
+  return service;
+}
 void ecow::impl::clang::generate_deps() {
   using namespace clang::tooling::dependencies;
   using namespace clang;
@@ -26,15 +40,6 @@ void ecow::impl::clang::generate_deps() {
     return;
 
   std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
-
-  auto scan_mode = ScanningMode::DependencyDirectivesScan;
-  auto format = ScanningOutputFormat::P1689;
-  auto opt_args = false;
-  auto eager_load_mod = false;
-
-  auto service =
-      DependencyScanningService{scan_mode, format, opt_args, eager_load_mod};
-  auto tool = DependencyScanningTool{service};
 
   auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
 
@@ -56,6 +61,7 @@ void ecow::impl::clang::generate_deps() {
 
   std::string mf_out{};
   std::string mf_out_path{};
+  auto tool = DependencyScanningTool{dep_scan_srv()};
   auto rule =
       tool.getP1689ModuleDependencyFile(input, cwd, mf_out, mf_out_path);
   if (!rule) {
