@@ -94,6 +94,7 @@ public:
   }
 
   void add_include_dir(std::string dir) { m_include_dirs.insert(dir); }
+  void add_library_dir(std::string dir) { add_link_flag("-L" + dir); }
   void add_resource(std::string res) { m_resources.insert(res); }
   void add_requirement(features r) { m_requirements.insert(r); }
 
