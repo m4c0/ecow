@@ -39,4 +39,13 @@ public:
     }
   }
 };
+
+[[nodiscard]] static inline std::string popen(const std::string &cmd) {
+  auto f = ::_popen(cmd.c_str(), "r");
+  char buf[1024];
+  std::string res{fgets(buf, 1024, f)};
+  if (res.back() == '\n')
+    res.pop_back();
+  return res;
+}
 } // namespace ecow::impl
