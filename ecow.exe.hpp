@@ -4,11 +4,11 @@
 
 namespace ecow {
 class exe : public seq {
-  [[nodiscard]] auto final_exe_name() const {
+protected:
+  [[nodiscard]] virtual std::string final_exe_name() const {
     return impl::current_target()->build_folder() + exe_name();
   }
 
-protected:
   [[nodiscard]] virtual std::string exe_name() const {
     return impl::current_target()->exe_name(name());
   }
