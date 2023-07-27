@@ -15,10 +15,10 @@ protected:
         u.build();
     }
   }
-  void create_self_cdb(std::ostream &o) const override {
+  void generate_self_deps() const override {
     for (auto &[f, u] : m_map) {
       if (target_supports(f))
-        u.create_cdb(o);
+        u.generate_deps();
     }
   }
   [[nodiscard]] pathset self_objects() const override {

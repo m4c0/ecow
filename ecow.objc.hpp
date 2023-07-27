@@ -22,9 +22,9 @@ protected:
 
     clang().run();
   }
-  void create_self_cdb(std::ostream &o) const override {
+  void generate_self_deps() const override {
     // clang-scan-deps doesn't like objc++
-    // clang().create_cdb(o);
+    // clang().generate_self_deps(o);
   }
 
   [[nodiscard]] virtual pathset self_objects() const override {

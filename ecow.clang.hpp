@@ -116,18 +116,6 @@ public:
     really_run();
   }
 
-  void create_cdb(std::ostream &o) const {
-    const auto dir = std::filesystem::current_path();
-    o << R"({ "directory": ")";
-    escape(o, dir);
-    o << R"(", "file": ")";
-    escape(o, dir / m_from);
-    o << R"(", "output": ")";
-    escape(o, dir / m_to);
-    o << R"(", "arguments": [")";
-    arguments(o, R"(", ")");
-    o << R"("]},)"
-      << "\n";
-  }
+  void generate_deps() {}
 };
 } // namespace ecow::impl

@@ -59,7 +59,7 @@ protected:
   void add_link_flag(const std::string &name) { m_link_flags.insert(name); }
 
   virtual void build_self() const { clang().run(); }
-  virtual void create_self_cdb(std::ostream &o) const { clang().create_cdb(o); }
+  virtual void generate_self_deps() const { clang().generate_deps(); }
 
   virtual pathset self_objects() const {
     pathset res{};
@@ -146,14 +146,14 @@ public:
     build_self();
   }
 
-  void create_cdb(std::ostream &o) const {
+  void generate_deps() const {
     if (!current_target_supports_me())
       return;
 
-    create_self_cdb(o);
+    generate_self_deps();
     for (const auto &[k, u] : m_wsdeps) {
       wsdeps::curpath_raii c{k};
-      u->create_self_cdb(o);
+      u->generate_deps();
     }
   }
 

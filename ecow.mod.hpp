@@ -49,13 +49,13 @@ protected:
                   [this](auto w) { return compile_impl(w); });
     seq::build_self();
   }
-  void create_self_cdb(std::ostream &o) const override {
+  void generate_self_deps() const override {
     std::for_each(m_parts.begin(), m_parts.end(),
-                  [&](auto w) { clang_part(w).create_cdb(o); });
-    clang_part(name()).create_cdb(o);
+                  [&](auto w) { clang_part(w).generate_deps(); });
+    clang_part(name()).generate_deps();
     std::for_each(m_impls.begin(), m_impls.end(),
-                  [&](auto w) { clang_impl(w).create_cdb(o); });
-    seq::create_self_cdb(o);
+                  [&](auto w) { clang_impl(w).generate_deps(); });
+    seq::generate_self_deps();
   }
 
   [[nodiscard]] pathset self_objects() const override {

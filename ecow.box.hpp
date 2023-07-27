@@ -22,9 +22,9 @@ class box : public unit {
       build_after_deps(m);
     }
   }
-  virtual void create_self_cdb(std::ostream &o) const override {
+  virtual void generate_self_deps() const override {
     for (const auto &u : m_mods) {
-      u->create_cdb(o);
+      u->generate_deps();
     }
   }
   [[nodiscard]] virtual pathset self_objects() const override {
