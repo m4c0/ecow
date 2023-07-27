@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
 
   auto all = unit::create<seq>("all");
   all->add_ref(bld);
-  all->add_unit<sys>(bld->executable().string());
+  // TODO: pass argv if we actually want to meta-invoke
+  // all->add_unit<sys>(bld->executable().string());
   return run_main(all, argc, argv);
 }
