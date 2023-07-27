@@ -36,15 +36,19 @@ void ecow::impl::clang::generate_deps() {
   using namespace clang::tooling::dependencies;
   using namespace clang;
 
-  if (deps::dependency_map.contains(m_from))
+  auto from =
+      (std::filesystem::current_path() / m_from).make_preferred().string();
+  auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
+
+  if (deps::dependency_map.contains(to))
     return;
+
+  deps::dependency_map[to] = {};
 
   std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
 
-  auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
-
   Twine dir{"."};
-  Twine file{m_from};
+  Twine file{from};
   Twine output{to};
 
   std::vector<std::string> cmd_line{};
@@ -52,11 +56,11 @@ void ecow::impl::clang::generate_deps() {
   for (const auto &r : m_args) {
     cmd_line.push_back(r);
   }
-  cmd_line.push_back(m_from);
+  cmd_line.push_back(from);
   cmd_line.push_back("-o");
   cmd_line.push_back(to);
 
-  tooling::CompileCommand input{".", m_from, cmd_line, output};
+  tooling::CompileCommand input{".", from, cmd_line, output};
   std::string cwd{"."};
 
   std::string mf_out{};
