@@ -88,11 +88,13 @@ public:
     if (!std::filesystem::exists(sysroot))
       throw std::runtime_error("Invalid wasi sysroot");
 
-    add_flags("-target", "wasm32-wasi", "--sysroot", sysroot.string());
+    add_flags("-target", triple(), "--sysroot", sysroot.string());
     add_cxxflags("-D_LIBCPP_SETJMP_H", "-D_LIBCPP_CSIGNAL", "-fno-exceptions");
     add_ldflags("-resource-dir", sysroot.string(), "-mexec-model=reactor",
                 "-flto", "-Wl,--lto-O3");
   }
+
+  [[nodiscard]] std::string triple() const override { return "wasm32-wasi"; }
 
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {

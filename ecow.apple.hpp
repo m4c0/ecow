@@ -208,7 +208,7 @@ protected:
 
 public:
   explicit iphone_target() : apple_target("iphoneos") {
-    add_flags("-target", "arm64-apple-ios13.0");
+    add_flags("-target", triple());
     add_ldflags("-Wl,-rpath,@executable_path");
   }
   void bundle(const std::string &name, const unit &u) const override {
@@ -221,6 +221,10 @@ public:
       code_sign(name);
       run_export(name);
     }
+  }
+
+  [[nodiscard]] std::string triple() const override {
+    return "arm64-apple-ios13.0";
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {
@@ -241,7 +245,7 @@ protected:
 
 public:
   explicit iphonesimulator_target() : apple_target("iphonesimulator") {
-    add_flags("-target", "x86_64-apple-ios13.0-simulator");
+    add_flags("-target", triple());
     add_ldflags("-Wl,-rpath,@executable_path");
   }
   void bundle(const std::string &name, const unit &u) const override {
@@ -249,6 +253,10 @@ public:
       build_common_app_plist(name, d);
       d.boolean("LSRequiresIPhoneOS", true);
     });
+  }
+
+  [[nodiscard]] std::string triple() const override {
+    return "x86_64-apple-ios13.0-simulator";
   }
 
   [[nodiscard]] virtual bool supports(features f) const override {
@@ -276,6 +284,10 @@ public:
     add_flags("-mmacosx-version-min=11.6");
   }
   void bundle(const std::string &name, const unit &u) const override {}
+
+  [[nodiscard]] std::string triple() const override {
+    return "x86_64-apple-darwin";
+  }
 
   [[nodiscard]] virtual bool supports(features f) const override {
     switch (f) {

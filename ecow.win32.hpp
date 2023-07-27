@@ -12,6 +12,10 @@ protected:
 public:
   explicit host_target() { add_cxxflags("-fno-ms-compatibility"); }
 
+  [[nodiscard]] std::string triple() const override {
+    return "x86_64-pc-windows-msvc";
+  }
+
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
     return name + ".exe";

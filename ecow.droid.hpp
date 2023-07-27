@@ -66,6 +66,8 @@ public:
                 llvm + "/lib64/clang/*");
   }
 
+  [[nodiscard]] std::string triple() const override { return m_target; }
+
   [[nodiscard]] std::string
   app_exe_name(const std::string &name) const override {
     return "lib" + name + ".so";

@@ -39,6 +39,8 @@ public:
 
   [[nodiscard]] virtual bool supports(features f) const { return false; }
 
+  [[nodiscard]] virtual std::string triple() const = 0;
+
   [[nodiscard]] virtual flags cxxflags() const { return m_cxxflags; }
   [[nodiscard]] virtual flags ldflags() const { return m_ldflags; }
 
@@ -85,6 +87,10 @@ public:
 
   [[nodiscard]] virtual bool supports(features f) const override {
     return m_prev->supports(f);
+  }
+
+  [[nodiscard]] virtual std::string triple() const override {
+    return m_prev->triple();
   }
 
   [[nodiscard]] virtual flags cxxflags() const override {
