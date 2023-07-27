@@ -56,7 +56,13 @@ public:
     if ((fext == ".mm") || (fext == ".m")) {
       add_arg("-fobjc-arc");
     } else if (fext != ".c") {
+#ifdef ECOW_META_BUILD
+      // Until this goes "live" in brew, etc
+      // https://github.com/llvm/llvm-project/issues/59784
+      add_arg("-std=c++20");
+#else
       add_arg("-std=c++2b");
+#endif
     }
 
     auto *xtra_cflags = std::getenv("ECOW_CFLAGS");
