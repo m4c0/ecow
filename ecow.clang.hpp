@@ -47,11 +47,15 @@ class clang {
     return cbuf.str();
   }
 
+#ifndef ECOW_META_BUILD
+  void really_run();
+#else
   void really_run() {
     auto cmd = full_cmd();
     if (std::system(cmd.c_str()))
       throw clang_failed{cmd};
   }
+#endif
 
 public:
   clang(const std::string &from, const std::string &to)
@@ -116,6 +120,10 @@ public:
     really_run();
   }
 
+#ifndef ECOW_META_BUILD
+  void generate_deps();
+#else
   void generate_deps() {}
+#endif
 };
 } // namespace ecow::impl

@@ -2,6 +2,8 @@
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
+#include "clang/Tooling/DependencyScanning/DependencyScanningService.h"
+#include "clang/Tooling/DependencyScanning/DependencyScanningTool.h"
 #include "llvm/Support/VirtualFileSystem.h"
 
 #ifdef __APPLE__
@@ -15,6 +17,60 @@ static auto find_clang_exe(const char *name) {
   return std::filesystem::path{impl::popen(ECOW_CLANG_FINDER)} / "bin" / name;
 }
 } // namespace ecow::impl
+
+void ecow::impl::clang::generate_deps() {
+  using namespace clang::tooling::dependencies;
+  using namespace clang;
+
+  if (deps::dependency_map.contains(m_from))
+    return;
+
+  std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
+
+  auto scan_mode = ScanningMode::DependencyDirectivesScan;
+  auto format = ScanningOutputFormat::P1689;
+  auto opt_args = false;
+  auto eager_load_mod = false;
+
+  auto service =
+      DependencyScanningService{scan_mode, format, opt_args, eager_load_mod};
+  auto tool = DependencyScanningTool{service};
+
+  auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
+
+  Twine dir{"."};
+  Twine file{m_from};
+  Twine output{to};
+
+  std::vector<std::string> cmd_line{};
+  cmd_line.push_back(clang_exe);
+  for (const auto &r : m_args) {
+    cmd_line.push_back(r);
+  }
+  cmd_line.push_back(m_from);
+  cmd_line.push_back("-o");
+  cmd_line.push_back(to);
+
+  tooling::CompileCommand input{".", m_from, cmd_line, output};
+  std::string cwd{"."};
+
+  std::string mf_out{};
+  std::string mf_out_path{};
+  auto rule =
+      tool.getP1689ModuleDependencyFile(input, cwd, mf_out, mf_out_path);
+  if (!rule) {
+    llvm::handleAllErrors(rule.takeError(), [&](llvm::StringError &err) {
+      std::cerr << err.getMessage();
+    });
+    throw clang_failed{full_cmd()};
+  }
+
+  // if (rule->Provides) rule->Provides->ModuleName
+  for (auto &req : rule->Requires) {
+    // req.ModuleName
+    deps::dependency_map[rule->PrimaryOutput].insert(req.SourcePath);
+  }
+}
 
 void ecow::impl::clang::really_run() {
   using namespace clang::driver;
