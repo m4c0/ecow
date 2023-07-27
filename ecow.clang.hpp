@@ -40,6 +40,15 @@ class clang {
     escape(o, std::filesystem::current_path() / m_to);
   }
 
+  void really_run() {
+    std::stringstream cbuf;
+    arguments(cbuf, " ");
+
+    auto cmd = cbuf.str();
+    if (std::system(cmd.c_str()))
+      throw clang_failed{cmd};
+  }
+
 public:
   clang(const std::string &from, const std::string &to)
       : m_from{from}, m_to{to} {
@@ -63,6 +72,8 @@ public:
 
     if (fext == ".c" || fext == ".m") {
       m_compiler = c();
+    } else if (fext == ".pcm") {
+      m_compiler = cxx();
     } else {
       m_compiler = cxx();
 
@@ -96,15 +107,7 @@ public:
       return;
 
     std::cerr << "compiling " << m_to << std::endl;
-
-    const auto &tgt = impl::current_target();
-
-    std::stringstream cbuf;
-    arguments(cbuf, " ");
-
-    auto cmd = cbuf.str();
-    if (std::system(cmd.c_str()))
-      throw clang_failed{cmd};
+    really_run();
   }
 
   void create_cdb(std::ostream &o) const {
