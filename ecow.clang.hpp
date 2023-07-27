@@ -40,11 +40,15 @@ class clang {
     escape(o, std::filesystem::current_path() / m_to);
   }
 
-  void really_run() {
+  auto full_cmd() const {
     std::stringstream cbuf;
     arguments(cbuf, " ");
 
-    auto cmd = cbuf.str();
+    return cbuf.str();
+  }
+
+  void really_run() {
+    auto cmd = full_cmd();
     if (std::system(cmd.c_str()))
       throw clang_failed{cmd};
   }
