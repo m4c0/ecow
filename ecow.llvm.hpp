@@ -75,10 +75,12 @@ void ecow::impl::clang::generate_deps() {
     throw clang_failed{full_cmd()};
   }
 
-  // if (rule->Provides) rule->Provides->ModuleName
+  if (!rule->Provides)
+    return;
+
+  auto &dps = deps::dependency_map[rule->Provides->ModuleName];
   for (auto &req : rule->Requires) {
-    // req.ModuleName
-    deps::dependency_map[rule->PrimaryOutput].insert(req.SourcePath);
+    dps.insert(req.ModuleName);
   }
 }
 

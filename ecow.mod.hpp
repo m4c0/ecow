@@ -7,6 +7,13 @@ class mod : public seq {
   strvec m_impls;
   strvec m_parts;
 
+  [[nodiscard]] auto part_name(const std::string &who) const {
+    return name() + ":" + who;
+  }
+  [[nodiscard]] auto part_file(const std::string &who) const {
+    return name() + "-" + who;
+  }
+
   [[nodiscard]] auto clang_part(const std::string &who) const {
     return impl::clang{who + ".cppm", pcm_name(who)}
         .add_arg("--precompile")
@@ -27,15 +34,13 @@ class mod : public seq {
   void compile_impl(const std::string &who) const { clang_impl(who).run(); }
 
   void build_part_after_deps(const std::string &who) const {
-    auto who_fn = std::filesystem::current_path() / pcm_name(who);
-    const auto &dps = deps::dependency_map[who_fn.make_preferred().string()];
+    const auto &dps = deps::dependency_map[part_name(who)];
     for (auto &p : m_parts) {
-      auto p_fn = std::filesystem::current_path() / (p + ".cppm");
-      if (dps.contains(p_fn.make_preferred().string())) {
+      if (dps.contains(part_name(p))) {
         build_part_after_deps(p);
       }
     }
-    compile_part(who);
+    compile_part(part_file(who));
   }
 
 protected:
@@ -51,7 +56,7 @@ protected:
   }
   void generate_self_deps() const override {
     std::for_each(m_parts.begin(), m_parts.end(),
-                  [&](auto w) { clang_part(w).generate_deps(); });
+                  [&](auto w) { clang_part(part_file(w)).generate_deps(); });
     clang_part(name()).generate_deps();
     std::for_each(m_impls.begin(), m_impls.end(),
                   [&](auto w) { clang_impl(w).generate_deps(); });
@@ -62,7 +67,7 @@ protected:
     pathset res = seq::self_objects();
     res.insert(obj_name(name()));
     std::for_each(m_parts.begin(), m_parts.end(),
-                  [&](auto w) { res.insert(obj_name(w)); });
+                  [&](auto w) { res.insert(obj_name(part_file(w))); });
     std::for_each(m_impls.begin(), m_impls.end(),
                   [&](auto w) { res.insert(obj_name(w)); });
     return res;
@@ -73,15 +78,8 @@ public:
   using seq::seq;
 
   void add_impl(std::string impl) { m_impls.push_back(impl); }
-  void add_part(std::string part) { m_parts.push_back(name() + "-" + part); }
+  void add_part(std::string part) { m_parts.push_back(part); }
 
-  auto main_cpp_file() {
-    auto p = std::filesystem::current_path() / (name() + ".cppm");
-    return p.make_preferred().string();
-  }
-  auto main_pcm_file() {
-    auto p = std::filesystem::current_path() / (pcm_name(name()));
-    return p.make_preferred().string();
-  }
+  [[nodiscard]] const auto &module_name() const { return name(); }
 };
 } // namespace ecow
