@@ -52,4 +52,10 @@ public:
     res.pop_back();
   return res;
 }
+
+auto clang_dir() {
+  return std::filesystem::path{impl::popen("where clang.exe")}
+      .parent_path()
+      .parent_path();
+}
 } // namespace ecow::impl

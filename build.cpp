@@ -3,16 +3,6 @@
 
 using namespace ecow;
 
-#ifdef __APPLE__
-#define CLANG_FINDER "brew --prefix llvm@16"
-#else
-#define CLANG_FINDER "which llvm@16"
-#endif
-
-static auto clang_dir() {
-  return std::filesystem::path{impl::popen(CLANG_FINDER)};
-}
-
 class builder : public exe {
 protected:
   virtual void build_self() const override {
@@ -32,7 +22,7 @@ public:
 };
 
 int main(int argc, char **argv) {
-  auto cdir = clang_dir();
+  auto cdir = impl::clang_dir();
 
   auto bld = unit::create<builder>("build");
   auto u = bld->add_unit("build");

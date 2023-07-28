@@ -12,6 +12,8 @@ struct clang_failed : public std::runtime_error {
   using runtime_error::runtime_error;
 };
 
+auto clang_dir();
+
 class clang {
   std::set<std::string> m_args{};
   std::string m_from;

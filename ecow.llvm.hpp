@@ -6,15 +6,9 @@
 #include "clang/Tooling/DependencyScanning/DependencyScanningTool.h"
 #include "llvm/Support/VirtualFileSystem.h"
 
-#ifdef __APPLE__
-#define ECOW_CLANG_FINDER "brew --prefix llvm@16"
-#else
-#define ECOW_CLANG_FINDER "which llvm@16"
-#endif
-
 namespace ecow::impl {
 static auto find_clang_exe(const char *name) {
-  return std::filesystem::path{impl::popen(ECOW_CLANG_FINDER)} / "bin" / name;
+  return clang_dir() / "bin" / name;
 }
 } // namespace ecow::impl
 
