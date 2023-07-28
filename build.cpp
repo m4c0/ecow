@@ -5,9 +5,40 @@ using namespace ecow;
 
 class builder : public exe {
 protected:
-  virtual void build_self() const override {
-    if (impl::current_target()->supports(host))
-      exe::build_self();
+  void build_self() const override {
+    if (!impl::current_target()->supports(host))
+      return;
+
+    if (std::filesystem::exists("ecow.hpp")) {
+      impl::clang{"build.cpp", exe_name()}.run();
+      return;
+    }
+
+    const auto cdir = impl::clang_dir();
+    const auto cinc = cdir / "include";
+    const auto clib = cdir / "lib";
+
+    auto c = impl::clang{"build.cpp", exe_name()}
+                 .add_arg("-I../ecow")
+                 .add_arg("-I" + cinc.string())
+                 .add_arg("-L" + clib.string())
+#if _WIN32
+                 .add_arg("-fms-runtime-lib=dll")
+                 .add_arg("-nostdlib")
+                 .add_arg("-nostdlib++")
+                 .add_arg("-lVersion");
+
+    for (const auto &e : std::filesystem::directory_iterator(clib)) {
+      const auto &p = e.path();
+      if (p.extension() == ".lib")
+        c.add_arg("-l" + p.stem().string());
+    }
+#else
+                 .add_arg("-lclang")
+                 .add_arg("-lclang-cpp")
+                 .add_arg("-lLLVM");
+#endif
+    c.run();
   }
   std::string final_exe_name() const override { return exe_name(); }
 
@@ -22,23 +53,6 @@ public:
 };
 
 int main(int argc, char **argv) {
-  auto cdir = impl::clang_dir();
-
   auto bld = unit::create<builder>("build");
-  auto u = bld->add_unit("build");
-
-  if (!std::filesystem::exists("ecow.hpp")) {
-    u->add_include_dir("../ecow");
-    u->add_include_dir((cdir / "include").string());
-    u->add_library_dir((cdir / "lib").string());
-    u->add_system_library("clang");
-    u->add_system_library("clang-cpp");
-    u->add_system_library("LLVM");
-  }
-
-  auto all = unit::create<seq>("all");
-  all->add_ref(bld);
-  // TODO: pass argv if we actually want to meta-invoke
-  // all->add_unit<sys>(bld->executable().string());
-  return run_main(all, argc, argv);
+  return run_main(bld, argc, argv);
 }
