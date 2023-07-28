@@ -10,7 +10,7 @@ protected:
       return;
 
     if (std::filesystem::exists("ecow.hpp")) {
-      impl::clang{"build.cpp", exe_name()}.run();
+      impl::clang{"build.cpp", exe_name()}.run(true);
       return;
     }
 
@@ -38,7 +38,7 @@ protected:
                  .add_arg("-lclang-cpp")
                  .add_arg("-lLLVM");
 #endif
-    c.run();
+    c.run(true);
   }
   std::string final_exe_name() const override { return exe_name(); }
 

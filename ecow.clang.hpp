@@ -111,11 +111,11 @@ public:
     return *this;
   }
 
-  void run() {
-    if (m_with_deps && !impl::must_recompile(depfile(), m_from, m_to))
+  void run(bool force = false) {
+    if (!force && m_with_deps && !impl::must_recompile(depfile(), m_from, m_to))
       return;
 
-    if (!m_with_deps && !impl::must_recompile(m_from, m_to))
+    if (!force && !m_with_deps && !impl::must_recompile(m_from, m_to))
       return;
 
     std::cerr << "compiling " << m_to << std::endl;
