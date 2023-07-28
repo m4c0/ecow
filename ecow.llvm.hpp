@@ -1,4 +1,8 @@
 #pragma once
+#ifdef _WIN32
+#define off_t _off_t
+#endif
+
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
@@ -8,7 +12,7 @@
 
 namespace ecow::impl {
 static auto find_clang_exe(const char *name) {
-  return clang_dir() / "bin" / name;
+  return (clang_dir() / "bin" / name).string();
 }
 } // namespace ecow::impl
 
