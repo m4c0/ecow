@@ -7,18 +7,28 @@ namespace ecow {
 class box : public unit {
   std::vector<std::shared_ptr<mod>> m_mods{};
 
-  void build_after_deps(std::shared_ptr<mod> mm) const {
-    const auto &dps = deps::dependency_map[mm->module_name()];
-    for (auto &m : m_mods) {
-      m->generate_deps();
-      if (dps.contains(m->module_name())) {
-        build_after_deps(m);
+  void build_deps_of(const std::string &mm) const {
+    for (auto &d : deps::dependency_map[mm]) {
+      if (d.starts_with(mm + ":")) {
+        build_deps_of(d);
+      } else {
+        for (auto &m : m_mods) {
+          if (m->module_name() == d) {
+            build_after_deps(m);
+          }
+        }
       }
     }
+  }
+  void build_after_deps(std::shared_ptr<mod> mm) const {
+    build_deps_of(mm->module_name());
     mm->build();
   }
 
   virtual void build_self() const override {
+    for (auto &m : m_mods) {
+      m->generate_deps();
+    }
     for (auto &m : m_mods) {
       build_after_deps(m);
     }
