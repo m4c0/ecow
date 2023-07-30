@@ -7,8 +7,9 @@ class mod : public seq {
   strvec m_impls;
   strvec m_parts;
 
+  [[nodiscard]] auto part_prefix() const { return name() + ":"; }
   [[nodiscard]] auto part_name(const std::string &who) const {
-    return name() + ":" + who;
+    return part_prefix() + who;
   }
   [[nodiscard]] auto part_file(const std::string &who) const {
     return name() + "-" + who;
@@ -43,9 +44,29 @@ class mod : public seq {
     compile_part(part_file(who));
   }
 
+  [[nodiscard]] strset auto_parts() const {
+    strset res{};
+    auto pp = part_prefix();
+    for (auto &d : deps::dependency_map[name()]) {
+      if (!d.starts_with(pp))
+        continue;
+
+      auto p = d.substr(pp.size());
+      auto pf = part_file(p) + ".cppm";
+      if (!std::filesystem::exists(pf))
+        continue;
+
+      res.insert(p);
+    }
+    for (auto &p : m_parts) {
+      res.insert(p);
+    }
+    return res;
+  }
+
 protected:
   void build_self() const override {
-    for (const auto &p : m_parts) {
+    for (const auto &p : auto_parts()) {
       build_part_after_deps(p);
     }
 
@@ -55,9 +76,12 @@ protected:
     seq::build_self();
   }
   void generate_self_deps() const override {
-    std::for_each(m_parts.begin(), m_parts.end(),
-                  [&](auto w) { clang_part(part_file(w)).generate_deps(); });
     clang_part(name()).generate_deps();
+
+    for (auto &w : auto_parts()) {
+      clang_part(part_file(w)).generate_deps();
+    }
+
     std::for_each(m_impls.begin(), m_impls.end(),
                   [&](auto w) { clang_impl(w).generate_deps(); });
     seq::generate_self_deps();
@@ -66,8 +90,9 @@ protected:
   [[nodiscard]] pathset self_objects() const override {
     pathset res = seq::self_objects();
     res.insert(obj_name(name()));
-    std::for_each(m_parts.begin(), m_parts.end(),
-                  [&](auto w) { res.insert(obj_name(part_file(w))); });
+    for (auto &w : auto_parts()) {
+      res.insert(obj_name(part_file(w)));
+    }
     std::for_each(m_impls.begin(), m_impls.end(),
                   [&](auto w) { res.insert(obj_name(w)); });
     return res;
