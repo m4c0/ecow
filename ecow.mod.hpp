@@ -28,13 +28,15 @@ class mod : public seq {
 
   const auto &deps_of(const std::string &who) const {
     if (!deps::has(who)) {
-      for (auto &d : clang_part(who).generate_deps())
+      for (auto &d : clang_part(who).generate_deps()) {
         deps::add(who, d);
+        deps::add(name(), d);
+      }
     }
     return deps::of(who);
   }
 
-  void calculate_deps_of(const std::string &who) const {
+  void calculate_deps_of(const std::string &who) {
     const auto pp = name() + ":";
     for (auto &d : deps_of(who)) {
       if (d.starts_with(pp)) {
