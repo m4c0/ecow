@@ -75,7 +75,7 @@ protected:
                   [this](auto w) { return compile_impl(w); });
     seq::build_self();
   }
-  void generate_self_deps() const override {
+  void calculate_self_deps() override {
     clang_part(name()).generate_deps();
 
     for (auto &w : auto_parts()) {
@@ -84,7 +84,7 @@ protected:
 
     std::for_each(m_impls.begin(), m_impls.end(),
                   [&](auto w) { clang_impl(w).generate_deps(); });
-    seq::generate_self_deps();
+    seq::calculate_self_deps();
   }
 
   [[nodiscard]] pathset self_objects() const override {

@@ -15,9 +15,9 @@ protected:
   virtual void build_self() const override {
     std::for_each(m_units.begin(), m_units.end(), std::mem_fn(&unit::build));
   }
-  virtual void generate_self_deps() const override {
+  virtual void calculate_self_deps() override {
     for (const auto &u : m_units) {
-      u->generate_deps();
+      u->calculate_deps();
     }
   }
   [[nodiscard]] virtual pathset self_objects() const override {

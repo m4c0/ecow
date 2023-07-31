@@ -17,7 +17,7 @@ class box : public unit {
   }
   void rec_deps(decltype(m_mods) &res, std::shared_ptr<mod> m) const {
     res.push_back(m);
-    m->generate_deps();
+    m->calculate_deps();
 
     auto mn = m->module_name();
 
@@ -56,17 +56,16 @@ class box : public unit {
   }
 
   virtual void build_self() const override {
-    generate_self_deps();
     for (auto &m : auto_mods()) {
       build_after_deps(m);
     }
   }
-  virtual void generate_self_deps() const override {
+  virtual void calculate_self_deps() override {
     for (const auto &u : m_mods) {
-      u->generate_deps();
+      u->calculate_deps();
     }
     for (const auto &u : auto_mods()) {
-      u->generate_deps();
+      u->calculate_deps();
     }
   }
   [[nodiscard]] virtual pathset self_objects() const override {

@@ -59,7 +59,7 @@ protected:
   void add_link_flag(const std::string &name) { m_link_flags.insert(name); }
 
   virtual void build_self() const { clang().run(); }
-  virtual void generate_self_deps() const { clang().generate_deps(); }
+  virtual void calculate_self_deps() {}
 
   virtual pathset self_objects() const {
     pathset res{};
@@ -146,14 +146,14 @@ public:
     build_self();
   }
 
-  void generate_deps() const {
+  void calculate_deps() {
     if (!current_target_supports_me())
       return;
 
-    generate_self_deps();
+    calculate_self_deps();
     for (const auto &[k, u] : m_wsdeps) {
       wsdeps::curpath_raii c{k};
-      u->generate_deps();
+      u->calculate_deps();
     }
   }
 

@@ -22,7 +22,7 @@ protected:
 
     clang().run();
   }
-  void generate_self_deps() const override {
+  void calculate_self_deps() override {
     // clang-scan-deps doesn't like objc++
     // clang().generate_self_deps(o);
   }

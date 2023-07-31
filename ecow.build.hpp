@@ -22,6 +22,7 @@ static inline void build(unit &u, Args &&...args) {
   T tgt{std::forward<Args>(args)...};
   std::filesystem::create_directories(tgt.build_folder());
 
+  u.calculate_deps();
   u.build();
 }
 static inline void run_main(unit &u, int argc, char **argv) {

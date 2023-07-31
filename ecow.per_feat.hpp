@@ -15,10 +15,10 @@ protected:
         u.build();
     }
   }
-  void generate_self_deps() const override {
+  void calculate_self_deps() override {
     for (auto &[f, u] : m_map) {
       if (target_supports(f))
-        u.generate_deps();
+        u.calculate_deps();
     }
   }
   [[nodiscard]] pathset self_objects() const override {
