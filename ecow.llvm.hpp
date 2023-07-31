@@ -38,10 +38,10 @@ void ecow::impl::clang::generate_deps() {
       (std::filesystem::current_path() / m_from).make_preferred().string();
   auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
 
-  if (deps::dependency_map.contains(to))
+  if (deps::mappings.contains(to))
     return;
 
-  deps::dependency_map[to] = {};
+  deps::mappings[to] = {};
 
   std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
 
@@ -76,7 +76,7 @@ void ecow::impl::clang::generate_deps() {
   if (!rule->Provides)
     return;
 
-  auto &dps = deps::dependency_map[rule->Provides->ModuleName];
+  auto &dps = deps::mappings[rule->Provides->ModuleName];
   for (auto &req : rule->Requires) {
     dps.insert(req.ModuleName);
   }

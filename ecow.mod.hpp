@@ -35,7 +35,7 @@ class mod : public seq {
   void compile_impl(const std::string &who) const { clang_impl(who).run(); }
 
   void build_part_after_deps(const std::string &who) const {
-    const auto &dps = deps::dependency_map[part_name(who)];
+    const auto &dps = deps::of(part_name(who));
     for (auto &p : m_parts) {
       if (dps.contains(part_name(p))) {
         build_part_after_deps(p);
@@ -47,7 +47,7 @@ class mod : public seq {
   [[nodiscard]] strset auto_parts() const {
     strset res{};
     auto pp = part_prefix();
-    for (auto &d : deps::dependency_map[name()]) {
+    for (auto &d : deps::of(name())) {
       if (!d.starts_with(pp))
         continue;
 

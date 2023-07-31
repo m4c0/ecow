@@ -21,7 +21,7 @@ class box : public unit {
 
     auto mn = m->module_name();
 
-    for (auto &d : deps::dependency_map[mn]) {
+    for (auto &d : deps::of(mn)) {
       if (!std::filesystem::exists(d + ".cppm"))
         continue;
       if (has_already(res, d))
@@ -38,7 +38,7 @@ class box : public unit {
   }
 
   void build_deps_of(const std::string &mm) const {
-    for (auto &d : deps::dependency_map[mm]) {
+    for (auto &d : deps::of(mm)) {
       if (d.starts_with(mm + ":")) {
         build_deps_of(d);
       } else {
