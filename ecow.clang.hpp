@@ -112,10 +112,10 @@ public:
   }
 
   [[nodiscard]] bool must_recompile() {
-    if (m_with_deps && !impl::must_recompile(depfile(), m_from, m_to))
+    if (m_with_deps && impl::must_recompile(depfile(), m_from, m_to))
       return true;
 
-    if (!m_with_deps && !impl::must_recompile(m_from, m_to))
+    if (!m_with_deps && impl::must_recompile(m_from, m_to))
       return true;
 
     return false;
