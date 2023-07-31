@@ -44,6 +44,11 @@ class mod : public seq {
         calculate_deps_of(pn);
       }
     }
+    if (who.starts_with(pp)) {
+      auto pn = who.substr(pp.size());
+      if (std::find(m_parts.begin(), m_parts.end(), pn) == m_parts.end())
+        add_part(pn);
+    }
   }
 
   void build_with_deps(const std::string &who) const {
@@ -55,6 +60,17 @@ class mod : public seq {
       }
     }
     compile_part(who);
+  }
+
+  void objs_with_deps(pathset &res, const std::string &who) const {
+    const auto pp = name() + ":";
+    for (auto &d : deps::of(who)) {
+      if (d.starts_with(pp)) {
+        auto pn = name() + "-" + d.substr(pp.size());
+        objs_with_deps(res, pn);
+      }
+    }
+    res.insert(obj_name(who));
   }
 
 protected:
@@ -74,7 +90,7 @@ protected:
 
   [[nodiscard]] pathset self_objects() const override {
     pathset res = seq::self_objects();
-    res.insert(obj_name(name()));
+    objs_with_deps(res, name());
     for (auto &w : m_parts) {
       res.insert(obj_name(name() + "-" + w));
     }
