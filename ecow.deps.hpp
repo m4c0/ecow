@@ -12,8 +12,5 @@ void add(const std::string &from, const std::string &to) {
 
 [[nodiscard]] bool has(const std::string &n) { return mappings.contains(n); }
 
-[[nodiscard]] const auto &of(const std::string &n) {
-  static std::set<std::string> empty{};
-  return has(n) ? mappings[n] : empty;
-}
+[[nodiscard]] const auto &of(const std::string &n) { return mappings[n]; }
 } // namespace ecow::deps
