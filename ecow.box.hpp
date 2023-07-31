@@ -111,7 +111,9 @@ class box : public unit {
   }
 
 public:
-  using unit::unit;
+  box(const std::string &name) : unit(name) {
+    m_mods.push_back(unit::create<mod>(name));
+  }
 
   auto add_mod(const char *name) {
     auto res = create<mod>(name);
