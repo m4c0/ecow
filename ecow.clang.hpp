@@ -111,11 +111,17 @@ public:
     return *this;
   }
 
-  void run(bool force = false) {
-    if (!force && m_with_deps && !impl::must_recompile(depfile(), m_from, m_to))
-      return;
+  [[nodiscard]] bool must_recompile() {
+    if (m_with_deps && !impl::must_recompile(depfile(), m_from, m_to))
+      return true;
 
-    if (!force && !m_with_deps && !impl::must_recompile(m_from, m_to))
+    if (!m_with_deps && !impl::must_recompile(m_from, m_to))
+      return true;
+
+    return false;
+  }
+  void run(bool force = false) {
+    if (!force && !must_recompile())
       return;
 
     std::cerr << "compiling " << m_to << std::endl;

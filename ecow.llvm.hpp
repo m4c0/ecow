@@ -34,6 +34,37 @@ std::set<std::string> ecow::impl::clang::generate_deps() {
   using namespace clang::tooling::dependencies;
   using namespace clang;
 
+  if (m_with_deps && !must_recompile()) {
+    std::ifstream deps{depfile()};
+
+    auto self = std::filesystem::path{m_to}.stem().string();
+
+    std::set<std::string> res{};
+    std::string line;
+    deps >> line; // output:
+    while (deps) {
+      deps >> line;
+      if (line == "\\")
+        continue;
+
+      auto path = std::filesystem::path{line};
+      if (path.extension() != ".pcm")
+        continue;
+
+      auto mod = path.stem().string();
+      if (mod == self)
+        continue;
+
+      auto dash = std::find(mod.begin(), mod.end(), '-');
+      if (dash != mod.end()) {
+        *dash = ':';
+      }
+      res.insert(mod);
+    }
+
+    return res;
+  }
+
   auto from =
       (std::filesystem::current_path() / m_from).make_preferred().string();
   auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
