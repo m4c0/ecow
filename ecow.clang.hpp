@@ -123,9 +123,9 @@ public:
   }
 
 #ifndef ECOW_META_BUILD
-  void generate_deps();
+  [[nodiscard]] std::set<std::string> generate_deps();
 #else
-  void generate_deps() {}
+  [[nodiscard]] std::set<std::string> generate_deps() { return {}; }
 #endif
 };
 } // namespace ecow::impl

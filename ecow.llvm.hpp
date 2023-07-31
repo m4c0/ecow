@@ -30,18 +30,13 @@ auto &dep_scan_srv() {
       DependencyScanningService{scan_mode, format, opt_args, eager_load_mod};
   return service;
 }
-void ecow::impl::clang::generate_deps() {
+std::set<std::string> ecow::impl::clang::generate_deps() {
   using namespace clang::tooling::dependencies;
   using namespace clang;
 
   auto from =
       (std::filesystem::current_path() / m_from).make_preferred().string();
   auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
-
-  if (deps::mappings.contains(to))
-    return;
-
-  deps::mappings[to] = {};
 
   std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
 
@@ -73,13 +68,11 @@ void ecow::impl::clang::generate_deps() {
     throw clang_failed{full_cmd()};
   }
 
-  if (!rule->Provides)
-    return;
-
-  auto &dps = deps::mappings[rule->Provides->ModuleName];
+  std::set<std::string> res{};
   for (auto &req : rule->Requires) {
-    dps.insert(req.ModuleName);
+    res.insert(req.ModuleName);
   }
+  return res;
 }
 
 void ecow::impl::clang::really_run() {

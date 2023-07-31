@@ -7,14 +7,6 @@ class mod : public seq {
   strvec m_impls;
   strvec m_parts;
 
-  [[nodiscard]] auto part_prefix() const { return name() + ":"; }
-  [[nodiscard]] auto part_name(const std::string &who) const {
-    return part_prefix() + who;
-  }
-  [[nodiscard]] auto part_file(const std::string &who) const {
-    return name() + "-" + who;
-  }
-
   [[nodiscard]] auto clang_part(const std::string &who) const {
     return impl::clang{who + ".cppm", pcm_name(who)}
         .add_arg("--precompile")
@@ -34,64 +26,49 @@ class mod : public seq {
   }
   void compile_impl(const std::string &who) const { clang_impl(who).run(); }
 
-  void build_part_after_deps(const std::string &who) const {
-    const auto &dps = deps::of(part_name(who));
-    for (auto &p : m_parts) {
-      if (dps.contains(part_name(p))) {
-        build_part_after_deps(p);
-      }
+  const auto &deps_of(const std::string &who) const {
+    if (!deps::has(who)) {
+      for (auto &d : clang_part(who).generate_deps())
+        deps::add(who, d);
     }
-    compile_part(part_file(who));
+    return deps::of(who);
   }
 
-  [[nodiscard]] strset auto_parts() const {
-    strset res{};
-    auto pp = part_prefix();
-    for (auto &d : deps::of(name())) {
-      if (!d.starts_with(pp))
-        continue;
-
-      auto p = d.substr(pp.size());
-      auto pf = part_file(p) + ".cppm";
-      if (!std::filesystem::exists(pf))
-        continue;
-
-      res.insert(p);
+  void calculate_deps_of(const std::string &who) {
+    const auto pp = name() + ":";
+    for (auto &d : deps_of(who)) {
+      if (d.starts_with(pp)) {
+        auto pn = name() + "-" + d.substr(pp.size());
+        calculate_deps_of(pn);
+      }
     }
-    for (auto &p : m_parts) {
-      res.insert(p);
+    if (who.starts_with(pp)) {
+      auto pn = who.substr(pp.size());
+      if (std::find(m_parts.begin(), m_parts.end(), pn) == m_parts.end())
+        add_part(pn);
     }
-    return res;
   }
 
 protected:
   void build_self() const override {
-    for (const auto &p : auto_parts()) {
-      build_part_after_deps(p);
-    }
-
+    std::for_each(m_parts.begin(), m_parts.end(),
+                  [this](auto w) { return compile_part(name() + "-" + w); });
     compile_part(name());
     std::for_each(m_impls.begin(), m_impls.end(),
                   [this](auto w) { return compile_impl(w); });
     seq::build_self();
   }
   void calculate_self_deps() override {
-    clang_part(name()).generate_deps();
-
-    for (auto &w : auto_parts()) {
-      clang_part(part_file(w)).generate_deps();
-    }
-
-    std::for_each(m_impls.begin(), m_impls.end(),
-                  [&](auto w) { clang_impl(w).generate_deps(); });
-    seq::calculate_self_deps();
+    calculate_deps_of(name());
+    std::for_each(m_parts.begin(), m_parts.end(),
+                  [this](auto w) { calculate_deps_of(name() + "-" + w); });
   }
 
   [[nodiscard]] pathset self_objects() const override {
     pathset res = seq::self_objects();
     res.insert(obj_name(name()));
-    for (auto &w : auto_parts()) {
-      res.insert(obj_name(part_file(w)));
+    for (auto &w : m_parts) {
+      res.insert(obj_name(name() + "-" + w));
     }
     std::for_each(m_impls.begin(), m_impls.end(),
                   [&](auto w) { res.insert(obj_name(w)); });

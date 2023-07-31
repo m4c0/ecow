@@ -4,120 +4,34 @@
 #include "ecow.unit.hpp"
 
 namespace ecow {
-class box : public unit {
-  std::vector<std::shared_ptr<mod>> m_mods{};
+class box : public seq {
+  std::set<std::string> m_cache{};
 
-  [[nodiscard]] static bool has_already(decltype(m_mods) &res,
-                                        const std::string &d) {
-    for (const auto &m : res) {
-      if (m->module_name() == d)
-        return true;
-    }
-    return false;
-  }
-  void rec_deps(decltype(m_mods) &res, std::shared_ptr<mod> m) const {
-    res.push_back(m);
+  void calculate_deps_of(const std::string &n) {
+    if (deps::has(n))
+      return;
+
+    if (!std::filesystem::exists(n + ".cppm"))
+      return;
+
+    auto m = create<mod>(n);
     m->calculate_deps();
 
-    auto mn = m->module_name();
+    for (auto &d : deps::of(n)) {
+      calculate_deps_of(d);
+    }
 
-    for (auto &d : deps::of(mn)) {
-      if (!std::filesystem::exists(d + ".cppm"))
-        continue;
-      if (has_already(res, d))
-        continue;
-      rec_deps(res, unit::create<mod>(d));
-    }
-  }
-  [[nodiscard]] auto auto_mods() const {
-    decltype(m_mods) res{};
-    for (auto m : m_mods) {
-      rec_deps(res, m);
-    }
-    return res;
+    add_unit<mod>(n);
   }
 
-  void build_deps_of(const std::string &mm) const {
-    for (auto &d : deps::of(mm)) {
-      if (d.starts_with(mm + ":")) {
-        build_deps_of(d);
-      } else {
-        for (auto &m : auto_mods()) {
-          if (m->module_name() == d) {
-            build_after_deps(m);
-          }
-        }
-      }
-    }
-  }
-  void build_after_deps(std::shared_ptr<mod> mm) const {
-    build_deps_of(mm->module_name());
-    mm->build();
-  }
-
-  virtual void build_self() const override {
-    for (auto &m : auto_mods()) {
-      build_after_deps(m);
-    }
-  }
   virtual void calculate_self_deps() override {
-    for (const auto &u : m_mods) {
-      u->calculate_deps();
-    }
-    for (const auto &u : auto_mods()) {
-      u->calculate_deps();
-    }
-  }
-  [[nodiscard]] virtual pathset self_objects() const override {
-    pathset res{};
-    for (const auto &u : auto_mods()) {
-      const auto objs = u->objects();
-      std::copy(objs.begin(), objs.end(), std::inserter(res, res.end()));
-    }
-    return res;
-  }
+    if (m_cache.size() > 0)
+      return;
 
-  virtual void visit(features f, strmap &out) const override {
-    unit::visit(f, out);
-    for (const auto &u : auto_mods()) {
-      u->visit(f, out);
-    }
-  }
-
-  virtual void recurse_wsdeps(wsdeps::map_t &res) const override {
-    unit::recurse_wsdeps(res);
-    for (const auto &u : auto_mods()) {
-      u->recurse_wsdeps(res);
-    }
-  }
-
-  [[nodiscard]] virtual strset link_flags() const override {
-    strset res{unit::link_flags()};
-    for (const auto &u : auto_mods()) {
-      const auto fws = u->link_flags();
-      std::copy(fws.begin(), fws.end(), std::inserter(res, res.end()));
-    }
-    return res;
-  }
-
-  [[nodiscard]] virtual pathset resources() const override {
-    pathset res{unit::resources()};
-    for (const auto &u : auto_mods()) {
-      const auto fws = u->resources();
-      std::copy(fws.begin(), fws.end(), std::inserter(res, res.end()));
-    }
-    return res;
+    calculate_deps_of(name());
   }
 
 public:
-  box(const std::string &name) : unit(name) {
-    m_mods.push_back(unit::create<mod>(name));
-  }
-
-  auto add_mod(const char *name) {
-    auto res = create<mod>(name);
-    m_mods.push_back(res);
-    return res;
-  }
+  using seq::seq;
 };
 } // namespace ecow
