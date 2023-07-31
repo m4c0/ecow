@@ -11,9 +11,6 @@ class box : public seq {
     if (m_cache.contains(n))
       return;
 
-    if (deps::has(n))
-      return;
-
     if (!std::filesystem::exists(n + ".cppm"))
       return;
 
