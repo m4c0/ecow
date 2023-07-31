@@ -59,13 +59,11 @@ must_recompile(const auto &depfn, const auto &from, const auto &to) {
 
   const auto ttime = impl::last_write_time(to);
   std::string line;
-  while (std::getline(deps, line)) {
-    if (!line.starts_with("  "))
+  deps >> line;
+  while (deps) {
+    deps >> line;
+    if (line == "\\")
       continue;
-
-    line = line.substr(2);
-    if (line.ends_with(" \\"))
-      line.resize(line.size() - 2);
 
     const auto deptime = last_write_time(line);
     if (deptime > ttime)
