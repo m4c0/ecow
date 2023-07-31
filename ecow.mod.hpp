@@ -105,7 +105,5 @@ public:
 
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(part); }
-
-  [[nodiscard]] const auto &module_name() const { return name(); }
 };
 } // namespace ecow
