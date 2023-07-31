@@ -34,7 +34,7 @@ class mod : public seq {
     return deps::of(who);
   }
 
-  void calculate_deps_of(const std::string &who) {
+  void calculate_deps_of(const std::string &who) const {
     const auto pp = name() + ":";
     for (auto &d : deps_of(who)) {
       if (d.starts_with(pp)) {
@@ -42,18 +42,24 @@ class mod : public seq {
         calculate_deps_of(pn);
       }
     }
-    if (who.starts_with(pp)) {
-      auto pn = who.substr(pp.size());
-      if (std::find(m_parts.begin(), m_parts.end(), pn) == m_parts.end())
-        add_part(pn);
+  }
+
+  void build_with_deps(const std::string &who) const {
+    const auto pp = name() + ":";
+    for (auto &d : deps::of(who)) {
+      if (d.starts_with(pp)) {
+        auto pn = name() + "-" + d.substr(pp.size());
+        build_with_deps(pn);
+      }
     }
+    compile_part(who);
   }
 
 protected:
   void build_self() const override {
     std::for_each(m_parts.begin(), m_parts.end(),
                   [this](auto w) { return compile_part(name() + "-" + w); });
-    compile_part(name());
+    build_with_deps(name());
     std::for_each(m_impls.begin(), m_impls.end(),
                   [this](auto w) { return compile_impl(w); });
     seq::build_self();
