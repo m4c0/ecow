@@ -17,13 +17,16 @@ class box : public seq {
     if (!std::filesystem::exists(n + ".cppm"))
       return;
 
-    auto m = add_unit<mod>(n);
+    auto m = create<mod>(n);
     m->calculate_deps();
     m_cache.insert(n);
 
     for (auto &d : deps::of(n)) {
       calculate_deps_of(d);
     }
+
+    // add after its deps
+    add_ref(m);
   }
 
   virtual void calculate_self_deps() override {
