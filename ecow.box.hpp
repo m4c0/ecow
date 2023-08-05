@@ -7,13 +7,7 @@ namespace ecow {
 class box : public seq {
   std::set<std::string> m_cache{};
 
-  void calculate_deps_of(const std::string &n) {
-    if (m_cache.contains(n))
-      return;
-
-    if (!std::filesystem::exists(n + ".cppm"))
-      return;
-
+  void add_mod(const std::string &n) {
     auto m = create<mod>(n);
     m->calculate_deps();
     m_cache.insert(n);
@@ -24,6 +18,16 @@ class box : public seq {
 
     // add after its deps
     add_ref(m);
+  }
+
+  void calculate_deps_of(const std::string &n) {
+    if (m_cache.contains(n))
+      return;
+
+    if (std::filesystem::exists(n + ".cppm")) {
+      add_mod(n);
+      return;
+    }
   }
 
   virtual void calculate_self_deps() override {
