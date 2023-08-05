@@ -67,6 +67,9 @@ protected:
     return res;
   }
 
+  [[nodiscard]] bool has_wsdep(const std::string &n) {
+    return m_wsdeps.contains(n);
+  }
   void merge_wsdep(const std::string &k, const pathset &objs,
                    pathset &res) const {
     for (const auto &obj : objs) {

@@ -20,6 +20,13 @@ class box : public seq {
     add_ref(m);
   }
 
+  void add_dep(const std::string &n) {
+    if (has_wsdep(n))
+      return;
+    add_wsdep(n, unit::create<box>(n));
+    m_cache.insert(n);
+  }
+
   void calculate_deps_of(const std::string &n) {
     if (m_cache.contains(n))
       return;
@@ -27,6 +34,11 @@ class box : public seq {
     if (std::filesystem::exists(n + ".cppm")) {
       add_mod(n);
       return;
+    }
+    auto cur_path = std::filesystem::current_path();
+    auto wsd_path = cur_path.parent_path() / n;
+    if (std::filesystem::exists(wsd_path / "build.cpp")) {
+      add_dep(n);
     }
   }
 
