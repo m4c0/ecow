@@ -300,7 +300,7 @@ public:
   }
 };
 
-auto clang_dir() {
+std::filesystem::path clang_dir() {
   return std::filesystem::path{impl::popen("brew --prefix llvm@16")};
 }
 } // namespace ecow::impl

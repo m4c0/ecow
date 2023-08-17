@@ -53,7 +53,7 @@ public:
   return res;
 }
 
-auto clang_dir() {
+std::filesystem::path clang_dir() {
   return std::filesystem::path{impl::popen("where clang.exe")}
       .parent_path()
       .parent_path();
