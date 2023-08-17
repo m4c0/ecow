@@ -4,11 +4,16 @@
 
 #include "ecow.clang.hpp"
 
+#include "clang/CodeGen/CodeGenAction.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Tooling/DependencyScanning/DependencyScanningService.h"
 #include "clang/Tooling/DependencyScanning/DependencyScanningTool.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/VirtualFileSystem.h"
 
 namespace ecow::impl {
@@ -140,18 +145,52 @@ void ecow::impl::clang::really_run(const std::string &triple) {
     args.push_back(str.begin());
   }
   auto c = driver.BuildCompilation(args);
-
-  if (c->containsError())
+  if (!c || c->containsError())
     // We did a mistake in clang args. Bail out and let the diagnostics
     // client do its job informing the user
     throw clang_failed{full_cmd()};
 
-  llvm::SmallVector<std::pair<int, const Command *>, 4> fail_cmds{};
-  if (driver.ExecuteCompilation(*c, fail_cmds) != 0)
-    throw clang_failed{full_cmd()};
+  auto cc1_args = c->getJobs().getJobs()[0]->getArguments();
 
-  for (const auto &p : fail_cmds) {
-    if (p.first != 0)
-      throw clang_failed{full_cmd()};
+  auto files = IntrusiveRefCntPtr<FileManager>(new FileManager({}));
+  auto cdiag =
+      CompilerInstance::createDiagnostics(&*diag_opts, diag_cli, false);
+
+  SourceManager src_mgr(*cdiag, *files);
+  cdiag->setSourceManager(&src_mgr);
+
+  auto cinv = std::make_shared<CompilerInvocation>();
+  CompilerInvocation::CreateFromArgs(*cinv, cc1_args, *cdiag);
+
+  auto pch_opts = std::make_shared<PCHContainerOperations>();
+  CompilerInstance cinst{pch_opts};
+  cinst.setInvocation(cinv);
+  cinst.setFileManager(&*files);
+  cinst.createDiagnostics(diag_cli, false);
+  cinst.createSourceManager(*files);
+
+  auto ext = std::filesystem::path{to}.extension();
+  std::unique_ptr<FrontendAction> a{};
+  if (ext == ".pcm") {
+    a.reset(new GenerateModuleInterfaceAction{});
+  } else if (ext == ".o") {
+    a.reset(new EmitObjAction{});
+  } else {
+    throw clang_failed{full_cmd()};
   }
+
+  files->clearStatCache();
+
+  if (!cinst.ExecuteAction(*a))
+    throw clang_failed{full_cmd()};
 }
+
+static struct init_llvm {
+  init_llvm() {
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllAsmParsers();
+  }
+  ~init_llvm() { llvm::llvm_shutdown(); }
+} XX;
