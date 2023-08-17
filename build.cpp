@@ -9,18 +9,22 @@ protected:
     if (!impl::current_target()->supports(host))
       return;
 
-    if (std::filesystem::exists("ecow.hpp")) {
-      impl::clang{"build.cpp", exe_name()}.run(true);
-      return;
-    }
-
     const auto cdir = impl::clang_dir();
     const auto cinc = cdir / "include";
     const auto clib = cdir / "lib";
 
+    if (std::filesystem::exists("ecow.hpp")) {
+      impl::clang{"build.cpp", exe_name()}.run(true);
+      impl::clang("ecow.cpp", "ecow.o")
+          .add_arg("-c")
+          .add_arg("-I" + cinc.string())
+          .run(true);
+      return;
+    }
+
     auto c = impl::clang{"build.cpp", exe_name()}
+                 .add_arg("../ecow/ecow.o")
                  .add_arg("-I../ecow")
-                 .add_arg("-I" + cinc.string())
                  .add_arg("-L" + clib.string())
 #if _WIN32
                  .add_arg("-fms-runtime-lib=dll")

@@ -9,7 +9,3 @@
 #include "ecow.per_feat.hpp"
 #include "ecow.sys.hpp"
 #include "ecow.tool.hpp"
-
-#ifndef ECOW_META_BUILD
-#include "ecow.llvm.hpp"
-#endif

@@ -1,5 +1,7 @@
+*.dSYM
 *.exe
 *.json
+*.o
 build
 build-poc
 out

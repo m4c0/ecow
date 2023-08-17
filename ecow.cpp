@@ -1,7 +1,8 @@
-#pragma once
 #ifdef _WIN32
 #define off_t _off_t
 #endif
+
+#include "ecow.clang.hpp"
 
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
@@ -106,12 +107,11 @@ std::set<std::string> ecow::impl::clang::generate_deps() {
   return res;
 }
 
-void ecow::impl::clang::really_run() {
+void ecow::impl::clang::really_run(const std::string &triple) {
   using namespace clang::driver;
   using namespace clang;
 
   std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
-  std::string triple = impl::current_target()->triple();
   std::string title = "ecow clang driver";
 
   auto diag_opts =

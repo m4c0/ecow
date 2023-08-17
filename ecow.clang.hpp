@@ -50,9 +50,9 @@ class clang {
   }
 
 #ifndef ECOW_META_BUILD
-  void really_run();
+  void really_run(const std::string &triple);
 #else
-  void really_run() {
+  void really_run(const std::string &triple) {
     auto cmd = full_cmd();
     if (std::system(cmd.c_str()))
       throw clang_failed{cmd};
@@ -125,7 +125,7 @@ public:
       return;
 
     std::cerr << "compiling " << m_to << std::endl;
-    really_run();
+    really_run(impl::current_target()->triple());
   }
 
 #ifndef ECOW_META_BUILD
