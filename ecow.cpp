@@ -10,6 +10,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
+#include "clang/Lex/LexDiagnostic.h"
 #include "clang/Tooling/DependencyScanning/DependencyScanningService.h"
 #include "clang/Tooling/DependencyScanning/DependencyScanningTool.h"
 #include "llvm/IR/Module.h"
@@ -112,6 +113,44 @@ std::set<std::string> ecow::impl::clang::generate_deps() {
   return res;
 }
 
+namespace {
+using namespace clang;
+
+class SysLibPragmaHandler : public PragmaHandler {
+public:
+  SysLibPragmaHandler() : PragmaHandler("add_system_library") {}
+  void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
+                    Token &PragmaTok) {
+    Token Tok;
+    do {
+      PP.LexUnexpandedToken(Tok);
+      if (Tok.getKind() == tok::eod) {
+        return;
+      }
+      if (!Tok.isAnyIdentifier()) {
+        PP.Diag(Tok, diag::err_pp_identifier_arg_not_identifier)
+            << Tok.getKind();
+        return;
+      }
+      llvm::errs() << Tok.getIdentifierInfo()->getName() << "\n";
+    } while (true);
+  }
+};
+
+class EcowAction : public WrapperFrontendAction {
+public:
+  EcowAction()
+      : WrapperFrontendAction{
+            std::make_unique<GenerateModuleInterfaceAction>()} {}
+
+  bool BeginSourceFileAction(CompilerInstance &CI) override {
+    CI.getPreprocessor().AddPragmaHandler("ecow", new SysLibPragmaHandler());
+
+    return WrapperFrontendAction::BeginSourceFileAction(CI);
+  }
+};
+} // namespace
+
 void ecow::impl::clang::really_run(const std::string &triple) {
   using namespace clang::driver;
   using namespace clang;
@@ -172,7 +211,7 @@ void ecow::impl::clang::really_run(const std::string &triple) {
   auto ext = std::filesystem::path{to}.extension();
   std::unique_ptr<FrontendAction> a{};
   if (ext == ".pcm") {
-    a.reset(new GenerateModuleInterfaceAction{});
+    a.reset(new EcowAction{});
   } else if (ext == ".o") {
     a.reset(new EmitObjAction{});
   } else {
