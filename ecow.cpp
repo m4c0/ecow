@@ -117,8 +117,12 @@ namespace {
 using namespace clang;
 
 class SysLibPragmaHandler : public PragmaHandler {
+  std::vector<std::string> *m_flags;
+
 public:
-  SysLibPragmaHandler() : PragmaHandler("add_system_library") {}
+  SysLibPragmaHandler(decltype(m_flags) f)
+      : PragmaHandler("add_system_library"), m_flags{f} {}
+
   void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
                     Token &PragmaTok) {
     Token Tok;
@@ -132,21 +136,46 @@ public:
             << Tok.getKind();
         return;
       }
-      llvm::errs() << Tok.getIdentifierInfo()->getName() << "\n";
+      auto flag = "-l" + Tok.getIdentifierInfo()->getName();
+      m_flags->push_back(flag.str());
     } while (true);
   }
 };
 
 class EcowAction : public WrapperFrontendAction {
+  std::vector<std::string> m_flags{};
+
+  void createFlagsFile() {
+    auto &ci = getCompilerInstance();
+
+    SmallString<128> path(ci.getFrontendOpts().OutputFile);
+    llvm::sys::path::replace_extension(path, "flags");
+
+    auto file = ci.createOutputFile(path, false, false, false);
+    for (const auto &f : m_flags) {
+      (*file) << f << "\n";
+    }
+
+    llvm::errs() << "ok\n";
+  }
+
 public:
   EcowAction()
       : WrapperFrontendAction{
             std::make_unique<GenerateModuleInterfaceAction>()} {}
 
   bool BeginSourceFileAction(CompilerInstance &CI) override {
-    CI.getPreprocessor().AddPragmaHandler("ecow", new SysLibPragmaHandler());
+    CI.getPreprocessor().AddPragmaHandler("ecow",
+                                          new SysLibPragmaHandler(&m_flags));
 
     return WrapperFrontendAction::BeginSourceFileAction(CI);
+  }
+
+  void EndSourceFile() override {
+    if (!m_flags.empty())
+      createFlagsFile();
+
+    WrapperFrontendAction::EndSourceFile();
   }
 };
 } // namespace
