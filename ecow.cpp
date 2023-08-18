@@ -138,8 +138,6 @@ class EcowAction : public WrapperFrontendAction {
     for (const auto &f : m_flags) {
       (*file) << f << "\n";
     }
-
-    ::llvm::errs() << "ok\n";
   }
 
 public:

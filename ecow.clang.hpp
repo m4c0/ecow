@@ -70,13 +70,19 @@ class clang {
     return r;
   }
 
-#ifndef ECOW_META_BUILD
-  [[nodiscard]] bool really_run() const { return llvm::compile(llvm_in()); }
-#else
-  [[nodiscard]] bool really_run() {
+  [[nodiscard]] bool run_with_powa() const { return llvm::compile(llvm_in()); }
+  [[nodiscard]] bool run_with_driver() {
     return 0 == std::system(full_cmd().c_str());
   }
-#endif
+
+  void run(auto &&fn, bool force) {
+    if (!force && !must_recompile())
+      return;
+
+    std::cerr << "compiling " << m_to << std::endl;
+    if (!(this->*fn)())
+      throw clang_failed{full_cmd()};
+  }
 
 public:
   clang(const std::string &from, const std::string &to)
@@ -139,14 +145,8 @@ public:
 
     return false;
   }
-  void run(bool force = false) {
-    if (!force && !must_recompile())
-      return;
-
-    std::cerr << "compiling " << m_to << std::endl;
-    if (!really_run())
-      throw clang_failed{full_cmd()};
-  }
+  void run(bool force = false) { run(&clang::run_with_driver, force); }
+  void powa_run() { run(&clang::run_with_powa, false); }
 
 #ifndef ECOW_META_BUILD
   [[nodiscard]] std::set<std::string> generate_deps() {
