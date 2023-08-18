@@ -143,6 +143,17 @@ public:
   }
 };
 
+class fw_pragma_handler : public ecow_idlist_pragma_handler {
+public:
+  fw_pragma_handler(CompilerInstance *ci)
+      : ecow_idlist_pragma_handler("add_framework", ci) {}
+
+  std::string extension() override { return "flags"; }
+  std::string translate_item(const Twine &t) override {
+    return ("-framework " + t).str();
+  }
+};
+
 class syslib_pragma_handler : public ecow_idlist_pragma_handler {
 public:
   syslib_pragma_handler(CompilerInstance *ci)
@@ -170,8 +181,9 @@ struct ecow_action : WrapperFrontendAction {
 
   bool BeginSourceFileAction(CompilerInstance &ci) override {
     auto &pp = ci.getPreprocessor();
-    pp.AddPragmaHandler("ecow", new syslib_pragma_handler(&ci));
+    pp.AddPragmaHandler("ecow", new fw_pragma_handler(&ci));
     pp.AddPragmaHandler("ecow", new impls_pragma_handler(&ci));
+    pp.AddPragmaHandler("ecow", new syslib_pragma_handler(&ci));
 
     return WrapperFrontendAction::BeginSourceFileAction(ci);
   }
