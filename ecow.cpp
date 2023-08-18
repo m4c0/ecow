@@ -103,7 +103,11 @@ std::set<std::string> ecow::impl::clang::generate_deps() {
     llvm::handleAllErrors(rule.takeError(), [&](llvm::StringError &err) {
       std::cerr << err.getMessage();
     });
-    throw clang_failed{full_cmd()};
+    std::stringstream o{};
+    for (const auto &s : cmd_line) {
+      o << s;
+    }
+    throw clang_failed{o.str()};
   }
 
   std::set<std::string> res{};
@@ -180,7 +184,7 @@ public:
 };
 } // namespace
 
-void ecow::impl::clang::really_run(const std::string &triple) {
+bool ecow::impl::clang::really_run(const std::string &triple) {
   using namespace clang::driver;
   using namespace clang;
 
@@ -216,7 +220,7 @@ void ecow::impl::clang::really_run(const std::string &triple) {
   if (!c || c->containsError())
     // We did a mistake in clang args. Bail out and let the diagnostics
     // client do its job informing the user
-    throw clang_failed{full_cmd()};
+    return false;
 
   auto cc1_args = c->getJobs().getJobs()[0]->getArguments();
 
@@ -244,13 +248,12 @@ void ecow::impl::clang::really_run(const std::string &triple) {
   } else if (ext == ".o") {
     a.reset(new EmitObjAction{});
   } else {
-    throw clang_failed{full_cmd()};
+    return false;
   }
 
   files->clearStatCache();
 
-  if (!cinst.ExecuteAction(*a))
-    throw clang_failed{full_cmd()};
+  return cinst.ExecuteAction(*a);
 }
 
 static struct init_llvm {

@@ -50,12 +50,10 @@ class clang {
   }
 
 #ifndef ECOW_META_BUILD
-  void really_run(const std::string &triple);
+  [[nodiscard]] bool really_run(const std::string &triple);
 #else
-  void really_run(const std::string &triple) {
-    auto cmd = full_cmd();
-    if (std::system(cmd.c_str()))
-      throw clang_failed{cmd};
+  [[nodiscard]] bool really_run(const std::string &triple) {
+    return 0 == std::system(full_cmd().c_str());
   }
 #endif
 
@@ -125,7 +123,8 @@ public:
       return;
 
     std::cerr << "compiling " << m_to << std::endl;
-    really_run(impl::current_target()->triple());
+    if (!really_run(impl::current_target()->triple()))
+      throw clang_failed{full_cmd()};
   }
 
 #ifndef ECOW_META_BUILD
