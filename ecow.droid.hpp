@@ -59,7 +59,7 @@ public:
 
     add_flags("-fdata-sections", "-ffunction-sections", "-funwind-tables",
               "-fstack-protector-strong", "-no-canonical-prefixes",
-              " --target=" + tgt, "--sysroot", llvm + "/sysroot");
+              "--target=" + tgt, "--sysroot", llvm + "/sysroot");
 
     add_ldflags("-shared", "-static-libstdc++", "-Wl,-Bsymbolic",
                 "-fuse-ld=lld", "-Wl,--no-undefined", "-resource-dir",
