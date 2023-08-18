@@ -109,5 +109,16 @@ public:
 
   void add_impl(std::string impl) { m_impls.push_back(impl); }
   void add_part(std::string part) { m_parts.push_back(part); }
+
+  [[nodiscard]] strset link_flags() const override {
+    auto res = seq::link_flags();
+
+    auto flags = impl::current_target()->build_path() / (name() + ".flags");
+    if (std::filesystem::exists(flags)) {
+      res.insert("@" + flags.string());
+    }
+
+    return res;
+  }
 };
 } // namespace ecow
