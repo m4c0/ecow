@@ -138,7 +138,8 @@ public:
 
     auto flags = impl::current_target()->build_path() / (name() + ".flags");
     if (std::filesystem::exists(flags)) {
-      res.insert("@" + flags.string());
+      const auto p = std::filesystem::current_path() / flags;
+      res.insert("@" + p.string());
     }
 
     return res;
