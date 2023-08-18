@@ -149,7 +149,22 @@ public:
   }
 };
 
+class impls_pragma_handler : public ecow_idlist_pragma_handler {
+  strvec *m_impls;
+
+public:
+  impls_pragma_handler(strvec *i)
+      : ecow_idlist_pragma_handler("add_impl"), m_impls{i} {}
+
+  void translate_item(const Twine &t) override {
+    m_impls->push_back(t.str());
+    llvm::errs() << t.str() << "\n";
+  }
+};
+
 struct ecow_action : WrapperFrontendAction {
+  strvec m_impls{};
+
   ecow_action()
       : WrapperFrontendAction{
             std::make_unique<GenerateModuleInterfaceAction>()} {}
@@ -157,6 +172,7 @@ struct ecow_action : WrapperFrontendAction {
   bool BeginSourceFileAction(CompilerInstance &ci) override {
     auto &pp = ci.getPreprocessor();
     pp.AddPragmaHandler("ecow", new syslib_pragma_handler(&ci));
+    pp.AddPragmaHandler("ecow", new impls_pragma_handler(&m_impls));
 
     return WrapperFrontendAction::BeginSourceFileAction(ci);
   }
