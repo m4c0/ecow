@@ -99,12 +99,17 @@ ecow::llvm::deps ecow::llvm::find_deps(const input &in,
   return res;
 }
 
-class SysLibPragmaHandler : public PragmaHandler {
-  std::vector<std::string> *m_flags;
+using strvec = std::vector<std::string>;
+
+class ecow_idlist_pragma_handler : public PragmaHandler {
+  strvec *m_items;
+
+protected:
+  virtual std::string translate_item(const Twine &t) = 0;
 
 public:
-  SysLibPragmaHandler(decltype(m_flags) f)
-      : PragmaHandler("add_system_library"), m_flags{f} {}
+  ecow_idlist_pragma_handler(const char *name, strvec *f)
+      : PragmaHandler(name), m_items{f} {}
 
   void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
                     Token &PragmaTok) {
@@ -119,16 +124,28 @@ public:
             << Tok.getKind();
         return;
       }
-      auto flag = "-l" + Tok.getIdentifierInfo()->getName();
-      m_flags->push_back(flag.str());
+      auto t = Tok.getIdentifierInfo()->getName();
+      m_items->push_back(translate_item(t));
     } while (true);
   }
 };
 
+struct syslib_pragma_handler : ecow_idlist_pragma_handler {
+  syslib_pragma_handler(strvec *f)
+      : ecow_idlist_pragma_handler("add_system_library", f) {}
+
+  std::string translate_item(const Twine &t) override {
+    return ("-l" + t).str();
+  }
+};
+
 class EcowAction : public WrapperFrontendAction {
-  std::vector<std::string> m_flags{};
+  strvec m_flags{};
 
   void createFlagsFile() {
+    if (m_flags.empty())
+      return;
+
     auto &ci = getCompilerInstance();
 
     SmallString<128> path(ci.getFrontendOpts().OutputFile);
@@ -146,15 +163,14 @@ public:
             std::make_unique<GenerateModuleInterfaceAction>()} {}
 
   bool BeginSourceFileAction(CompilerInstance &CI) override {
-    CI.getPreprocessor().AddPragmaHandler("ecow",
-                                          new SysLibPragmaHandler(&m_flags));
+    auto &pp = CI.getPreprocessor();
+    pp.AddPragmaHandler("ecow", new syslib_pragma_handler(&m_flags));
 
     return WrapperFrontendAction::BeginSourceFileAction(CI);
   }
 
   void EndSourceFile() override {
-    if (!m_flags.empty())
-      createFlagsFile();
+    createFlagsFile();
 
     WrapperFrontendAction::EndSourceFile();
   }
