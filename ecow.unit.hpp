@@ -166,6 +166,7 @@ public:
 
     strset res = m_link_flags;
     for (const auto &[k, u] : m_wsdeps) {
+      wsdeps::curpath_raii c{k};
       const auto flags = u->link_flags();
       std::copy(flags.begin(), flags.end(), std::inserter(res, res.end()));
     }
@@ -181,6 +182,7 @@ public:
       res.insert(r);
     }
     for (const auto &[k, u] : m_wsdeps) {
+      wsdeps::curpath_raii c{k};
       const auto r = u->resources();
       merge_wsdep(k, r, res);
     }
@@ -193,6 +195,7 @@ public:
 
     pathset res = self_objects();
     for (const auto &[k, u] : m_wsdeps) {
+      wsdeps::curpath_raii c{k};
       const auto objs = u->objects();
       merge_wsdep(k, objs, res);
     }
