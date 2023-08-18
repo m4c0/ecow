@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ecow.core.hpp"
+#include "ecow.llvm.hpp"
 #include "ecow.target.hpp"
 
 #include <filesystem>
@@ -49,10 +50,30 @@ class clang {
     return cbuf.str();
   }
 
+  auto llvm_in() const {
+    auto clang_path = clang_dir() / "bin" / (m_cpp ? "clang++" : "clang");
+    llvm::input r{
+        .from = m_from,
+        .to =
+            (std::filesystem::current_path() / m_to).make_preferred().string(),
+        .clang_exe = clang_path.string(),
+        .triple = impl::current_target()->triple(),
+    };
+    r.cmd_line.push_back(r.clang_exe);
+    for (const auto &a : current_target()->cxxflags())
+      r.cmd_line.push_back(a);
+    for (const auto &a : m_args)
+      r.cmd_line.push_back(a);
+    r.cmd_line.push_back(r.from);
+    r.cmd_line.push_back("-o");
+    r.cmd_line.push_back(r.to);
+    return r;
+  }
+
 #ifndef ECOW_META_BUILD
-  [[nodiscard]] bool really_run(const std::string &triple);
+  [[nodiscard]] bool really_run() const { return llvm::compile(llvm_in()); }
 #else
-  [[nodiscard]] bool really_run(const std::string &triple) {
+  [[nodiscard]] bool really_run() {
     return 0 == std::system(full_cmd().c_str());
   }
 #endif
@@ -123,12 +144,19 @@ public:
       return;
 
     std::cerr << "compiling " << m_to << std::endl;
-    if (!really_run(impl::current_target()->triple()))
+    if (!really_run())
       throw clang_failed{full_cmd()};
   }
 
 #ifndef ECOW_META_BUILD
-  [[nodiscard]] std::set<std::string> generate_deps();
+  [[nodiscard]] std::set<std::string> generate_deps() {
+    auto [deps, success] =
+        llvm::find_deps(llvm_in(), depfile(), must_recompile());
+    if (!success)
+      throw clang_failed{full_cmd()};
+
+    return deps;
+  }
 #else
   [[nodiscard]] std::set<std::string> generate_deps() { return {}; }
 #endif

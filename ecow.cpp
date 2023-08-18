@@ -2,7 +2,7 @@
 #define off_t _off_t
 #endif
 
-#include "ecow.clang.hpp"
+#include "ecow.llvm.hpp"
 
 #include "clang/CodeGen/CodeGenAction.h"
 #include "clang/Driver/Compilation.h"
@@ -17,16 +17,14 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/VirtualFileSystem.h"
 
-namespace ecow::impl {
-static auto find_clang_exe(const char *name) {
-  return (clang_dir() / "bin" / name).string();
-}
-} // namespace ecow::impl
+#include <filesystem>
+#include <fstream>
 
-auto &dep_scan_srv() {
-  using namespace clang::tooling::dependencies;
-  using namespace clang;
+using namespace clang::tooling::dependencies;
+using namespace clang::driver;
+using namespace clang;
 
+static auto &dep_scan_srv() {
   static constexpr const auto scan_mode =
       ScanningMode::DependencyDirectivesScan;
   static constexpr const auto format = ScanningOutputFormat::P1689;
@@ -37,16 +35,16 @@ auto &dep_scan_srv() {
       DependencyScanningService{scan_mode, format, opt_args, eager_load_mod};
   return service;
 }
-std::set<std::string> ecow::impl::clang::generate_deps() {
-  using namespace clang::tooling::dependencies;
-  using namespace clang;
+ecow::llvm::deps ecow::llvm::find_deps(const input &in,
+                                       const std::string &depfile,
+                                       bool must_recompile) {
+  ecow::llvm::deps res{{}, true};
 
-  if (m_with_deps && !must_recompile()) {
-    std::ifstream deps{depfile()};
+  if (depfile != "" && !must_recompile) {
+    std::ifstream deps{depfile};
 
-    auto self = std::filesystem::path{m_to}.stem().string();
+    auto self = std::filesystem::path{in.to}.stem().string();
 
-    std::set<std::string> res{};
     std::string line;
     deps >> line; // output:
     while (deps) {
@@ -66,32 +64,21 @@ std::set<std::string> ecow::impl::clang::generate_deps() {
       if (dash != mod.end()) {
         *dash = ':';
       }
-      res.insert(mod);
+      res.deps.insert(mod);
     }
 
     return res;
   }
 
   auto from =
-      (std::filesystem::current_path() / m_from).make_preferred().string();
-  auto to = (std::filesystem::current_path() / m_to).make_preferred().string();
-
-  std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
+      (std::filesystem::current_path() / in.from).make_preferred().string();
+  auto to = (std::filesystem::current_path() / in.to).make_preferred().string();
 
   Twine dir{"."};
   Twine file{from};
   Twine output{to};
 
-  std::vector<std::string> cmd_line{};
-  cmd_line.push_back(clang_exe);
-  for (const auto &r : m_args) {
-    cmd_line.push_back(r);
-  }
-  cmd_line.push_back(from);
-  cmd_line.push_back("-o");
-  cmd_line.push_back(to);
-
-  tooling::CompileCommand input{".", from, cmd_line, output};
+  tooling::CompileCommand input{".", from, in.cmd_line, output};
   std::string cwd{"."};
 
   std::string mf_out{};
@@ -100,25 +87,17 @@ std::set<std::string> ecow::impl::clang::generate_deps() {
   auto rule =
       tool.getP1689ModuleDependencyFile(input, cwd, mf_out, mf_out_path);
   if (!rule) {
-    llvm::handleAllErrors(rule.takeError(), [&](llvm::StringError &err) {
-      std::cerr << err.getMessage();
+    ::llvm::handleAllErrors(rule.takeError(), [&](::llvm::StringError &err) {
+      ::llvm::errs() << err.getMessage();
     });
-    std::stringstream o{};
-    for (const auto &s : cmd_line) {
-      o << s;
-    }
-    throw clang_failed{o.str()};
+    return {{}, false};
   }
 
-  std::set<std::string> res{};
   for (auto &req : rule->Requires) {
-    res.insert(req.ModuleName);
+    res.deps.insert(req.ModuleName);
   }
   return res;
 }
-
-namespace {
-using namespace clang;
 
 class SysLibPragmaHandler : public PragmaHandler {
   std::vector<std::string> *m_flags;
@@ -153,14 +132,14 @@ class EcowAction : public WrapperFrontendAction {
     auto &ci = getCompilerInstance();
 
     SmallString<128> path(ci.getFrontendOpts().OutputFile);
-    llvm::sys::path::replace_extension(path, "flags");
+    ::llvm::sys::path::replace_extension(path, "flags");
 
     auto file = ci.createOutputFile(path, false, false, false);
     for (const auto &f : m_flags) {
       (*file) << f << "\n";
     }
 
-    llvm::errs() << "ok\n";
+    ::llvm::errs() << "ok\n";
   }
 
 public:
@@ -182,39 +161,24 @@ public:
     WrapperFrontendAction::EndSourceFile();
   }
 };
-} // namespace
 
-bool ecow::impl::clang::really_run(const std::string &triple) {
-  using namespace clang::driver;
-  using namespace clang;
-
-  std::string clang_exe = find_clang_exe(m_cpp ? "clang++" : "clang");
+bool ecow::llvm::compile(const input &in) {
   std::string title = "ecow clang driver";
 
   auto diag_opts =
       IntrusiveRefCntPtr<DiagnosticOptions>{new DiagnosticOptions()};
   auto diag_ids = IntrusiveRefCntPtr<DiagnosticIDs>{new DiagnosticIDs()};
-  auto diag_cli = new TextDiagnosticPrinter(llvm::errs(), &*diag_opts);
+  auto diag_cli = new TextDiagnosticPrinter(::llvm::errs(), &*diag_opts);
 
   DiagnosticsEngine diags{diag_ids, diag_opts, diag_cli};
 
-  Driver driver{clang_exe, triple, diags, title};
+  Driver driver{in.clang_exe, in.triple, diags, title};
 
-  std::string to = (std::filesystem::current_path() / m_to).string();
-
-  // Not sure why ref'ng directly from std::set fails
-  std::vector<llvm::StringRef> args0{};
-  args0.push_back(clang_exe);
-  for (const auto &r : m_args) {
-    args0.push_back(r);
-  }
-  args0.push_back(m_from);
-  args0.push_back("-o");
-  args0.push_back(to);
+  std::string to = (std::filesystem::current_path() / in.to).string();
 
   std::vector<const char *> args{};
-  for (auto str : args0) {
-    args.push_back(str.begin());
+  for (auto &str : in.cmd_line) {
+    args.push_back(str.data());
   }
   auto c = driver.BuildCompilation(args);
   if (!c || c->containsError())
