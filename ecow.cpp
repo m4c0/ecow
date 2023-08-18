@@ -102,11 +102,28 @@ ecow::llvm::deps ecow::llvm::find_deps(const input &in,
 using strvec = std::vector<std::string>;
 
 class ecow_idlist_pragma_handler : public PragmaHandler {
+  CompilerInstance *m_ci;
+  std::unique_ptr<raw_pwrite_stream> m_out{};
+
+  void output_item(const Token &t) {
+    if (!m_out) {
+      SmallString<128> path(m_ci->getFrontendOpts().OutputFile);
+      ::llvm::sys::path::replace_extension(path, extension());
+
+      m_out = m_ci->createOutputFile(path, false, false, false);
+    }
+
+    if (m_out)
+      (*m_out) << translate_item(t.getIdentifierInfo()->getName()) << "\n";
+  }
+
 protected:
-  virtual void translate_item(const Twine &t) = 0;
+  virtual std::string translate_item(const Twine &t) = 0;
+  virtual std::string extension() = 0;
 
 public:
-  ecow_idlist_pragma_handler(const char *name) : PragmaHandler(name) {}
+  ecow_idlist_pragma_handler(const char *name, CompilerInstance *ci)
+      : PragmaHandler(name), m_ci{ci} {}
 
   void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
                     Token &PragmaTok) {
@@ -121,50 +138,32 @@ public:
             << Tok.getKind();
         return;
       }
-      translate_item(Tok.getIdentifierInfo()->getName());
+      output_item(Tok);
     } while (true);
   }
 };
 
 class syslib_pragma_handler : public ecow_idlist_pragma_handler {
-  CompilerInstance *m_ci;
-  std::unique_ptr<raw_pwrite_stream> m_out{};
-
 public:
   syslib_pragma_handler(CompilerInstance *ci)
-      : ecow_idlist_pragma_handler("add_system_library"), m_ci{ci} {}
+      : ecow_idlist_pragma_handler("add_system_library", ci) {}
 
-  void translate_item(const Twine &t) override {
-    if (!m_out) {
-      SmallString<128> path(m_ci->getFrontendOpts().OutputFile);
-      ::llvm::sys::path::replace_extension(path, "flags");
-
-      m_out = m_ci->createOutputFile(path, false, false, false);
-    }
-
-    if (m_out) {
-      auto flag = ("-l" + t).str();
-      (*m_out) << flag << "\n";
-    }
+  std::string extension() override { return "flags"; }
+  std::string translate_item(const Twine &t) override {
+    return ("-l" + t).str();
   }
 };
 
 class impls_pragma_handler : public ecow_idlist_pragma_handler {
-  strvec *m_impls;
-
 public:
-  impls_pragma_handler(strvec *i)
-      : ecow_idlist_pragma_handler("add_impl"), m_impls{i} {}
+  impls_pragma_handler(CompilerInstance *ci)
+      : ecow_idlist_pragma_handler("add_impl", ci) {}
 
-  void translate_item(const Twine &t) override {
-    m_impls->push_back(t.str());
-    llvm::errs() << t.str() << "\n";
-  }
+  std::string extension() override { return "impls"; }
+  std::string translate_item(const Twine &t) override { return t.str(); }
 };
 
 struct ecow_action : WrapperFrontendAction {
-  strvec m_impls{};
-
   ecow_action()
       : WrapperFrontendAction{
             std::make_unique<GenerateModuleInterfaceAction>()} {}
@@ -172,7 +171,7 @@ struct ecow_action : WrapperFrontendAction {
   bool BeginSourceFileAction(CompilerInstance &ci) override {
     auto &pp = ci.getPreprocessor();
     pp.AddPragmaHandler("ecow", new syslib_pragma_handler(&ci));
-    pp.AddPragmaHandler("ecow", new impls_pragma_handler(&m_impls));
+    pp.AddPragmaHandler("ecow", new impls_pragma_handler(&ci));
 
     return WrapperFrontendAction::BeginSourceFileAction(ci);
   }

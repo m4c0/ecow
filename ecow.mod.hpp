@@ -77,6 +77,23 @@ class mod : public seq {
     res.insert(obj_name(who));
   }
 
+  [[nodiscard]] strvec auto_impls() const {
+    auto impls = impl::current_target()->build_path() / (name() + ".impls");
+    if (!std::filesystem::exists(impls))
+      return {};
+
+    std::ifstream in{impls};
+    strvec res{};
+    while (in) {
+      std::string line;
+      in >> line;
+      if (line != "")
+        res.push_back(line);
+    }
+
+    return res;
+  }
+
 protected:
   void build_self() const override {
     std::for_each(m_parts.begin(), m_parts.end(),
@@ -84,6 +101,9 @@ protected:
     build_with_deps(name());
     std::for_each(m_impls.begin(), m_impls.end(),
                   [this](auto w) { return compile_impl(w); });
+    for (const auto &w : auto_impls()) {
+      compile_impl(w);
+    }
     seq::build_self();
   }
   void calculate_self_deps() override {
@@ -100,6 +120,9 @@ protected:
     }
     std::for_each(m_impls.begin(), m_impls.end(),
                   [&](auto w) { res.insert(obj_name(w)); });
+    for (const auto &w : auto_impls()) {
+      res.insert(obj_name(w));
+    }
     return res;
   }
 
