@@ -102,14 +102,11 @@ ecow::llvm::deps ecow::llvm::find_deps(const input &in,
 using strvec = std::vector<std::string>;
 
 class ecow_idlist_pragma_handler : public PragmaHandler {
-  strvec *m_items;
-
 protected:
-  virtual std::string translate_item(const Twine &t) = 0;
+  virtual void translate_item(const Twine &t) = 0;
 
 public:
-  ecow_idlist_pragma_handler(const char *name, strvec *f)
-      : PragmaHandler(name), m_items{f} {}
+  ecow_idlist_pragma_handler(const char *name) : PragmaHandler(name) {}
 
   void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
                     Token &PragmaTok) {
@@ -124,55 +121,44 @@ public:
             << Tok.getKind();
         return;
       }
-      auto t = Tok.getIdentifierInfo()->getName();
-      m_items->push_back(translate_item(t));
+      translate_item(Tok.getIdentifierInfo()->getName());
     } while (true);
   }
 };
 
-struct syslib_pragma_handler : ecow_idlist_pragma_handler {
-  syslib_pragma_handler(strvec *f)
-      : ecow_idlist_pragma_handler("add_system_library", f) {}
+class syslib_pragma_handler : public ecow_idlist_pragma_handler {
+  CompilerInstance *m_ci;
+  std::unique_ptr<raw_pwrite_stream> m_out{};
 
-  std::string translate_item(const Twine &t) override {
-    return ("-l" + t).str();
+public:
+  syslib_pragma_handler(CompilerInstance *ci)
+      : ecow_idlist_pragma_handler("add_system_library"), m_ci{ci} {}
+
+  void translate_item(const Twine &t) override {
+    if (!m_out) {
+      SmallString<128> path(m_ci->getFrontendOpts().OutputFile);
+      ::llvm::sys::path::replace_extension(path, "flags");
+
+      m_out = m_ci->createOutputFile(path, false, false, false);
+    }
+
+    if (m_out) {
+      auto flag = ("-l" + t).str();
+      (*m_out) << flag << "\n";
+    }
   }
 };
 
-class EcowAction : public WrapperFrontendAction {
-  strvec m_flags{};
-
-  void createFlagsFile() {
-    if (m_flags.empty())
-      return;
-
-    auto &ci = getCompilerInstance();
-
-    SmallString<128> path(ci.getFrontendOpts().OutputFile);
-    ::llvm::sys::path::replace_extension(path, "flags");
-
-    auto file = ci.createOutputFile(path, false, false, false);
-    for (const auto &f : m_flags) {
-      (*file) << f << "\n";
-    }
-  }
-
-public:
-  EcowAction()
+struct ecow_action : WrapperFrontendAction {
+  ecow_action()
       : WrapperFrontendAction{
             std::make_unique<GenerateModuleInterfaceAction>()} {}
 
-  bool BeginSourceFileAction(CompilerInstance &CI) override {
-    auto &pp = CI.getPreprocessor();
-    pp.AddPragmaHandler("ecow", new syslib_pragma_handler(&m_flags));
+  bool BeginSourceFileAction(CompilerInstance &ci) override {
+    auto &pp = ci.getPreprocessor();
+    pp.AddPragmaHandler("ecow", new syslib_pragma_handler(&ci));
 
-    return WrapperFrontendAction::BeginSourceFileAction(CI);
-  }
-
-  void EndSourceFile() override {
-    createFlagsFile();
-
-    WrapperFrontendAction::EndSourceFile();
+    return WrapperFrontendAction::BeginSourceFileAction(ci);
   }
 };
 
@@ -222,7 +208,7 @@ bool ecow::llvm::compile(const input &in) {
   auto ext = std::filesystem::path{to}.extension();
   std::unique_ptr<FrontendAction> a{};
   if (ext == ".pcm") {
-    a.reset(new EcowAction{});
+    a.reset(new ecow_action{});
   } else if (ext == ".o") {
     a.reset(new EmitObjAction{});
   } else {
