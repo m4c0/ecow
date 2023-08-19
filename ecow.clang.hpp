@@ -32,8 +32,12 @@ class clang {
 
   [[nodiscard]] auto depfile() const { return m_to + ".deps"; }
 
+  auto clang_exe() const {
+    return clang_dir() / "bin" / (m_cpp ? "clang++" : "clang");
+  }
+
   void arguments(std::ostream &o, std::string_view sep) const {
-    o << (m_cpp ? cxx() : c());
+    o << clang_exe().string();
     for (const auto &a : current_target()->cxxflags())
       o << sep << a;
     for (const auto &a : m_args)
@@ -51,12 +55,11 @@ class clang {
   }
 
   auto llvm_in() const {
-    auto clang_path = clang_dir() / "bin" / (m_cpp ? "clang++" : "clang");
     llvm::input r{
         .from = m_from,
         .to =
             (std::filesystem::current_path() / m_to).make_preferred().string(),
-        .clang_exe = clang_path.string(),
+        .clang_exe = clang_exe().string(),
         .triple = impl::current_target()->triple(),
     };
     r.cmd_line.push_back(r.clang_exe);
