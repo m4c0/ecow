@@ -13,27 +13,6 @@
 #include <string>
 
 namespace ecow::impl {
-[[nodiscard]] static inline std::string c() {
-  // NOTE: this are host-dependent, not target-dependent
-#ifdef __APPLE__
-  return "$(brew --prefix llvm@16)/bin/clang ";
-#elif defined(_WIN32)
-  return "clang ";
-#else
-  return "/home/linuxbrew/.linuxbrew/bin/clang ";
-#endif
-}
-[[nodiscard]] static inline std::string cxx() {
-  // NOTE: this are host-dependent, not target-dependent
-#ifdef __APPLE__
-  return "$(brew --prefix llvm@16)/bin/clang++ ";
-#elif defined(_WIN32)
-  return "clang++ ";
-#else
-  return "/home/linuxbrew/.linuxbrew/bin/clang++ ";
-#endif
-}
-
 [[nodiscard]] static inline auto last_write_time(auto path) {
   if (std::filesystem::exists(path))
     return std::filesystem::last_write_time(path);
