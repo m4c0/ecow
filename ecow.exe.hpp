@@ -2,6 +2,10 @@
 
 #include "ecow.seq.hpp"
 
+namespace ecow::impl {
+std::filesystem::path clang_dir();
+}
+
 namespace ecow {
 class exe : public seq {
 protected:
@@ -21,9 +25,10 @@ protected:
     const auto exe_nm = final_exe_name();
     const auto exe_time = impl::last_write_time(exe_nm);
     const auto ldflags = impl::current_target()->ldflags();
+    const auto cxx = impl::clang_dir() / "bin" / "clang++";
 
     bool any_is_newer = false;
-    std::string cmd = impl::cxx() + " -o " + exe_nm;
+    std::string cmd = cxx.string() + " -o " + exe_nm;
     for (const auto &f : ldflags) {
       cmd.append(" ");
       cmd.append(f);
