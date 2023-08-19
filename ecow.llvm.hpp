@@ -1,6 +1,7 @@
 #pragma once
 #include <set>
 #include <string>
+#include <vector>
 
 namespace ecow::llvm {
 struct input {

@@ -14,7 +14,7 @@ protected:
     const auto clib = cdir / "lib";
 
     if (std::filesystem::exists("ecow.hpp")) {
-      impl::clang{"build.cpp", exe_name()}.run(true);
+      // impl::clang{"build.cpp", exe_name()}.run(true);
       impl::clang("ecow.cpp", "ecow.o")
           .add_arg("-c")
           .add_arg("-I" + cinc.string())
