@@ -18,6 +18,9 @@ protected:
       impl::clang("ecow.cpp", "ecow.o")
           .add_arg("-c")
           .add_arg("-I" + cinc.string())
+#if _WIN32
+          .add_arg("-fms-runtime-lib=dll")
+#endif
           .run(true);
       return;
     }
