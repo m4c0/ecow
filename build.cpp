@@ -51,12 +51,12 @@ protected:
   }
   std::string final_exe_name() const override { return exe_name(); }
 
-  static auto ecow_o(const char *argv0) {
+  static auto ecow_o(const std::string &argv0) {
     return std::filesystem::path{argv0}.parent_path() / "ecow.o";
   }
 
 public:
-  explicit builder(const char *argv0)
+  explicit builder(const std::string &argv0)
       : exe("build"), m_ecow_o{ecow_o(argv0).string()} {}
 
   [[nodiscard]] auto executable() const {
