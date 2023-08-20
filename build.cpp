@@ -4,6 +4,8 @@
 using namespace ecow;
 
 class builder : public exe {
+  std::string m_ecow_o;
+
 protected:
   void build_self() const override {
     if (!impl::current_target()->supports(host))
@@ -26,7 +28,7 @@ protected:
     }
 
     auto c = impl::clang{"build.cpp", exe_name()}
-                 .add_arg("../ecow/ecow.o")
+                 .add_arg(m_ecow_o)
                  .add_arg("-I../ecow")
                  .add_arg("-L" + clib.string())
 #if _WIN32
@@ -49,8 +51,13 @@ protected:
   }
   std::string final_exe_name() const override { return exe_name(); }
 
+  static auto ecow_o(const char *argv0) {
+    return std::filesystem::path{argv0}.parent_path() / "ecow.o";
+  }
+
 public:
-  using exe::exe;
+  explicit builder(const char *argv0)
+      : exe("build"), m_ecow_o{ecow_o(argv0).string()} {}
 
   [[nodiscard]] auto executable() const {
     // This runs before "exe_name" can access a target
@@ -60,6 +67,6 @@ public:
 };
 
 int main(int argc, char **argv) {
-  auto bld = unit::create<builder>("build");
+  auto bld = unit::create<builder>(argv[0]);
   return run_main(bld, argc, argv);
 }
