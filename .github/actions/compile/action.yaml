@@ -14,23 +14,17 @@ runs:
       shell: bash
       working-directory: ecow
       run: ./build.exe
-
     - name: 🐮 Build ECOW
-      if: runner.os == 'macOS'
       shell: bash
       working-directory: ${{ inputs.project }}
-      run: clang++ -I../ecow -std=c++20 build.cpp -o build.exe
+      run: ../ecow/build.exe
+
     - name: 🍼 Build Project
       if: runner.os == 'macOS'
       shell: bash
       working-directory: ${{ inputs.project }}
       run: ./build.exe clean macosx iphoneos iphonesimulator wasm android
 
-    - name: 🐮 Build ECOW
-      if: runner.os == 'Windows'
-      shell: pwsh
-      working-directory: ${{ inputs.project }}
-      run: clang++ -I../ecow -std=c++20 build.cpp -o build.exe
     - name: 🍼 Build Project
       if: runner.os == 'Windows'
       shell: pwsh
