@@ -17,7 +17,7 @@ runs:
     - name: 🐮 Build ECOW
       shell: bash
       working-directory: ${{ inputs.project }}
-      run: ../ecow/build.exe
+      run: $GITHUB_WORKSPACE/ecow/build.exe
 
     - name: 🍼 Build Project
       if: runner.os == 'macOS'
