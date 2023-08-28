@@ -94,6 +94,12 @@ class mod : public seq {
     return res;
   }
 
+  void calculate_deps_of_impl(const std::string &who) {
+    for (auto &d : clang_impl(who).generate_deps()) {
+      deps::add(name(), d);
+    }
+  }
+
 protected:
   void build_self() const override {
     std::for_each(m_parts.begin(), m_parts.end(),
@@ -107,6 +113,15 @@ protected:
     seq::build_self();
   }
   void calculate_self_deps() override {
+    if (!deps::has(name())) {
+      for (const auto &impl : m_impls) {
+        calculate_deps_of_impl(impl);
+      }
+      for (const auto &impl : auto_impls()) {
+        calculate_deps_of_impl(impl);
+      }
+    }
+
     calculate_deps_of(name());
     std::for_each(m_parts.begin(), m_parts.end(),
                   [this](auto w) { calculate_deps_of(name() + "-" + w); });
