@@ -113,16 +113,15 @@ protected:
     seq::build_self();
   }
   void calculate_self_deps() override {
-    if (!deps::has(name())) {
-      for (const auto &impl : m_impls) {
-        calculate_deps_of_impl(impl);
-      }
-      for (const auto &impl : auto_impls()) {
-        calculate_deps_of_impl(impl);
-      }
+    for (const auto &impl : m_impls) {
+      calculate_deps_of_impl(impl);
     }
-
+    // TODO: auto_impls only works after first build
+    for (const auto &impl : auto_impls()) {
+      calculate_deps_of_impl(impl);
+    }
     calculate_deps_of(name());
+
     std::for_each(m_parts.begin(), m_parts.end(),
                   [this](auto w) { calculate_deps_of(name() + "-" + w); });
   }
