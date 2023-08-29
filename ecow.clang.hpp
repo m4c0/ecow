@@ -36,22 +36,18 @@ class clang {
     return clang_dir() / "bin" / (m_cpp ? "clang++" : "clang");
   }
 
-  void arguments(std::ostream &o, std::string_view sep) const {
-    o << '"' << clang_exe().string() << '"';
-    for (const auto &a : current_target()->cxxflags())
-      o << sep << a;
-    for (const auto &a : m_args)
-      o << sep << '\"' << a << '\"';
-    o << sep << m_from;
-    o << sep << "-o" << sep;
-    escape(o, std::filesystem::current_path() / m_to);
-  }
-
   auto full_cmd() const {
-    std::stringstream cbuf;
-    arguments(cbuf, " ");
+    std::stringstream o;
+    o << (m_cpp ? "clang++" : "clang");
+    for (const auto &a : current_target()->cxxflags())
+      o << ' ' << a;
+    for (const auto &a : m_args)
+      o << ' ' << '\"' << a << '\"';
+    o << ' ' << m_from;
+    o << ' ' << "-o" << ' ';
+    escape(o, std::filesystem::current_path() / m_to);
 
-    return cbuf.str();
+    return o.str();
   }
 
   auto llvm_in() const {
