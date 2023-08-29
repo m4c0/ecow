@@ -4,8 +4,9 @@
 namespace ecow::llvm {
 bool compile(const input &in) {
   std::ostringstream str{};
-  for (const auto &arg : in.cmd_line) {
-    str << '"' << arg << '"' << ' ';
+  str << "clang++";
+  for (const auto &arg : std::span{in.cmd_line}.subview(1)) {
+    str << ' ' << '"' << arg << '"';
   }
   return 0 == system(str.str().c_str());
 }
