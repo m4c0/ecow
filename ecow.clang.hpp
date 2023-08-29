@@ -38,7 +38,7 @@ class clang {
 
   auto full_cmd() const {
     std::stringstream o;
-    o << (m_cpp ? "clang++" : "clang");
+    o << clang_exe();
     for (const auto &a : current_target()->cxxflags())
       o << ' ' << a;
     for (const auto &a : m_args)
@@ -67,20 +67,6 @@ class clang {
     r.cmd_line.push_back("-o");
     r.cmd_line.push_back(r.to);
     return r;
-  }
-
-  [[nodiscard]] bool run_with_powa() const { return llvm::compile(llvm_in()); }
-  [[nodiscard]] bool run_with_driver() {
-    return 0 == std::system(full_cmd().c_str());
-  }
-
-  void run(auto &&fn, bool force) {
-    if (!force && !must_recompile())
-      return;
-
-    std::cerr << "compiling " << m_to << std::endl;
-    if (!(this->*fn)())
-      throw clang_failed{full_cmd()};
   }
 
 public:
@@ -144,8 +130,14 @@ public:
 
     return false;
   }
-  void run(bool force = false) { run(&clang::run_with_driver, force); }
-  void powa_run() { run(&clang::run_with_powa, false); }
+  void run(bool force = false) {
+    if (!force && !must_recompile())
+      return;
+
+    std::cerr << "compiling " << m_to << std::endl;
+    if (!llvm::compile(llvm_in()))
+      throw clang_failed{full_cmd()};
+  }
 
 #ifndef ECOW_META_BUILD
   [[nodiscard]] std::set<std::string> generate_deps() {

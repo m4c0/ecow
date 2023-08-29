@@ -21,11 +21,7 @@ class mod : public seq {
   }
 
   void compile_part(const std::string &who) const {
-    if (who == name()) {
-      clang_part(who).powa_run();
-    } else {
-      clang_part(who).run();
-    }
+    clang_part(who).run();
     impl::clang{pcm_name(who), obj_name(who)}.add_arg("-c").run();
   }
   void compile_impl(const std::string &who) const { clang_impl(who).run(); }

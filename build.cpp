@@ -1,6 +1,16 @@
 #define ECOW_META_BUILD
 #include "ecow.hpp"
 
+namespace ecow::llvm {
+bool compile(const input &in) {
+  std::ostringstream str{};
+  for (const auto &arg : in.cmd_line) {
+    str << '"' << arg << '"' << ' ';
+  }
+  return 0 == system(str.str().c_str());
+}
+} // namespace ecow::llvm
+
 using namespace ecow;
 
 class builder : public exe {
