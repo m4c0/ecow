@@ -1,4 +1,5 @@
 #ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
 #define off_t _off_t
 #endif
 
