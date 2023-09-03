@@ -33,7 +33,8 @@ class clang {
   [[nodiscard]] auto depfile() const { return m_to + ".deps"; }
 
   auto clang_exe() const {
-    return clang_dir() / "bin" / (m_cpp ? "clang++" : "clang");
+    auto exe = impl::current_target()->exe_name(m_cpp ? "clang++" : "clang");
+    return clang_dir() / "bin" / exe;
   }
 
   auto full_cmd() const {
