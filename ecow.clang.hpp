@@ -98,7 +98,12 @@ public:
 
     m_cpp = (fext != ".c" && fext != ".m");
 
-    if (fext != ".c" && fext != ".m" && fext != ".pcm") {
+    auto req_modpath = m_cpp;
+#if __clang_major__ < 17
+    req_modpath &= fext != ".pcm";
+#endif
+
+    if (req_modpath) {
       for (const auto &path : current_target()->prebuilt_module_paths())
         add_arg("-fprebuilt-module-path=" + path);
     }
