@@ -6,6 +6,7 @@
 #include "ecow.llvm.hpp"
 
 #include "clang/CodeGen/CodeGenAction.h"
+#include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -223,15 +224,20 @@ bool ecow::llvm::compile(const input &in) {
   SourceManager src_mgr(*cdiag, *files);
   cdiag->setSourceManager(&src_mgr);
 
-  auto cinv = std::make_shared<CompilerInvocation>();
-  CompilerInvocation::CreateFromArgs(*cinv, cc1_args, *cdiag);
+  auto cinst = std::make_unique<CompilerInstance>();
 
-  auto pch_opts = std::make_shared<PCHContainerOperations>();
-  CompilerInstance cinst{pch_opts};
-  cinst.setInvocation(cinv);
-  cinst.setFileManager(&*files);
-  cinst.createDiagnostics(diag_cli, false);
-  cinst.createSourceManager(*files);
+  auto pch_ops = cinst->getPCHContainerOperations();
+  pch_ops->registerWriter(std::make_unique<ObjectFilePCHContainerWriter>());
+  pch_ops->registerReader(std::make_unique<ObjectFilePCHContainerReader>());
+
+  ::llvm::InitializeAllTargets();
+  ::llvm::InitializeAllTargetMCs();
+  ::llvm::InitializeAllAsmPrinters();
+  ::llvm::InitializeAllAsmParsers();
+
+  CompilerInvocation::CreateFromArgs(cinst->getInvocation(), cc1_args, *cdiag,
+                                     in.clang_exe.c_str());
+  cinst->createDiagnostics(diag_cli, false);
 
   auto ext = std::filesystem::path{to}.extension();
   std::unique_ptr<FrontendAction> a{};
@@ -245,15 +251,5 @@ bool ecow::llvm::compile(const input &in) {
 
   files->clearStatCache();
 
-  return cinst.ExecuteAction(*a);
+  return cinst->ExecuteAction(*a);
 }
-
-static struct init_llvm {
-  init_llvm() {
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmPrinters();
-    llvm::InitializeAllAsmParsers();
-  }
-  ~init_llvm() { llvm::llvm_shutdown(); }
-} XX;
