@@ -50,8 +50,14 @@ protected:
 
     for (const auto &e : std::filesystem::directory_iterator(clib)) {
       const auto &p = e.path();
-      if (p.extension() == ".lib")
-        c.add_arg("-l" + p.stem().string());
+      if (p.extension() != ".lib")
+        continue;
+      if (p.stem() == "LLVM-C")
+        continue;
+      if (p.stem() == "libclang")
+        continue;
+
+      c.add_arg("-l" + p.stem().string());
     }
 #else
                  .add_arg("-lclang")
