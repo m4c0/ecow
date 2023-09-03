@@ -11,13 +11,16 @@
 #include "clang/Driver/Driver.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
+#include "clang/Frontend/TextDiagnosticBuffer.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Lex/LexDiagnostic.h"
 #include "clang/Tooling/DependencyScanning/DependencyScanningService.h"
 #include "clang/Tooling/DependencyScanning/DependencyScanningTool.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/CrashRecoveryContext.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/VirtualFileSystem.h"
+#include "llvm/TargetParser/Host.h"
 
 #include <filesystem>
 #include <fstream>
@@ -191,65 +194,79 @@ struct ecow_action : WrapperFrontendAction {
   }
 };
 
-bool ecow::llvm::compile(const input &in) {
-  std::string title = "ecow clang driver";
-
-  auto diag_opts =
-      IntrusiveRefCntPtr<DiagnosticOptions>{new DiagnosticOptions()};
-  auto diag_ids = IntrusiveRefCntPtr<DiagnosticIDs>{new DiagnosticIDs()};
-  auto diag_cli = new TextDiagnosticPrinter(::llvm::errs(), &*diag_opts);
-
-  DiagnosticsEngine diags{diag_ids, diag_opts, diag_cli};
-
-  Driver driver{in.clang_exe, in.triple, diags, title};
-
-  std::string to = (std::filesystem::current_path() / in.to).string();
-
-  std::vector<const char *> args{};
-  for (auto &str : in.cmd_line) {
-    args.push_back(str.data());
-  }
-  auto c = driver.BuildCompilation(args);
-  if (!c || c->containsError())
-    // We did a mistake in clang args. Bail out and let the diagnostics
-    // client do its job informing the user
-    return false;
-
-  auto cc1_args = c->getJobs().getJobs()[0]->getArguments();
-
-  auto files = IntrusiveRefCntPtr<FileManager>(new FileManager({}));
-  auto cdiag =
-      CompilerInstance::createDiagnostics(&*diag_opts, diag_cli, false);
-
-  SourceManager src_mgr(*cdiag, *files);
-  cdiag->setSourceManager(&src_mgr);
-
+int cc1(const ecow::llvm::input *in, SmallVectorImpl<const char *> &args) {
   auto cinst = std::make_unique<CompilerInstance>();
 
   auto pch_ops = cinst->getPCHContainerOperations();
   pch_ops->registerWriter(std::make_unique<ObjectFilePCHContainerWriter>());
   pch_ops->registerReader(std::make_unique<ObjectFilePCHContainerReader>());
 
-  ::llvm::InitializeAllTargets();
-  ::llvm::InitializeAllTargetMCs();
-  ::llvm::InitializeAllAsmPrinters();
-  ::llvm::InitializeAllAsmParsers();
+  auto diag_opts =
+      IntrusiveRefCntPtr<DiagnosticOptions>{new DiagnosticOptions()};
+  auto diag_ids = new DiagnosticIDs();
+  auto diag_cli = new TextDiagnosticBuffer;
+  DiagnosticsEngine diags{diag_ids, &*diag_opts, diag_cli};
 
-  CompilerInvocation::CreateFromArgs(cinst->getInvocation(), cc1_args, *cdiag,
-                                     in.clang_exe.c_str());
-  cinst->createDiagnostics(diag_cli, false);
+  auto argv = ::llvm::ArrayRef(args).slice(1);
+  CompilerInvocation::CreateFromArgs(cinst->getInvocation(), argv, diags,
+                                     args[0]);
+  cinst->createDiagnostics();
 
-  auto ext = std::filesystem::path{to}.extension();
+  diag_cli->FlushDiagnostics(cinst->getDiagnostics());
+
+  auto ext = std::filesystem::path{in->to}.extension();
   std::unique_ptr<FrontendAction> a{};
   if (ext == ".pcm") {
     a.reset(new ecow_action{});
   } else if (ext == ".o") {
     a.reset(new EmitObjAction{});
   } else {
-    return false;
+    return 1;
   }
 
-  files->clearStatCache();
+  auto res = cinst->ExecuteAction(*a);
+  return !res;
+}
 
-  return cinst->ExecuteAction(*a);
+bool ecow::llvm::compile(const input &in) {
+  ::llvm::InitializeAllTargets();
+  ::llvm::InitializeAllTargetMCs();
+  ::llvm::InitializeAllAsmPrinters();
+  ::llvm::InitializeAllAsmParsers();
+
+  IntrusiveRefCntPtr<DiagnosticOptions> diag_opts{new DiagnosticOptions()};
+  IntrusiveRefCntPtr<DiagnosticIDs> diag_ids{new DiagnosticIDs()};
+  auto diag_cli = new TextDiagnosticPrinter(::llvm::errs(), &*diag_opts);
+
+  DiagnosticsEngine diags{diag_ids, diag_opts, diag_cli};
+
+  const auto wtf = [in = &in](auto &argv) -> int { return cc1(in, argv); };
+
+  Driver driver{in.clang_exe, ::llvm::sys::getDefaultTargetTriple(), diags};
+  driver.setInstalledDir(
+      std::filesystem::path{in.clang_exe}.parent_path().parent_path().string());
+  driver.CC1Main = wtf;
+
+  ::llvm::CrashRecoveryContext::Enable();
+
+  std::vector<const char *> args{};
+  for (auto &str : in.cmd_line) {
+    args.push_back(str.data());
+  }
+  std::unique_ptr<Compilation> c{driver.BuildCompilation(args)};
+  if (!c || c->containsError())
+    // We did a mistake in clang args. Bail out and let the diagnostics
+    // client do its job informing the user
+    return false;
+
+  ::llvm::SmallVector<std::pair<int, const ::clang::driver::Command *>, 4>
+      failures;
+  int res = driver.ExecuteCompilation(*c, failures);
+  for (const auto &p : failures) {
+    if (p.first)
+      return false;
+  }
+
+  diags.getClient()->finish();
+  return res == 0;
 }
