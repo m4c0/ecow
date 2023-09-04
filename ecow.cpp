@@ -231,21 +231,28 @@ int cc1(SmallVectorImpl<const char *> &args) {
   return !res;
 }
 
+auto &diag_engine() {
+  static IntrusiveRefCntPtr<DiagnosticOptions> diag_opts{
+      new DiagnosticOptions()};
+  static IntrusiveRefCntPtr<DiagnosticIDs> diag_ids{new DiagnosticIDs()};
+  static auto diag_cli = new TextDiagnosticPrinter(::llvm::errs(), &*diag_opts);
+
+  static DiagnosticsEngine diags{diag_ids, diag_opts, diag_cli};
+  return diags;
+}
+
+auto &driver_for_exe(const std::string &exe) {
+  static std::map<std::string, Driver> cache{};
+  static auto def_triple = llvm::sys::getDefaultTargetTriple();
+  auto [it, _] = cache.try_emplace(exe, exe, def_triple, diag_engine());
+  auto &[__, drv] = *it;
+  return drv;
+}
+
 bool ecow::llvm::compile(const input &in) {
-  IntrusiveRefCntPtr<DiagnosticOptions> diag_opts{new DiagnosticOptions()};
-  IntrusiveRefCntPtr<DiagnosticIDs> diag_ids{new DiagnosticIDs()};
-  auto diag_cli = new TextDiagnosticPrinter(::llvm::errs(), &*diag_opts);
-
-  DiagnosticsEngine diags{diag_ids, diag_opts, diag_cli};
-
   llvm16_hack = &in;
 
-  Driver driver{in.clang_exe, ::llvm::sys::getDefaultTargetTriple(), diags};
-  driver.setInstalledDir(
-      std::filesystem::path{in.clang_exe}.parent_path().parent_path().string());
-  driver.CC1Main = cc1;
-
-  ::llvm::CrashRecoveryContext::Enable();
+  auto &driver = driver_for_exe(in.clang_exe);
 
   std::vector<const char *> args{};
   for (auto &str : in.cmd_line) {
@@ -264,8 +271,6 @@ bool ecow::llvm::compile(const input &in) {
     if (p.first)
       return false;
   }
-
-  diags.getClient()->finish();
   return res == 0;
 }
 
@@ -275,6 +280,7 @@ static struct init_llvm {
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
     llvm::InitializeAllAsmParsers();
+    llvm::CrashRecoveryContext::Enable();
   }
   ~init_llvm() { llvm::llvm_shutdown(); }
 } xx;
