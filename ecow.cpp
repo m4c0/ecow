@@ -232,11 +232,6 @@ int cc1(SmallVectorImpl<const char *> &args) {
 }
 
 bool ecow::llvm::compile(const input &in) {
-  ::llvm::InitializeAllTargets();
-  ::llvm::InitializeAllTargetMCs();
-  ::llvm::InitializeAllAsmPrinters();
-  ::llvm::InitializeAllAsmParsers();
-
   IntrusiveRefCntPtr<DiagnosticOptions> diag_opts{new DiagnosticOptions()};
   IntrusiveRefCntPtr<DiagnosticIDs> diag_ids{new DiagnosticIDs()};
   auto diag_cli = new TextDiagnosticPrinter(::llvm::errs(), &*diag_opts);
@@ -273,3 +268,13 @@ bool ecow::llvm::compile(const input &in) {
   diags.getClient()->finish();
   return res == 0;
 }
+
+static struct init_llvm {
+  init_llvm() {
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllAsmParsers();
+  }
+  ~init_llvm() { llvm::llvm_shutdown(); }
+} xx;
