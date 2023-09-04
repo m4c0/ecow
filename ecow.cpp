@@ -194,43 +194,6 @@ struct ecow_action : WrapperFrontendAction {
   }
 };
 
-static const ecow::llvm::input *llvm16_hack;
-int cc1(SmallVectorImpl<const char *> &args) {
-  auto in = llvm16_hack;
-
-  auto cinst = std::make_unique<CompilerInstance>();
-
-  auto pch_ops = cinst->getPCHContainerOperations();
-  pch_ops->registerWriter(std::make_unique<ObjectFilePCHContainerWriter>());
-  pch_ops->registerReader(std::make_unique<ObjectFilePCHContainerReader>());
-
-  auto diag_opts =
-      IntrusiveRefCntPtr<DiagnosticOptions>{new DiagnosticOptions()};
-  auto diag_ids = new DiagnosticIDs();
-  auto diag_cli = new TextDiagnosticBuffer;
-  DiagnosticsEngine diags{diag_ids, &*diag_opts, diag_cli};
-
-  auto argv = ::llvm::ArrayRef(args).slice(1);
-  CompilerInvocation::CreateFromArgs(cinst->getInvocation(), argv, diags,
-                                     args[0]);
-  cinst->createDiagnostics();
-
-  diag_cli->FlushDiagnostics(cinst->getDiagnostics());
-
-  auto ext = std::filesystem::path{in->to}.extension();
-  std::unique_ptr<FrontendAction> a{};
-  if (ext == ".pcm") {
-    a.reset(new ecow_action{});
-  } else if (ext == ".o") {
-    a.reset(new EmitObjAction{});
-  } else {
-    return 1;
-  }
-
-  auto res = cinst->ExecuteAction(*a);
-  return !res;
-}
-
 auto &diag_engine() {
   static IntrusiveRefCntPtr<DiagnosticOptions> diag_opts{
       new DiagnosticOptions()};
@@ -247,6 +210,35 @@ auto &driver_for_exe(const std::string &exe) {
   auto [it, _] = cache.try_emplace(exe, exe, def_triple, diag_engine());
   auto &[__, drv] = *it;
   return drv;
+}
+
+static const ecow::llvm::input *llvm16_hack;
+int cc1(SmallVectorImpl<const char *> &args) {
+  auto in = llvm16_hack;
+
+  auto cinst = std::make_unique<CompilerInstance>();
+
+  auto pch_ops = cinst->getPCHContainerOperations();
+  pch_ops->registerWriter(std::make_unique<ObjectFilePCHContainerWriter>());
+  pch_ops->registerReader(std::make_unique<ObjectFilePCHContainerReader>());
+
+  auto argv = ::llvm::ArrayRef(args).slice(1);
+  CompilerInvocation::CreateFromArgs(cinst->getInvocation(), argv,
+                                     diag_engine(), args[0]);
+  cinst->createDiagnostics();
+
+  auto ext = std::filesystem::path{in->to}.extension();
+  std::unique_ptr<FrontendAction> a{};
+  if (ext == ".pcm") {
+    a.reset(new ecow_action{});
+  } else if (ext == ".o") {
+    a.reset(new EmitObjAction{});
+  } else {
+    return 1;
+  }
+
+  auto res = cinst->ExecuteAction(*a);
+  return !res;
 }
 
 bool ecow::llvm::compile(const input &in) {
