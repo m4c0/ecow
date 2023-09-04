@@ -194,7 +194,10 @@ struct ecow_action : WrapperFrontendAction {
   }
 };
 
-int cc1(const ecow::llvm::input *in, SmallVectorImpl<const char *> &args) {
+static const ecow::llvm::input *llvm16_hack;
+int cc1(SmallVectorImpl<const char *> &args) {
+  auto in = llvm16_hack;
+
   auto cinst = std::make_unique<CompilerInstance>();
 
   auto pch_ops = cinst->getPCHContainerOperations();
@@ -240,12 +243,12 @@ bool ecow::llvm::compile(const input &in) {
 
   DiagnosticsEngine diags{diag_ids, diag_opts, diag_cli};
 
-  const auto wtf = [in = &in](auto &argv) -> int { return cc1(in, argv); };
+  llvm16_hack = &in;
 
   Driver driver{in.clang_exe, ::llvm::sys::getDefaultTargetTriple(), diags};
   driver.setInstalledDir(
       std::filesystem::path{in.clang_exe}.parent_path().parent_path().string());
-  driver.CC1Main = wtf;
+  driver.CC1Main = cc1;
 
   ::llvm::CrashRecoveryContext::Enable();
 
